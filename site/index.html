@@ -19,103 +19,74 @@
   <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"SoftwareApplication","name":"KeyScribe","applicationCategory":"UtilitiesApplication","operatingSystem":"macOS, Windows, Ubuntu","description":"A lightweight voice typing app that turns speech into text and inserts it into the focused field.","url":"https://keyscribe.gitools.net/","downloadUrl":"https://github.com/zidell/keyscribe/releases","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
   </script>
-  <style>
-    :root { color-scheme: light dark; font-family: system-ui, -apple-system, sans-serif; }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #f6f7fb; color: #202330; }
-    main { width: min(760px, calc(100% - 40px)); margin: 0 auto; padding: 64px 0 80px; }
-    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; font-size: 1.1rem; font-weight: 800; }
-    .brand img { width: 40px; height: 40px; }
-    .languages { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; font-size: .78rem; font-weight: 500; }
-    .languages a { color: #62697b; text-decoration: none; }
-    .languages a[aria-current="true"] { color: inherit; font-weight: 800; text-decoration: underline; }
-    h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.2; margin: 0 0 18px; letter-spacing: -.04em; }
-    h2 { font-size: 1.3rem; margin: 0 0 18px; }
-    p, li { line-height: 1.7; }
-    .intro { font-size: 1.13rem; max-width: 620px; }
-    section { margin-top: 52px; }
-    .downloads { display: block; }
-    .download { display: block; border-radius: 12px; padding: 18px 20px; background: #3659e3; color: white; text-decoration: none; font-weight: 700; }
-    .download:hover { background: #2747ca; }
-    .download small { display: block; font-weight: 400; margin-top: 4px; opacity: .85; }
-    .note { font-size: .93rem; color: #62697b; }
-    .note a { color: inherit; }
-    .warning { margin: 0 0 20px; padding: 12px 14px; border-left: 3px solid #d92d3a; background: #fff0f1; color: #a31e29; border-radius: 4px; }
-    .warning a { color: inherit; font-weight: 700; }
-    .previews { width: min(100vw - 40px, 1040px); margin-left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-    .preview { margin: 0; }
-    .preview img { display: block; width: 100%; border-radius: 9px; border: 1px solid #dfe3ed; }
-    .preview figcaption { margin-top: 8px; color: #62697b; font-size: .9rem; }
-    .benchmarks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .benchmark { padding: 18px 20px; border: 1px solid #dfe3ed; border-radius: 9px; }
-    .benchmark strong { display: block; margin-bottom: 6px; color: #62697b; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-    .benchmark b { display: block; font-size: 1.15rem; letter-spacing: -.02em; }
-    .benchmark small { display: block; margin-top: 5px; color: #62697b; }
-    .platform-only { display: none; }
-    html[data-platform="mac"] .platform-only.mac, html[data-platform="windows"] .platform-only.windows, html[data-platform="linux"] .platform-only.linux, html[data-platform="other"] .platform-only { display: block; }
-    ol { padding-left: 1.4rem; }
-    li + li { margin-top: 8px; }
-    @media (prefers-color-scheme: dark) { body { background: #171923; color: #f0f2fa; } .note, .preview figcaption, .benchmark small { color: #aab0c0; } .warning { background: #3b1d25; color: #ffb9c0; } .preview img, .benchmark { border-color: #34394b; } }
-    @media (max-width: 560px) { .previews, .benchmarks { grid-template-columns: 1fr; } }
-  </style>
 </head>
 <body>
-  <main>
-    <div class="brand"><img src="logo.svg" alt="">KeyScribe <nav class="languages" aria-label="Language"><a href="?lang=en" data-language="en">English</a><a href="?lang=ko" data-language="ko">한국어</a><a href="?lang=zh-CN" data-language="zh-CN">中文</a><a href="?lang=ja" data-language="ja">日本語</a><a href="?lang=es" data-language="es">Español</a></nav></div>
-    <h1 data-en="Type with your voice.">음성으로 타이핑하세요.</h1>
-    <p class="intro" data-en="KeyScribe is a voice typing app that turns speech into text. It is lightweight and responsive because it is built natively with only the essentials. Connect the STT API service you use and start typing.">KeyScribe는 음성을 텍스트로 변환해주는 보이스 입력 앱입니다. 네이티브 코드로 최소한의 기능만 구현했기에 가볍고 쾌적합니다. 본인이 사용하는 STT API 서비스를 연결하여 사용하세요.</p>
+<div style="max-width: 600px; margin: 0 auto">
+<p class="languages">[ <a href="?lang=en" data-language="en">English</a> | <a href="?lang=ko" data-language="ko">한국어</a> | <a href="?lang=zh-CN" data-language="zh-CN">中文</a> | <a href="?lang=ja" data-language="ja">日本語</a> | <a href="?lang=es" data-language="es">Español</a> ]</p>
+<hr>
+<h1><img src="logo.svg" width="40" height="40" alt=""> KeyScribe</h1>
+<p><i data-en="Type with your voice.">음성으로 타이핑하세요.</i></p>
+<p data-en="KeyScribe is a voice typing app that turns speech into text. It is lightweight and responsive because it is built natively with only the essentials. Connect the STT API service you use and start typing.">KeyScribe는 음성을 텍스트로 변환해주는 보이스 입력 앱입니다. 네이티브 코드로 최소한의 기능만 구현했기에 가볍고 쾌적합니다. 본인이 사용하는 STT API 서비스를 연결하여 사용하세요.</p>
+<hr>
 
-    <section class="platform-only mac windows" aria-labelledby="preview-title">
-      <h2 id="preview-title" data-en="Preview">화면 미리보기</h2>
-      <div class="previews">
-        <figure class="preview platform-only mac"><img src="screenshots/macos-menu-preview.png" alt="macOS 메뉴 막대에서 열린 KeyScribe 메뉴" data-en-alt="The KeyScribe menu open in the macOS menu bar"><figcaption data-en="macOS menu bar">macOS 메뉴 막대</figcaption></figure>
-        <figure class="preview platform-only windows"><img src="screenshots/windows-menu-preview.png" alt="Windows 트레이에서 열린 KeyScribe 메뉴" data-en-alt="The KeyScribe menu open in the Windows system tray"><figcaption data-en="Windows system tray">Windows 시스템 트레이</figcaption></figure>
-        <figure class="preview platform-only mac"><img src="screenshots/keyscribe-flow.gif" alt="KeyScribe가 녹음하고 텍스트를 입력하는 macOS 화면" data-en-alt="KeyScribe recording and inserting text on macOS"><figcaption data-en="Voice typing flow">음성 입력 흐름</figcaption></figure>
-        <figure class="preview platform-only windows"><img src="screenshots/keyscribe-windows-flow.gif" alt="KeyScribe가 녹음하고 텍스트를 입력하는 Windows 화면" data-en-alt="KeyScribe recording and inserting text on Windows"><figcaption data-en="Voice typing flow">음성 입력 흐름</figcaption></figure>
-      </div>
-    </section>
+<h2 data-en="Contents">목차</h2>
+<ol>
+<li><a href="#motivation" data-en="Motivation">개발 동기</a></li>
+<li><a href="#download" data-en="Download">다운로드</a></li>
+<li><a href="#how" data-en="How it works">사용 방법</a></li>
+<li><a href="#preview" data-en="Preview">화면 미리보기</a></li>
+<li><a href="#memory" data-en="Memory usage">사용 메모리</a></li>
+<li><a href="#info" data-en="Distribution">배포 정보</a></li>
+</ol>
+<hr>
 
-    <section aria-labelledby="download-title">
-      <h2 id="download-title" data-en="Download">다운로드</h2>
-      <div class="downloads">
-        <a class="download platform-only mac" href="https://github.com/zidell/keyscribe/releases/tag/macos-v__MACOS_VERSION__"><span data-en="Download for macOS">macOS 다운로드</span> <small data-en="Apple Silicon __MACOS_ARM64_SIZE__ or Intel __MACOS_X64_SIZE__ · DMG">Apple Silicon __MACOS_ARM64_SIZE__ 또는 Intel __MACOS_X64_SIZE__ · DMG</small></a>
-        <a class="download platform-only windows" data-windows-store href="__WINDOWS_STORE_URL__"><span data-en="Get it from Microsoft Store">Microsoft Store에서 받기</span> <small>Windows 10/11 · x64</small></a>
-        <a class="download platform-only linux" href="https://github.com/zidell/keyscribe/releases/download/linux-v__LINUX_VERSION__/KeyScribe-ubuntu-amd64-__LINUX_VERSION__.deb"><span data-en="Download for Ubuntu">Ubuntu 다운로드</span> <small data-en="Ubuntu 24.04+ · amd64 · DEB">Ubuntu 24.04 이상 · amd64 · DEB</small></a>
-      </div>
-      <p class="note platform-only mac" data-en-template="macOS version {version} · Updates are offered in the app.">macOS 버전 __MACOS_VERSION__ · 새 버전은 앱에서 알려 줍니다.</p>
-      <p class="note platform-only linux" data-en-template="Ubuntu version {version} · Open the downloaded DEB to install. The app tells you when a new version is out.">Ubuntu 버전 __LINUX_VERSION__ · 다운로드한 DEB 파일을 열어 설치하세요. 새 버전이 나오면 앱이 알려 줍니다.</p>
-      <p class="note platform-only windows" data-windows-store data-en="Installed from the Microsoft Store, KeyScribe updates automatically.">Microsoft Store에서 설치하면 자동으로 업데이트됩니다.</p>
-      <p class="note platform-only windows" data-windows-pending data-en="The Windows version is coming to the Microsoft Store.">Windows 버전은 Microsoft Store 출시를 준비하고 있습니다.</p>
-    </section>
+<h2 id="motivation">1. <span data-en="Motivation">개발 동기</span></h2>
+<p data-en="There were already plenty of voice typing tools, but they were too heavy in memory and features for what they did, and the speech recognition built into the OS was just not quite accurate enough. So I built an app that does only the essentials: it turns the words you speak into typed text.">기존의 수많은 보이스앱 입력도구들이 있었지만 기능에 비해 메모리나 기능이 너무 무거운 단점이 있었고, OS에 기본적으로 있는 음성인식은 인식률이 2% 부족했습니다. 그래서 최소한의 기능으로 딱 필요한 말 소리를 타이핑으로 변경해주는 앱을 개발했습니다.</p>
 
-    <section aria-labelledby="how-title">
-      <h2 id="how-title" data-en="How it works">사용 방법</h2>
-      <p class="note platform-only linux" data-en="Ubuntu: register global shortcuts and allow automatic paste in the Shortcuts / Permissions tab. The requested recording shortcut is Ctrl+Alt+Space. On desktops without the required portals, use the recording button and copy the result.">Ubuntu: 단축키 / 권한 탭에서 전역 단축키를 등록하고 자동 붙여넣기를 허용하세요. 기본 요청 단축키는 Ctrl+Alt+Space입니다. 포털을 지원하지 않는 데스크톱에서는 녹음 버튼과 결과 복사를 사용하세요.</p>
-      <p class="warning" data-en-html="<strong>An external API key is required.</strong> <a href=&quot;https://platform.openai.com/api-keys&quot;>OpenAI ↗</a> · <a href=&quot;https://elevenlabs.io/app/developers/api-keys&quot;>ElevenLabs ↗</a> · <a href=&quot;https://console.groq.com/keys&quot;>Groq ↗</a>"><strong>외부 API 키가 필수입니다.</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a></p>
-      <ol>
-        <li data-en-html="Open the app and enter an ElevenLabs, OpenAI, or Groq API key in <strong>Settings...</strong> from the menu bar or system tray.">앱을 실행하고 메뉴바 또는 트레이의 <strong>설정...</strong>에서 ElevenLabs, OpenAI 또는 Groq API 키를 입력합니다.</li>
-        <li data-en="Allow microphone access. On macOS, also allow Accessibility access.">마이크 접근을 허용합니다. macOS에서는 손쉬운 사용 권한도 허용합니다.</li>
-        <li data-en="Put the cursor where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to insert the text.">입력할 창에 커서를 놓고 오른쪽 Command(macOS), 오른쪽 Alt(Windows) 또는 Ctrl+Alt+Space(Ubuntu)를 누른 채 말합니다. 키를 놓으면 글이 입력됩니다.</li>
-      </ol>
-      <p class="note" data-en="In Settings, you can change the shortcut, transcription language, recording time limit, and whether to send automatically after pasting.">설정에서 단축키, 인식 언어, 녹음 시간 제한과 붙여넣기 후 자동 전송 여부를 바꿀 수 있습니다.</p>
-    </section>
+<h2 id="download">2. <span data-en="Download">다운로드</span></h2>
+<ul>
+<li><a href="https://github.com/zidell/keyscribe/releases/tag/macos-v__MACOS_VERSION__" data-en="Download for macOS">macOS 다운로드</a> (<span data-en="Apple Silicon __MACOS_ARM64_SIZE__ or Intel __MACOS_X64_SIZE__ · DMG">Apple Silicon __MACOS_ARM64_SIZE__ 또는 Intel __MACOS_X64_SIZE__ · DMG</span>)</li>
+<li data-windows-store><a href="__WINDOWS_STORE_URL__" data-en="Get it from Microsoft Store">Microsoft Store에서 받기</a> (Windows 10/11 · x64)</li>
+<li><a href="https://github.com/zidell/keyscribe/releases/download/linux-v__LINUX_VERSION__/KeyScribe-ubuntu-amd64-__LINUX_VERSION__.deb" data-en="Download for Ubuntu">Ubuntu 다운로드</a> (<span data-en="Ubuntu 24.04+ · amd64 · DEB">Ubuntu 24.04 이상 · amd64 · DEB</span>)</li>
+</ul>
+<p data-en-template="macOS version {version} · Updates are offered in the app.">macOS 버전 __MACOS_VERSION__ · 새 버전은 앱에서 알려 줍니다.</p>
+<p data-windows-store data-en="Installed from the Microsoft Store, KeyScribe updates automatically.">Microsoft Store에서 설치하면 자동으로 업데이트됩니다.</p>
+<p data-windows-pending data-en="The Windows version is coming to the Microsoft Store.">Windows 버전은 Microsoft Store 출시를 준비하고 있습니다.</p>
+<p data-en-template="Ubuntu version {version} · Open the downloaded DEB to install. The app tells you when a new version is out.">Ubuntu 버전 __LINUX_VERSION__ · 다운로드한 DEB 파일을 열어 설치하세요. 새 버전이 나오면 앱이 알려 줍니다.</p>
 
-    <section aria-labelledby="benchmark-title">
-      <h2 id="benchmark-title" data-en="Memory usage">사용 메모리</h2>
-      <p class="note" data-en="We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.">쓸데없는 기능 다 빼고 최소한의 기능만 넣어서 가볍습니다. 아래는 대기 상태 벤치마크 결과이며, 운영체제와 설정에 따라 달라질 수 있습니다.</p>
-      <div class="benchmarks">
-        <div class="benchmark"><strong>macOS</strong><b>19.6MB</b><small data-en="Idle memory">대기 메모리</small><small data-en="Swift · AppKit">Swift · AppKit</small></div>
-        <div class="benchmark"><strong>Windows</strong><b>12.18MiB</b><small data-en="Idle memory">대기 메모리</small><small data-en="Rust · Win32 API">Rust · Win32 API</small></div>
-      </div>
-    </section>
+<h2 id="how">3. <span data-en="How it works">사용 방법</span></h2>
+<p data-en-html="<strong>An external API key is required.</strong> <a href=&quot;https://platform.openai.com/api-keys&quot;>OpenAI ↗</a> · <a href=&quot;https://elevenlabs.io/app/developers/api-keys&quot;>ElevenLabs ↗</a> · <a href=&quot;https://console.groq.com/keys&quot;>Groq ↗</a>"><strong>외부 API 키가 필수입니다.</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a></p>
+<ol>
+<li data-en-html="Open the app and enter an ElevenLabs, OpenAI, or Groq API key in <strong>Settings...</strong> from the menu bar or system tray.">앱을 실행하고 메뉴바 또는 트레이의 <strong>설정...</strong>에서 ElevenLabs, OpenAI 또는 Groq API 키를 입력합니다.</li>
+<li data-en="Allow microphone access. On macOS, also allow Accessibility access.">마이크 접근을 허용합니다. macOS에서는 손쉬운 사용 권한도 허용합니다.</li>
+<li data-en="Put the cursor where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to insert the text.">입력할 창에 커서를 놓고 오른쪽 Command(macOS), 오른쪽 Alt(Windows) 또는 Ctrl+Alt+Space(Ubuntu)를 누른 채 말합니다. 키를 놓으면 글이 입력됩니다.</li>
+</ol>
+<p data-en="In Settings, you can change the shortcut, transcription language, recording time limit, and whether to send automatically after pasting.">설정에서 단축키, 인식 언어, 녹음 시간 제한과 붙여넣기 후 자동 전송 여부를 바꿀 수 있습니다.</p>
+<p data-en="Ubuntu: register global shortcuts and allow automatic paste in the Shortcuts / Permissions tab. The requested recording shortcut is Ctrl+Alt+Space. On desktops without the required portals, use the recording button and copy the result.">Ubuntu: 단축키 / 권한 탭에서 전역 단축키를 등록하고 자동 붙여넣기를 허용하세요. 기본 요청 단축키는 Ctrl+Alt+Space입니다. 포털을 지원하지 않는 데스크톱에서는 녹음 버튼과 결과 복사를 사용하세요.</p>
 
-    <section aria-labelledby="info-title">
-      <h2 id="info-title" data-en="Distribution">배포 정보</h2>
-      <p class="note"><a href="https://github.com/zidell/keyscribe/blob/main/docs/privacy.md" data-en="Privacy">개인정보 안내</a> · <a href="https://github.com/zidell/keyscribe/blob/main/LICENSE">MIT License</a></p>
-    </section>
-  </main>
+<h2 id="preview">4. <span data-en="Preview">화면 미리보기</span></h2>
+<p><a href="screenshots/macos-menu-preview.png"><img src="screenshots/macos-menu-preview.png" width="320" height="200" alt="macOS 메뉴 막대에서 열린 KeyScribe 메뉴" data-en-alt="The KeyScribe menu open in the macOS menu bar"></a><br>Fig. 1. <span data-en="macOS menu bar">macOS 메뉴 막대</span></p>
+<p><a href="screenshots/keyscribe-flow.gif"><img src="screenshots/keyscribe-flow.gif" width="320" height="200" alt="KeyScribe가 녹음하고 텍스트를 입력하는 macOS 화면" data-en-alt="KeyScribe recording and inserting text on macOS"></a><br>Fig. 2. <span data-en="Voice typing flow">음성 입력 흐름</span> (macOS)</p>
+<p><a href="screenshots/windows-menu-preview.png"><img src="screenshots/windows-menu-preview.png" width="320" height="200" alt="Windows 트레이에서 열린 KeyScribe 메뉴" data-en-alt="The KeyScribe menu open in the Windows system tray"></a><br>Fig. 3. <span data-en="Windows system tray">Windows 시스템 트레이</span></p>
+<p><a href="screenshots/keyscribe-windows-flow.gif"><img src="screenshots/keyscribe-windows-flow.gif" width="320" height="200" alt="KeyScribe가 녹음하고 텍스트를 입력하는 Windows 화면" data-en-alt="KeyScribe recording and inserting text on Windows"></a><br>Fig. 4. <span data-en="Voice typing flow">음성 입력 흐름</span> (Windows)</p>
+
+<h2 id="memory">5. <span data-en="Memory usage">사용 메모리</span></h2>
+<p data-en="We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.">쓸데없는 기능 다 빼고 최소한의 기능만 넣어서 가볍습니다. 아래는 대기 상태 벤치마크 결과이며, 운영체제와 설정에 따라 달라질 수 있습니다.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>OS</th><th data-en="Idle memory">대기 메모리</th><th data-en="Implementation">구현</th></tr>
+<tr><td>macOS</td><td align="right">19.6MB</td><td>Swift · AppKit</td></tr>
+<tr><td>Windows</td><td align="right">12.18MiB</td><td>Rust · Win32 API</td></tr>
+</table>
+
+<h2 id="info">6. <span data-en="Distribution">배포 정보</span></h2>
+<ul>
+<li><a href="https://github.com/zidell/keyscribe/blob/main/docs/privacy.md" data-en="Privacy">개인정보 안내</a></li>
+<li><a href="https://github.com/zidell/keyscribe/blob/main/LICENSE">MIT License</a></li>
+</ul>
+<hr>
+<address><a href="https://github.com/zidell/keyscribe">github.com/zidell/keyscribe</a></address>
+</div>
   <script>
-    const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent;
     const requestedLanguage = new URLSearchParams(location.search).get('lang');
     const normalizeLanguage = (value) => {
       const language = (value || '').toLowerCase();
@@ -135,7 +106,7 @@
         'Preview': 'プレビュー', 'macOS menu bar': 'macOSメニューバー', 'Windows system tray': 'Windowsシステムトレイ', 'Voice typing flow': '音声入力の流れ',
         'Download': 'ダウンロード', 'Download for macOS': 'macOS版をダウンロード', 'Apple Silicon __MACOS_ARM64_SIZE__ or Intel __MACOS_X64_SIZE__ · DMG': 'Apple Silicon __MACOS_ARM64_SIZE__ または Intel __MACOS_X64_SIZE__ · DMG', 'macOS version {version} · Updates are offered in the app.': 'macOS版 {version} · 新しいバージョンはアプリがお知らせします。', 'Installed from the Microsoft Store, KeyScribe updates automatically.': 'Microsoft Storeからインストールすると自動で更新されます。', 'The Windows version is coming to the Microsoft Store.': 'Windows版はMicrosoft Storeでの公開を準備しています。', 'Get it from Microsoft Store': 'Microsoft Storeから入手', 'Download for Ubuntu': 'Ubuntu版をダウンロード', 'Ubuntu 24.04+ · amd64 · DEB': 'Ubuntu 24.04以降 · amd64 · DEB', 'Ubuntu version {version} · Open the downloaded DEB to install. The app tells you when a new version is out.': 'Ubuntu版 {version} · ダウンロードしたDEBファイルを開いてインストールしてください。新しいバージョンが出るとアプリがお知らせします。', 'Ubuntu: register global shortcuts and allow automatic paste in the Shortcuts / Permissions tab. The requested recording shortcut is Ctrl+Alt+Space. On desktops without the required portals, use the recording button and copy the result.': 'Ubuntu：ショートカット / 権限タブでグローバルショートカットを登録し、自動貼り付けを許可してください。既定で要求する録音ショートカットはCtrl+Alt+Spaceです。必要なポータルがないデスクトップでは、録音ボタンを使い、結果をコピーしてください。',
         'How it works': '使い方', 'Allow microphone access. On macOS, also allow Accessibility access.': 'マイクへのアクセスを許可してください。macOSではアクセシビリティへのアクセスも許可します。', 'Put the cursor where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to insert the text.': '入力したい位置にカーソルを置き、右Command（macOS）、右Alt（Windows）、またはCtrl+Alt+Space（Ubuntu）を押したまま話します。キーを離すとテキストが入力されます。', 'In Settings, you can change the shortcut, transcription language, recording time limit, and whether to send automatically after pasting.': '設定では、ショートカット、文字起こし言語、録音時間制限、貼り付け後の自動送信を変更できます。',
-        'Memory usage': 'メモリ使用量', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': '不要な機能を省き、必要な機能だけに絞ることで軽量にしています。待機時のベンチマーク結果はOSや設定によって異なる場合があります。', 'Idle memory': '待機時メモリ', 'Distribution': '配布情報', 'Privacy': 'プライバシー'
+        'Memory usage': 'メモリ使用量', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': '不要な機能を省き、必要な機能だけに絞ることで軽量にしています。待機時のベンチマーク結果はOSや設定によって異なる場合があります。', 'Idle memory': '待機時メモリ', 'Motivation': '開発の動機', 'There were already plenty of voice typing tools, but they were too heavy in memory and features for what they did, and the speech recognition built into the OS was just not quite accurate enough. So I built an app that does only the essentials: it turns the words you speak into typed text.': '既存の音声入力ツールはたくさんありましたが、機能のわりにメモリも機能も重すぎるのが難点でした。OS標準の音声認識は、認識精度があと一歩足りませんでした。そこで、必要な機能だけに絞り、話した言葉をそのまま文字入力に変えるアプリを開発しました。', 'Contents': '目次', 'Implementation': '実装', 'Distribution': '配布情報', 'Privacy': 'プライバシー'
       },
       'zh-CN': {
         'Type with your voice.': '用语音输入。',
@@ -143,7 +114,7 @@
         'Preview': '预览', 'macOS menu bar': 'macOS 菜单栏', 'Windows system tray': 'Windows 系统托盘', 'Voice typing flow': '语音输入流程',
         'Download': '下载', 'Download for macOS': '下载 macOS 版', 'Apple Silicon __MACOS_ARM64_SIZE__ or Intel __MACOS_X64_SIZE__ · DMG': 'Apple Silicon __MACOS_ARM64_SIZE__ 或 Intel __MACOS_X64_SIZE__ · DMG', 'macOS version {version} · Updates are offered in the app.': 'macOS 版 {version} · 有新版本时应用会提示。', 'Installed from the Microsoft Store, KeyScribe updates automatically.': '从 Microsoft Store 安装后会自动更新。', 'The Windows version is coming to the Microsoft Store.': 'Windows 版正在准备上架 Microsoft Store。', 'Get it from Microsoft Store': '从 Microsoft Store 获取', 'Download for Ubuntu': '下载 Ubuntu 版', 'Ubuntu 24.04+ · amd64 · DEB': 'Ubuntu 24.04 及以上 · amd64 · DEB', 'Ubuntu version {version} · Open the downloaded DEB to install. The app tells you when a new version is out.': 'Ubuntu 版 {version} · 打开下载的 DEB 文件即可安装。有新版本时应用会提示。', 'Ubuntu: register global shortcuts and allow automatic paste in the Shortcuts / Permissions tab. The requested recording shortcut is Ctrl+Alt+Space. On desktops without the required portals, use the recording button and copy the result.': 'Ubuntu：请在“快捷键 / 权限”标签页注册全局快捷键并允许自动粘贴。默认请求的录音快捷键为 Ctrl+Alt+Space。在缺少所需门户的桌面上，请使用录音按钮并复制结果。',
         'How it works': '使用方法', 'Allow microphone access. On macOS, also allow Accessibility access.': '请允许访问麦克风。在 macOS 上，还需允许“辅助功能”访问。', 'Put the cursor where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to insert the text.': '将光标放在要输入文字的位置，按住右 Command（macOS）、右 Alt（Windows）或 Ctrl+Alt+Space（Ubuntu）说话。松开按键即可插入文字。', 'In Settings, you can change the shortcut, transcription language, recording time limit, and whether to send automatically after pasting.': '您可在设置中更改快捷键、转写语言、录音时间限制，以及粘贴后是否自动发送。',
-        'Memory usage': '内存占用', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': '我们去除了不必要的功能，只保留核心功能，因此应用十分轻量。待机内存测试结果可能因操作系统和配置而异。', 'Idle memory': '待机内存', 'Distribution': '发布信息', 'Privacy': '隐私说明'
+        'Memory usage': '内存占用', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': '我们去除了不必要的功能，只保留核心功能，因此应用十分轻量。待机内存测试结果可能因操作系统和配置而异。', 'Idle memory': '待机内存', 'Motivation': '开发动机', 'There were already plenty of voice typing tools, but they were too heavy in memory and features for what they did, and the speech recognition built into the OS was just not quite accurate enough. So I built an app that does only the essentials: it turns the words you speak into typed text.': '市面上已有许多语音输入工具，但相对于功能而言，它们占用的内存和功能都过于臃肿；而操作系统自带的语音识别，准确率又总是差那么一点。因此我开发了这款应用，只保留最少的功能，把说出的话直接变成键入的文字。', 'Contents': '目录', 'Implementation': '实现', 'Distribution': '发布信息', 'Privacy': '隐私说明'
       },
       es: {
         'Type with your voice.': 'Escribe con tu voz.',
@@ -151,7 +122,7 @@
         'Preview': 'Vista previa', 'macOS menu bar': 'Barra de menús de macOS', 'Windows system tray': 'Bandeja del sistema de Windows', 'Voice typing flow': 'Flujo de dictado por voz',
         'Download': 'Descargar', 'Download for macOS': 'Descargar para macOS', 'Apple Silicon __MACOS_ARM64_SIZE__ or Intel __MACOS_X64_SIZE__ · DMG': 'Apple Silicon __MACOS_ARM64_SIZE__ o Intel __MACOS_X64_SIZE__ · DMG', 'macOS version {version} · Updates are offered in the app.': 'Versión para macOS {version} · La aplicación avisa cuando hay una versión nueva.', 'Installed from the Microsoft Store, KeyScribe updates automatically.': 'Si la instalas desde Microsoft Store, se actualiza automáticamente.', 'The Windows version is coming to the Microsoft Store.': 'La versión para Windows llegará pronto a Microsoft Store.', 'Get it from Microsoft Store': 'Obtener en Microsoft Store', 'Download for Ubuntu': 'Descargar para Ubuntu', 'Ubuntu version {version} · Open the downloaded DEB to install. The app tells you when a new version is out.': 'Versión para Ubuntu {version} · Abre el DEB descargado para instalarlo. La aplicación avisa cuando hay una versión nueva.', 'Ubuntu: register global shortcuts and allow automatic paste in the Shortcuts / Permissions tab. The requested recording shortcut is Ctrl+Alt+Space. On desktops without the required portals, use the recording button and copy the result.': 'Ubuntu: registra los atajos globales y permite el pegado automático en la pestaña Atajos / Permisos. El atajo de grabación solicitado es Ctrl+Alt+Space. En escritorios sin los portales necesarios, usa el botón de grabación y copia el resultado.',
         'How it works': 'Cómo funciona', 'Allow microphone access. On macOS, also allow Accessibility access.': 'Permite el acceso al micrófono. En macOS, permite también el acceso de Accesibilidad.', 'Put the cursor where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to insert the text.': 'Coloca el cursor donde quieras escribir y mantén pulsada la tecla Command derecha (macOS), Alt derecha (Windows) o Ctrl+Alt+Space (Ubuntu) mientras hablas. Suelta la tecla para insertar el texto.', 'In Settings, you can change the shortcut, transcription language, recording time limit, and whether to send automatically after pasting.': 'En Configuración puedes cambiar el atajo, el idioma de transcripción, el límite de tiempo de grabación y el envío automático tras pegar.',
-        'Memory usage': 'Uso de memoria', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': 'Mantenemos la aplicación ligera eliminando funciones innecesarias e incluyendo solo lo esencial. Los resultados de memoria en reposo pueden variar según el sistema operativo y la configuración.', 'Idle memory': 'Memoria en reposo', 'Distribution': 'Distribución', 'Privacy': 'Privacidad'
+        'Memory usage': 'Uso de memoria', 'We keep it lightweight by removing unnecessary features and including only the essentials. Idle-state benchmark results may vary with the operating system and configuration.': 'Mantenemos la aplicación ligera eliminando funciones innecesarias e incluyendo solo lo esencial. Los resultados de memoria en reposo pueden variar según el sistema operativo y la configuración.', 'Idle memory': 'Memoria en reposo', 'Motivation': 'Motivación', 'There were already plenty of voice typing tools, but they were too heavy in memory and features for what they did, and the speech recognition built into the OS was just not quite accurate enough. So I built an app that does only the essentials: it turns the words you speak into typed text.': 'Ya existían muchas herramientas de dictado, pero eran demasiado pesadas en memoria y funciones para lo que hacían, y el reconocimiento de voz integrado en el sistema operativo se quedaba un poco corto en precisión. Por eso desarrollé una aplicación con lo mínimo: convierte en texto escrito justo lo que dices.', 'Contents': 'Contenido', 'Implementation': 'Implementación', 'Distribution': 'Distribución', 'Privacy': 'Privacidad'
       }
     };
     const htmlCopy = {
@@ -160,7 +131,6 @@
       'zh-CN': {'<strong>An external API key is required.</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a>': '<strong>需要外部 API 密钥。</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a>', 'Open the app and enter an ElevenLabs, OpenAI, or Groq API key in <strong>Settings...</strong> from the menu bar or system tray.': '打开应用，在菜单栏或系统托盘的<strong>设置...</strong>中输入 ElevenLabs、OpenAI 或 Groq API 密钥。'},
       es: {'<strong>An external API key is required.</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a>': '<strong>Se requiere una clave de API externa.</strong> <a href="https://platform.openai.com/api-keys">OpenAI ↗</a> · <a href="https://elevenlabs.io/app/developers/api-keys">ElevenLabs ↗</a> · <a href="https://console.groq.com/keys">Groq ↗</a>', 'Open the app and enter an ElevenLabs, OpenAI, or Groq API key in <strong>Settings...</strong> from the menu bar or system tray.': 'Abre la aplicación e introduce una clave de API de ElevenLabs, OpenAI o Groq en <strong>Configuración...</strong>, desde la barra de menús o la bandeja del sistema.'}
     };
-    document.documentElement.dataset.platform = /mac/i.test(platform) ? 'mac' : /win/i.test(platform) ? 'windows' : /linux/i.test(platform) && !/android/i.test(navigator.userAgent) ? 'linux' : 'other';
     document.documentElement.lang = locale;
     document.querySelectorAll('.languages a').forEach((link) => { link.setAttribute('aria-current', String(link.dataset.language === locale)); });
     if (locale !== 'ko') {
