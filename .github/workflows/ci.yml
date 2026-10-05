@@ -18,8 +18,8 @@ jobs:
       - name: Build native app
         run: swift build --package-path native/macos
 
-  windows-test-and-coverage:
-    name: Windows tests and coverage
+  windows-test:
+    name: Windows tests
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -27,19 +27,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Run tests and create LCOV report
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path coverage -Force | Out-Null
-          cargo llvm-cov --manifest-path native/windows/Cargo.toml --lcov --output-path coverage/lcov.info
-      - name: Upload coverage to Codecov
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/lcov.info
-          fail_ci_if_error: false
+      - name: Run tests
+        run: cargo test --manifest-path native/windows/Cargo.toml
 
   linux-build-and-test:
     name: Ubuntu native build and tests
