@@ -1,10 +1,10 @@
 # KeyScribe
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> KeyScribe es un proyecto personal publicado de forma gratuita. Puedes usarlo libremente, pero no se aceptan sugerencias de funciones, informes de errores ni solicitudes de soporte. Si necesitas algo distinto, haz un fork bajo la licencia MIT y adáptalo.
+> KeyScribe es un proyecto personal publicado de forma gratuita. Puedes usarlo libremente, pero no se aceptan sugerencias de funciones, informes de errores ni solicitudes de soporte. Si necesitas algo distinto, haz un fork bajo la GPLv3 y adáptalo.
 
 KeyScribe es una aplicación de dictado que transcribe las grabaciones del micrófono y pega el texto resultante en el campo activo. Mantiene deliberadamente un conjunto pequeño de funciones y está implementada de forma nativa, con un objetivo de memoria en reposo de unos 20 MB. No incluye un modelo propio, por lo que necesita una clave de API de OpenAI, ElevenLabs o Groq (Groq puede usarse gratis).
 
@@ -122,4 +122,4 @@ Puedes consultar el estado y los errores en el menú de la barra de menús o de 
 - Ubuntu: `~/.local/share/keyscribe/logs/` (o `$XDG_DATA_HOME/keyscribe/logs/`)
 - Ejecuciones de desarrollo: `dist-native/logs/`
 
-El [aviso de privacidad](docs/privacy.md) explica cómo se envía el audio y se almacenan las claves de API. El código fuente está disponible bajo la [licencia MIT](LICENSE).
+El [aviso de privacidad](docs/privacy.md) explica cómo se envía el audio y se almacenan las claves de API. El código fuente está disponible bajo la [licencia GNU GPL v3](LICENSE).

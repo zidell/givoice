@@ -1,10 +1,10 @@
 # KeyScribe
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> KeyScribe is a personal project released for free. You are welcome to use it, but feature requests, bug reports, and support requests are not accepted. If you need something different, fork it under the MIT License and adapt it.
+> KeyScribe is a personal project released for free. You are welcome to use it, but feature requests, bug reports, and support requests are not accepted. If you need something different, fork it under the GPLv3 and adapt it.
 
 KeyScribe is a voice-input app that transcribes microphone recordings and pastes the resulting text into the active input field. It deliberately keeps the feature set small and is implemented natively, with an idle-memory target of roughly 20 MB. It does not include its own model, so an OpenAI, ElevenLabs, or Groq API key is required (Groq can be used for free).
 
@@ -135,4 +135,4 @@ You can check app status and errors in the menu-bar or tray menu. **Logs & Recor
 
 The [privacy notice](docs/privacy.md) explains how audio is sent and API keys are stored.
 
-The source code is available under the [MIT License](LICENSE).
+The source code is available under the [GNU General Public License v3.0](LICENSE).

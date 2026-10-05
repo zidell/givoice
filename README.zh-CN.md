@@ -1,10 +1,10 @@
 # KeyScribe
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> 这是个人开发并免费公开的应用。欢迎自由使用，但不接受功能建议、错误报告或使用支持请求。如需其他功能，请依据 MIT 许可证 fork 后自行修改。
+> 这是个人开发并免费公开的应用。欢迎自由使用，但不接受功能建议、错误报告或使用支持请求。如需其他功能，请依据 GPLv3 fork 后自行修改。
 
 KeyScribe 是一款语音输入应用：它将麦克风录音转写为文字，并粘贴到当前输入框。应用以原生方式实现，只保留必要功能，目标是在空闲时使用约 20 MB 内存。它不包含自有模型，因此需要 OpenAI、ElevenLabs 或 Groq API 密钥（Groq 可免费使用）。
 
@@ -120,4 +120,4 @@ Groq 密钥归属于所选项目，免费层有请求和音频处理限制。提
 - Ubuntu：`~/.local/share/keyscribe/logs/`（或 `$XDG_DATA_HOME/keyscribe/logs/`）
 - 开发运行：`dist-native/logs/`
 
-[隐私说明](docs/privacy.md)介绍音频传输和 API 密钥存储方式。源代码采用 [MIT 许可证](LICENSE)发布。
+[隐私说明](docs/privacy.md)介绍音频传输和 API 密钥存储方式。源代码采用 [GNU GPL v3 许可证](LICENSE)发布。

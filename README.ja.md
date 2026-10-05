@@ -1,10 +1,10 @@
 # KeyScribe
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> 個人が作って無料で公開しているアプリです。自由に使っていただけますが、機能の提案、バグ報告、使い方のサポートは受け付けていません。必要な機能があれば、MITライセンスに従ってフォークして改変してください。
+> 個人が作って無料で公開しているアプリです。自由に使っていただけますが、機能の提案、バグ報告、使い方のサポートは受け付けていません。必要な機能があれば、GPLv3に従ってフォークして改変してください。
 
 KeyScribeは、マイクの録音を文字起こしし、現在の入力欄へ貼り付ける音声入力アプリです。必要な機能だけをネイティブ実装し、待機時メモリは約20 MBを目標にしています。独自モデルは搭載していないため、OpenAI、ElevenLabs、またはGroqのAPIキーが必要です（Groqは無料でも利用できます）。
 
@@ -121,4 +121,4 @@ Groqキーは選択したプロジェクトに属し、無料枠にはリクエ�
 - Ubuntu: `~/.local/share/keyscribe/logs/`（または`$XDG_DATA_HOME/keyscribe/logs/`）
 - 開発実行: `dist-native/logs/`
 
-[プライバシー通知](docs/privacy.md)では音声送信とAPIキー保存について説明しています。ソースコードは[MITライセンス](LICENSE)で公開しています。
+[プライバシー通知](docs/privacy.md)では音声送信とAPIキー保存について説明しています。ソースコードは[GNU GPL v3ライセンス](LICENSE)で公開しています。
