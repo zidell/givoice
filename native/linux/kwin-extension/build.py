@@ -7,8 +7,8 @@ from pathlib import Path
 import shlex
 import subprocess
 root = Path(__file__).resolve().parent
-headers = Path(os.environ.get('KEYSCRIBE_KWIN_INCLUDE_DIR', '/usr/include'))
-output = Path(os.environ.get('KEYSCRIBE_BUILD_DIR', root.parents[2] / 'dist-native/linux'))
+headers = Path(os.environ.get('GIVOICE_KWIN_INCLUDE_DIR', '/usr/include'))
+output = Path(os.environ.get('GIVOICE_BUILD_DIR', root.parents[2] / 'dist-native/linux'))
 output.mkdir(parents=True, exist_ok=True)
 include = ['-I' + str(root), '-I' + str(output), '-I' + str(headers / 'kwin'),
            '-I' + str(headers / 'KF6/KConfig')]
@@ -16,11 +16,11 @@ for name in ['KCoreAddons', 'KConfigCore', 'KConfigGui', 'KWindowSystem']:
     include.append('-I' + str(headers / 'KF6' / name))
 source = root / 'escape.cpp'
 name = 'escape'
-binary = 'keyscribe-escape'
+binary = 'givoice-escape'
 if '--test-driver' in sys.argv:
     source = root.parent / 'tests/kwin_escape_driver.cpp'
     name = 'kwin_escape_driver'
-    binary = 'keyscribe-escape-driver'
+    binary = 'givoice-escape-driver'
 include.append('-I' + str(source.parent))
 qt = shlex.split(subprocess.check_output(
     ['pkg-config', '--cflags', '--libs', 'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6DBus'], text=True))
@@ -45,11 +45,11 @@ if '--test-driver' not in sys.argv:
             ['pkg-config', '--cflags', '--libs', 'Qt6Core', 'Qt6DBus'], text=True))
         qml += ['-I' + str(qml_headers), '-I' + str(qml_headers / 'QtQml'), '-l:libQt6Qml.so.6']
     source = root / 'bootstrap.cpp'
-    plugin_dir = Path(os.environ.get('KEYSCRIBE_INSTALL_PREFIX', Path.home() / '.local')) / 'lib/qt6/plugins'
-    define = '-DKEYSCRIBE_KWIN_PLUGIN_DIR=' + json.dumps(str(plugin_dir))
+    plugin_dir = Path(os.environ.get('GIVOICE_INSTALL_PREFIX', Path.home() / '.local')) / 'lib/qt6/plugins'
+    define = '-DGIVOICE_KWIN_PLUGIN_DIR=' + json.dumps(str(plugin_dir))
     subprocess.run(['/usr/lib/qt6/libexec/moc',
         *[v for v in qml if v.startswith(('-I', '-D'))], str(source),
         '-o', str(output / 'bootstrap.moc')], check=True)
     subprocess.run(['g++', '-std=c++20', '-fPIC', '-shared', '-O2', '-Wall', '-Wextra',
         '-Wl,-z,defs', '-I' + str(output), define, str(source),
-        '-o', str(output / 'libkeyscribebootstrap.so'), *qml], check=True)
+        '-o', str(output / 'libgivoicebootstrap.so'), *qml], check=True)

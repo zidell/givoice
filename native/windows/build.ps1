@@ -33,7 +33,7 @@ if ($linker) {
     $installationRoot = Split-Path $bin
     $staticUnwind = Join-Path $installationRoot 'x86_64-w64-mingw32\lib\libunwind.a'
     if (-not (Test-Path -LiteralPath $staticUnwind)) { throw 'Static libunwind.a was not found.' }
-    $staticDirectory = Join-Path $env:TEMP 'keyscribe-static-unwind'
+    $staticDirectory = Join-Path $env:TEMP 'givoice-static-unwind'
     New-Item -ItemType Directory -Path $staticDirectory -Force | Out-Null
     Copy-Item -LiteralPath $staticUnwind -Destination (Join-Path $staticDirectory 'libunwind.a') -Force
     $env:PATH = "$bin;$env:PATH"
@@ -45,7 +45,7 @@ if ($linker) {
 }
 if ($LASTEXITCODE -ne 0) { throw 'Rust build failed.' }
 
-$built = Join-Path $PSScriptRoot "target\$profile\KeyScribe.exe"
+$built = Join-Path $PSScriptRoot "target\$profile\Givoice.exe"
 if (-not (Test-Path -LiteralPath $built)) { throw "Build output missing: $built" }
 if ($NoCopy) {
     # The watcher swaps the executable only after a successful build.
@@ -54,7 +54,7 @@ if ($NoCopy) {
 }
 $outputDirectory = Join-Path $root 'dist-native'
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
-$output = Join-Path $outputDirectory 'KeyScribe.exe'
+$output = Join-Path $outputDirectory 'Givoice.exe'
 Copy-Item -LiteralPath $built -Destination $output -Force
 Copy-Item -LiteralPath (Join-Path $root 'docs\readme.txt') -Destination (Join-Path $outputDirectory 'readme.txt') -Force
 Write-Output $output

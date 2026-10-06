@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-output="${KEYSCRIBE_BUILD_DIR:-$root/dist-native/linux}"
+output="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}"
 mkdir -p "$output"
 settings_sources=("$root/native/linux/src/settings.c" "$root/native/linux/vendor/tomlc17/tomlc17.c")
 if [[ "${1:-}" == --kde-escape ]]; then
@@ -25,7 +25,7 @@ read -r -a libs <<< "$(pkg-config --libs gio-2.0 libcurl json-glib-1.0)"
 "$output/core-test"
 
 "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${cflags[@]}" -I"$root/native/linux/src" \
-  '-DKEYSCRIBE_TEST_ENDPOINT=g_getenv("KEYSCRIBE_TEST_ENDPOINT")' \
+  '-DGIVOICE_TEST_ENDPOINT=g_getenv("GIVOICE_TEST_ENDPOINT")' \
   "$root/native/linux/tests/transcribe_fixture.c" "$root/native/linux/src/core.c" "${settings_sources[@]}" -o "$output/transcribe-fixture" ${LDFLAGS:-} "${libs[@]}"
 python3 "$root/native/linux/tests/http_test.py" "$output/transcribe-fixture"
 if [[ "${1:-}" == --desktop ]]; then

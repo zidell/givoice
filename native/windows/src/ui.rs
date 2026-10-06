@@ -147,9 +147,9 @@ unsafe fn decode_icon(png: &[u8]) -> HICON {
 
 unsafe fn tray_icons() -> TrayIcons {
     let decoded = [
-        include_bytes!(concat!(env!("OUT_DIR"), "/keyscribe-tray.png")).as_slice(),
-        include_bytes!(concat!(env!("OUT_DIR"), "/keyscribe-tray-recording.png")).as_slice(),
-        include_bytes!(concat!(env!("OUT_DIR"), "/keyscribe-tray-transcribing.png")).as_slice(),
+        include_bytes!(concat!(env!("OUT_DIR"), "/givoice-tray.png")).as_slice(),
+        include_bytes!(concat!(env!("OUT_DIR"), "/givoice-tray-recording.png")).as_slice(),
+        include_bytes!(concat!(env!("OUT_DIR"), "/givoice-tray-transcribing.png")).as_slice(),
     ]
     .map(|png| decode_icon(png));
     if decoded.iter().all(|icon| !icon.is_null()) {
@@ -184,7 +184,7 @@ mod icon_tests {
             let icons = tray_icons();
             assert!(
                 icons.owned,
-                "Windows did not decode the KeyScribe PNG icons"
+                "Windows did not decode the Givoice PNG icons"
             );
             assert!(!icons.idle.is_null());
             assert_ne!(icons.idle, icons.recording);
@@ -324,8 +324,8 @@ pub fn run() -> Result<(), String> {
         if instance.is_null() {
             return Err("Windows 모듈을 찾을 수 없습니다".into());
         }
-        let root_class = wide("KeyScribeNativeRoot");
-        let settings_class = wide("KeyScribeNativeSettings");
+        let root_class = wide("GivoiceNativeRoot");
+        let settings_class = wide("GivoiceNativeSettings");
         let icons = tray_icons();
         TASKBAR_CREATED.store(
             RegisterWindowMessageW(wide("TaskbarCreated").as_ptr()),
@@ -359,7 +359,7 @@ pub fn run() -> Result<(), String> {
         let hwnd = CreateWindowExW(
             0,
             root_class.as_ptr(),
-            wide("KeyScribe").as_ptr(),
+            wide("Givoice").as_ptr(),
             WS_OVERLAPPEDWINDOW,
             0,
             0,
@@ -371,7 +371,7 @@ pub fn run() -> Result<(), String> {
             ptr::null(),
         );
         if hwnd.is_null() {
-            return Err("KeyScribe 창을 만들지 못했습니다".into());
+            return Err("Givoice 창을 만들지 못했습니다".into());
         }
         crate::debug_log::log(|| "root window created".into());
         let settings = Settings::load();
@@ -384,7 +384,7 @@ pub fn run() -> Result<(), String> {
         tray.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
         tray.uCallbackMessage = TRAY_MESSAGE;
         tray.hIcon = icons.idle;
-        write_wide(&mut tray.szTip, "KeyScribe · 준비됨");
+        write_wide(&mut tray.szTip, "Givoice · 준비됨");
         let overlay = overlay::create(instance, hwnd);
         overlay::set_position(overlay, &settings.overlay_position);
         let state = Box::new(App {
@@ -417,8 +417,8 @@ pub fn run() -> Result<(), String> {
         });
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, Box::into_raw(state) as isize);
         ROOT.store(hwnd as isize, Ordering::SeqCst);
-        if std::env::var_os("KEYSCRIBE_DEBUG_LOG").is_some() {
-            let event_name = wide(&format!("Local\\KeyScribeDevStop-{}", std::process::id()));
+        if std::env::var_os("GIVOICE_DEBUG_LOG").is_some() {
+            let event_name = wide(&format!("Local\\GivoiceDevStop-{}", std::process::id()));
             let event = CreateEventW(ptr::null(), 0, 0, event_name.as_ptr());
             if !event.is_null() {
                 DEV_STOP_EVENT.store(event as isize, Ordering::SeqCst);
@@ -461,7 +461,7 @@ pub fn run() -> Result<(), String> {
     }
 }
 
-// Escape belongs to KeyScribe alone while the overlay is up: cancelling a
+// Escape belongs to Givoice alone while the overlay is up: cancelling a
 // recording or a transcription must not also close a dialog or drop an editor
 // out of insert mode in the foreground window. Swallowing the key down keeps it
 // from reaching any other process, and the matching key up follows it so
@@ -818,7 +818,7 @@ unsafe fn tray_menu(hwnd: HWND) {
     if menu.is_null() {
         return;
     }
-    // 메뉴를 띄우면 포커스가 KeyScribe로 넘어오니, 그 전의 대상을 먼저 붙잡아 둔다.
+    // 메뉴를 띄우면 포커스가 Givoice로 넘어오니, 그 전의 대상을 먼저 붙잡아 둔다.
     remember_target(GetForegroundWindow());
     let target = LAST_TARGET.load(Ordering::Relaxed) as HWND;
     AppendMenuW(
@@ -847,7 +847,7 @@ unsafe fn tray_menu(hwnd: HWND) {
         0,
         wide(&format!(
             "버전 {}",
-            option_env!("KEYSCRIBE_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+            option_env!("GIVOICE_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
         ))
         .as_ptr(),
     );
@@ -884,7 +884,7 @@ fn last_result_label(text: &str) -> String {
     format!("다시 붙여넣기: \u{201C}{}\u{201D}", preview.replace('&', "&&"))
 }
 
-/// 붙여넣을 수 있는 다른 앱의 창이면 기억해 둔다. KeyScribe 자신의 창과
+/// 붙여넣을 수 있는 다른 앱의 창이면 기억해 둔다. Givoice 자신의 창과
 /// 작업 표시줄·바탕 화면 같은 셸 창은 붙여넣을 곳이 아니라서 건너뛴다.
 unsafe fn remember_target(hwnd: HWND) {
     if hwnd.is_null() {
@@ -988,7 +988,7 @@ unsafe fn set_status(hwnd: HWND, status: &str) {
     } else {
         state.icons.idle
     };
-    write_wide(&mut state.tray.szTip, &format!("KeyScribe · {status}"));
+    write_wide(&mut state.tray.szTip, &format!("Givoice · {status}"));
     Shell_NotifyIconW(NIM_MODIFY, &state.tray);
 }
 
@@ -1587,7 +1587,7 @@ unsafe fn info(owner: HWND, message: &str) {
     MessageBoxW(
         owner,
         wide(message).as_ptr(),
-        wide("KeyScribe").as_ptr(),
+        wide("Givoice").as_ptr(),
         MB_OK | MB_ICONINFORMATION,
     );
 }
@@ -1631,8 +1631,8 @@ unsafe fn show_settings(root: HWND) {
     let instance = GetModuleHandleW(ptr::null());
     let dialog = CreateWindowExW(
         WS_EX_CONTROLPARENT,
-        wide("KeyScribeNativeSettings").as_ptr(),
-        wide("KeyScribe 설정").as_ptr(),
+        wide("GivoiceNativeSettings").as_ptr(),
+        wide("Givoice 설정").as_ptr(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT,
         CW_USEDEFAULT,

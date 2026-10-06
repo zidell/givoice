@@ -104,7 +104,7 @@ static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
     return G_SOURCE_CONTINUE;
 }
 // Geometry, colours, and waveform are ported from native/windows/src/overlay.rs
-// and native/macos/Sources/KeyScribe/RecordingOverlay.swift.
+// and native/macos/Sources/Givoice/RecordingOverlay.swift.
 static void pill(cairo_t *cr, double x, double y, double width, double height) {
     double radius = MIN(width, height) / 2;
     cairo_new_sub_path(cr);
@@ -221,7 +221,7 @@ int overlay_run(void) {
     if (desktop && strstr(desktop, "KDE"))
         widget_scale *= 1.2;
     window = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_window_set_title(GTK_WINDOW(window), "KeyScribe widget");
+    gtk_window_set_title(GTK_WINDOW(window), "Givoice widget");
     GtkWidget *canvas = gtk_drawing_area_new();
     gtk_widget_set_size_request(canvas, widget_pixels(260), widget_pixels(52));
     gtk_container_add(GTK_CONTAINER(window), canvas);

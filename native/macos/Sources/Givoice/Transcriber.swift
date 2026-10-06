@@ -104,7 +104,7 @@ final class Transcriber {
         case .elevenLabs: endpoint = "https://api.elevenlabs.io/v1/speech-to-text"
         case .groq: endpoint = "https://api.groq.com/openai/v1/audio/transcriptions"
         }
-        let boundary = "KeyScribe-\(UUID().uuidString)"
+        let boundary = "Givoice-\(UUID().uuidString)"
         let fields = makeFields(settings: settings, provider: provider)
         let body: URL
         do {
@@ -208,7 +208,7 @@ private func splitWAV(_ audioURL: URL) throws -> [URL] {
     do {
         while source.framePosition < source.length {
             let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent("keyscribe-\(UUID().uuidString)-part.wav")
+                .appendingPathComponent("givoice-\(UUID().uuidString)-part.wav")
             output.append(url)
             let writer = try AVAudioFile(forWriting: url, settings: source.fileFormat.settings,
                                          commonFormat: source.processingFormat.commonFormat,
@@ -251,7 +251,7 @@ private func makeFields(settings: Settings, provider: TranscriptionProvider) -> 
 
 private func makeMultipartBody(audioURL: URL, boundary: String,
                                fields: [(String, String)]) throws -> URL {
-    let output = FileManager.default.temporaryDirectory.appendingPathComponent("keyscribe-\(UUID().uuidString).multipart")
+    let output = FileManager.default.temporaryDirectory.appendingPathComponent("givoice-\(UUID().uuidString).multipart")
     FileManager.default.createFile(atPath: output.path, contents: nil)
     let destination = try FileHandle(forWritingTo: output)
     defer { try? destination.close() }

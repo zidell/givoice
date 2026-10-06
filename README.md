@@ -1,12 +1,12 @@
-# KeyScribe
+# Givoice
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![CI](https://github.com/zidell/givoice/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/givoice/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> KeyScribe is a personal project released for free. You are welcome to use it, but feature requests, bug reports, and support requests are not accepted. If you need something different, fork it under the GPLv3 and adapt it.
+> Givoice is a personal project released for free. You are welcome to use it, but feature requests, bug reports, and support requests are not accepted. If you need something different, fork it under the GPLv3 and adapt it.
 
-KeyScribe is a voice-input app that transcribes microphone recordings and pastes the resulting text into the active input field. It deliberately keeps the feature set small and is implemented natively, with an idle-memory target of roughly 20 MB. It does not include its own model, so an OpenAI, ElevenLabs, or Groq API key is required (Groq can be used for free).
+Givoice is a voice-input app that transcribes microphone recordings and pastes the resulting text into the active input field. It deliberately keeps the feature set small and is implemented natively, with an idle-memory target of roughly 20 MB. It does not include its own model, so an OpenAI, ElevenLabs, or Groq API key is required (Groq can be used for free).
 
 ## Features
 
@@ -30,45 +30,45 @@ The images below show the app's control menu and usage flow.
 
 | macOS | Windows |
 | --- | --- |
-| ![KeyScribe menu open from the macOS menu bar](assets/screenshots/macos-menu-preview.png) | ![KeyScribe menu open from the Windows tray](assets/screenshots/windows-menu-preview.png) |
+| ![Givoice menu open from the macOS menu bar](assets/screenshots/macos-menu-preview.png) | ![Givoice menu open from the Windows tray](assets/screenshots/windows-menu-preview.png) |
 
 ### Usage flow
 
 | macOS | Windows |
 | --- | --- |
-| ![KeyScribe recording, transcribing, and automatically pasting on macOS](assets/screenshots/keyscribe-flow.gif) | ![KeyScribe recording, transcribing, and automatically pasting on Windows](assets/screenshots/keyscribe-windows-flow.gif) |
+| ![Givoice recording, transcribing, and automatically pasting on macOS](assets/screenshots/givoice-flow.gif) | ![Givoice recording, transcribing, and automatically pasting on Windows](assets/screenshots/givoice-windows-flow.gif) |
 
 ## Install
 
-See the [KeyScribe download page](https://keyscribe.gitools.net) for downloads and installation instructions. macOS and Ubuntu installers are published on [GitHub Releases](https://github.com/zidell/keyscribe/releases); the Windows app is distributed through the Microsoft Store. The macOS app offers new versions and installs them on request, the Microsoft Store updates the Windows app automatically, and the Ubuntu app shows a download item in the tray menu when a new version is out.
+See the [Givoice download page](https://zidell.github.io/givoice) for downloads and installation instructions. macOS and Ubuntu installers are published on [GitHub Releases](https://github.com/zidell/givoice/releases); the Windows app is distributed through the Microsoft Store. The macOS app offers new versions and installs them on request, the Microsoft Store updates the Windows app automatically, and the Ubuntu app shows a download item in the tray menu when a new version is out.
 
 | Operating system | File | Install or run |
 | --- | --- | --- |
-| macOS Apple Silicon | `KeyScribe-macos-arm64-*.dmg` | Open the DMG and copy the app to Applications |
-| macOS Intel | `KeyScribe-macos-x64-*.dmg` | Open the DMG and copy the app to Applications |
+| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | Open the DMG and copy the app to Applications |
+| macOS Intel | `Givoice-macos-x64-*.dmg` | Open the DMG and copy the app to Applications |
 | Windows 10/11 x64 | Microsoft Store | Coming soon to the Microsoft Store |
-| Ubuntu 24.04+ amd64 | `KeyScribe-ubuntu-amd64-*.deb` | [Native Linux installation](native/linux/README.md) |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Native Linux installation](native/linux/README.md) |
 
 ### Ubuntu (native Linux app)
 
 Ubuntu support is available as a compiled GTK desktop app alongside the macOS
 and Windows apps. Download the `.deb` from
-[the latest Ubuntu release](https://github.com/zidell/keyscribe/releases?q=linux-v&expanded=true)
+[the latest Ubuntu release](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true)
 or see [Ubuntu build, installation, and usage](native/linux/README.md).
 It supports PipeWire/PulseAudio recording, the three STT providers, and portal-based
 global shortcuts and automatic paste on supported GNOME and KDE Plasma desktops.
 
 ## First use
 
-1. Open **Settings...** from the KeyScribe menu-bar or tray icon, then choose an ElevenLabs, OpenAI, or Groq API key and model. Groq's default model is `whisper-large-v3-turbo`.
+1. Open **Settings...** from the Givoice menu-bar or tray icon, then choose an ElevenLabs, OpenAI, or Groq API key and model. Groq's default model is `whisper-large-v3-turbo`.
 2. On macOS, allow Microphone and **System Settings → Privacy & Security → Accessibility** permissions. On Windows, allow desktop-app microphone access under **Settings → Privacy & security → Microphone**. On Ubuntu, register the global shortcut and allow keyboard control (automatic paste) in the Shortcuts / Permissions tab when the system dialog asks.
 3. Put the cursor in the field where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to paste the transcription.
 
-In Settings you can change the shortcut, recording-stop method, recording time limit (10, 20, 30, or 60 minutes; 30 by default), recognition language, recording-start sound volume, and automatic sending. With automatic sending enabled, KeyScribe presses Enter after pasting. To automatically type into a Windows app running as administrator, KeyScribe may also need to run as administrator.
+In Settings you can change the shortcut, recording-stop method, recording time limit (10, 20, 30, or 60 minutes; 30 by default), recognition language, recording-start sound volume, and automatic sending. With automatic sending enabled, Givoice presses Enter after pasting. To automatically type into a Windows app running as administrator, Givoice may also need to run as administrator.
 
 ## Configure with an AI agent
 
-KeyScribe stores preferences in editable text files on macOS, Windows, and Linux.
+Givoice stores preferences in editable text files on macOS, Windows, and Linux.
 The installed app includes an offline `readme.txt` ([contents](docs/readme.txt))
 with file locations, supported values, platform differences, and how to apply edits.
 Use `--help` to discover `--config-path`, which prints the active preferences path.
@@ -92,7 +92,7 @@ Groq uses an OpenAI-compatible transcription API. Get an API key through **Groq 
 
 ### Getting an API key
 
-Paste a key created with the steps below into **Settings... → API Key** in KeyScribe, then click **Refresh**. Treat a key like a password: never share it or post it publicly.
+Paste a key created with the steps below into **Settings... → API Key** in Givoice, then click **Refresh**. Treat a key like a password: never share it or post it publicly.
 
 The route to key creation differs by service. Notably, a ChatGPT subscription is separate from OpenAI API billing, and ElevenLabs requires a Full Seat to create a personal API key. Groq has the lowest barrier to trying it for free, but its free tier has usage and rate limits.
 
@@ -102,7 +102,7 @@ The route to key creation differs by service. Notably, a ChatGPT subscription is
 2. Set up an API payment method or credits under **Billing** in the API Platform. A ChatGPT Plus or Pro subscription alone does not include API usage.
 3. Select the project to use. Individual users can keep the default project.
 4. Click **Create new secret key**, name it, and create the key.
-5. Copy the displayed `sk-…` key into KeyScribe.
+5. Copy the displayed `sk-…` key into Givoice.
 
 OpenAI API keys are created per project; permissions and usage limits can be managed in project settings. [Official OpenAI guide](https://help.openai.com/en/articles/9186755)
 
@@ -111,7 +111,7 @@ OpenAI API keys are created per project; permissions and usage limits can be man
 1. Sign in or create an account on the [ElevenLabs API keys page](https://elevenlabs.io/app/developers/api-keys).
 2. Confirm that you have the **Full Seat** required to create a personal API key. Otherwise, the appropriate plan or workspace-admin setting is needed.
 3. Create a key in the personal API-key list and give it a recognizable name.
-4. Copy the resulting `sk_…` key into KeyScribe.
+4. Copy the resulting `sk_…` key into Givoice.
 
 Personal keys can be created and rotated in personal API-key settings. [Official ElevenLabs guide](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys)
 
@@ -120,7 +120,7 @@ Personal keys can be created and rotated in personal API-key settings. [Official
 1. Sign in or create an account on the [Groq Console API keys page](https://console.groq.com/keys). Keys can be created on the free tier.
 2. If this is your first time, create a project or select the default project from the project selector.
 3. Click **Create API Key**, name it, and create the key.
-4. Copy the resulting `gsk_…` key into KeyScribe.
+4. Copy the resulting `gsk_…` key into Givoice.
 
 Groq keys belong to the selected project, and the free tier has request and audio-processing limits. A payment method is required to move to the paid Developer tier for higher limits. [Official Groq project guide](https://console.groq.com/docs/projects), [billing guide](https://console.groq.com/docs/billing-faqs)
 
@@ -128,9 +128,9 @@ Groq keys belong to the selected project, and the free tier has request and audi
 
 You can check app status and errors in the menu-bar or tray menu. **Logs & Recordings Folder** in that menu opens the folder holding the diagnostic log (`debug.log`) and the original recordings (`recording-*.wav`).
 
-- macOS: `~/Library/Application Support/keyscribe/logs/`
-- Windows: `%APPDATA%\keyscribe\logs\`
-- Ubuntu: `~/.local/share/keyscribe/logs/` (or `$XDG_DATA_HOME/keyscribe/logs/`)
+- macOS: `~/Library/Application Support/givoice/logs/`
+- Windows: `%APPDATA%\givoice\logs\`
+- Ubuntu: `~/.local/share/givoice/logs/` (or `$XDG_DATA_HOME/givoice/logs/`)
 - Development runs: `dist-native/logs/`
 
 The [privacy notice](docs/privacy.md) explains how audio is sent and API keys are stored.

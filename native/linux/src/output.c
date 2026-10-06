@@ -103,7 +103,7 @@ static void connected(pa_context *c, void *user) {
 }
 void output_init(Output *out, pa_glib_mainloop *loop) {
     *out = (Output){0};
-    out->context = pa_context_new(pa_glib_mainloop_get_api(loop), "KeyScribe output control");
+    out->context = pa_context_new(pa_glib_mainloop_get_api(loop), "Givoice output control");
     if (out->context) {
         pa_context_set_state_callback(out->context, connected, out);
         pa_context_connect(out->context, NULL, PA_CONTEXT_NOFLAGS, NULL);
@@ -148,8 +148,8 @@ static void play_worker(GTask *task, void *source, void *data, GCancellable *can
     }
     pa_sample_spec spec = {PA_SAMPLE_S16LE, 24000, 1};
     int error;
-    pa_simple *stream = pa_simple_new(NULL, "KeyScribe", PA_STREAM_PLAYBACK, NULL,
-                                      "KeyScribe notification", &spec, NULL, NULL, &error);
+    pa_simple *stream = pa_simple_new(NULL, "Givoice", PA_STREAM_PLAYBACK, NULL,
+                                      "Givoice notification", &spec, NULL, NULL, &error);
     gboolean ok = stream && pa_simple_write(stream, pcm, length - 44, &error) >= 0 &&
                   pa_simple_drain(stream, &error) >= 0;
     if (stream)

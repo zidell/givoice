@@ -4,11 +4,11 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key><string>ko</string>
     <key>CFBundleLocalizations</key><array><string>ko</string><string>en</string></array>
-    <key>CFBundleName</key><string>KeyScribe</string>
-    <key>CFBundleDisplayName</key><string>KeyScribe</string>
-    <key>CFBundleExecutable</key><string>KeyScribe</string>
-    <key>CFBundleIconFile</key><string>keyscribe.icns</string>
-    <key>CFBundleIdentifier</key><string>com.videostew.keyscribe</string>
+    <key>CFBundleName</key><string>Givoice</string>
+    <key>CFBundleDisplayName</key><string>Givoice</string>
+    <key>CFBundleExecutable</key><string>Givoice</string>
+    <key>CFBundleIconFile</key><string>givoice.icns</string>
+    <key>CFBundleIdentifier</key><string>com.videostew.givoice</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>0.1.2</string>
     <key>CFBundleVersion</key><string>0.1.2</string>

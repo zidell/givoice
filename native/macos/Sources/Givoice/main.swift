@@ -32,7 +32,7 @@ private let keyCodes: [String: CGKeyCode] = [
 private func eventTapCallback(proxy: CGEventTapProxy, type: CGEventType,
                               event: CGEvent, userInfo: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
     guard let userInfo else { return Unmanaged.passUnretained(event) }
-    let app = Unmanaged<KeyScribeApp>.fromOpaque(userInfo).takeUnretainedValue()
+    let app = Unmanaged<GivoiceApp>.fromOpaque(userInfo).takeUnretainedValue()
     var consumed = false
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
         DispatchQueue.main.async { app.enableEventTap() }
@@ -47,7 +47,7 @@ private func eventTapCallback(proxy: CGEventTapProxy, type: CGEventType,
     return consumed ? nil : Unmanaged.passUnretained(event)
 }
 
-final class KeyScribeApp: NSObject, NSApplicationDelegate {
+final class GivoiceApp: NSObject, NSApplicationDelegate {
     private var settings = Settings.load()
     private var jobs: [TranscriptionJob] = []
     /// 앞선 결과가 붙여넣기 전에 실패했다면, 모든 작업이 끝났을 때 알린다.
@@ -150,7 +150,7 @@ final class KeyScribeApp: NSObject, NSApplicationDelegate {
 
     private func setupMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let url = Bundle.main.url(forResource: "keyscribe-menu", withExtension: "png"),
+        if let url = Bundle.main.url(forResource: "givoice-menu", withExtension: "png"),
            let icon = NSImage(contentsOf: url) {
             icon.size = NSSize(width: 18, height: 18)
             icon.isTemplate = true
@@ -271,7 +271,7 @@ final class KeyScribeApp: NSObject, NSApplicationDelegate {
         let context = Unmanaged.passUnretained(self).toOpaque()
         let handlerStatus = InstallEventHandler(GetApplicationEventTarget(), { _, _, userInfo in
             guard let userInfo else { return noErr }
-            let app = Unmanaged<KeyScribeApp>.fromOpaque(userInfo).takeUnretainedValue()
+            let app = Unmanaged<GivoiceApp>.fromOpaque(userInfo).takeUnretainedValue()
             DispatchQueue.main.async {
                 guard app.phase != .idle else { return }
                 DebugLog.shared.record("escape received by global hot key; cancelling recording/transcription")
@@ -321,7 +321,7 @@ final class KeyScribeApp: NSObject, NSApplicationDelegate {
         DebugLog.shared.record("global escape hot keys unregistered")
     }
 
-    // Escape belongs to KeyScribe alone while the overlay is up: cancelling a
+    // Escape belongs to Givoice alone while the overlay is up: cancelling a
     // recording or a transcription must not also close a sheet or drop an
     // editor out of insert mode in the focused application. Consuming the key
     // down keeps it from ever reaching another process, and the matching key up
@@ -442,7 +442,7 @@ final class KeyScribeApp: NSObject, NSApplicationDelegate {
         do {
             recorder = try AVAudioRecorder(url: url, settings: format)
             recorder?.isMeteringEnabled = true
-            guard recorder?.record() == true else { throw NSError(domain: "KeyScribe", code: 1,
+            guard recorder?.record() == true else { throw NSError(domain: "Givoice", code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "마이크를 시작하지 못했습니다."]) }
             recordingURL = url
             refreshPhase()
@@ -866,10 +866,10 @@ final class KeyScribeApp: NSObject, NSApplicationDelegate {
     }
 
     @objc private func restart(_ sender: Any?) {
-        // A supervisor such as a launchd KeepAlive job sets KEYSCRIBE_KEEPALIVE.
+        // A supervisor such as a launchd KeepAlive job sets GIVOICE_KEEPALIVE.
         // Starting a second process here would leave two keyboard hooks alive,
         // so let the supervisor perform the relaunch when it owns this process.
-        if ProcessInfo.processInfo.environment["KEYSCRIBE_KEEPALIVE"] == "1" {
+        if ProcessInfo.processInfo.environment["GIVOICE_KEEPALIVE"] == "1" {
             DebugLog.shared.record("app restart requested through LaunchAgent")
             NSApp.terminate(nil)
             return
@@ -918,15 +918,15 @@ if arguments == ["--config-path"] {
 }
 if arguments == ["--help"] || arguments == ["-h"] {
     print("""
-    KeyScribe voice input
+    Givoice voice input
       --config-path  Print preferences path; no GUI is started
-    Offline settings guide: KeyScribe.app/Contents/Resources/readme.txt
+    Offline settings guide: Givoice.app/Contents/Resources/readme.txt
     Quit before editing preferences; relaunch afterward.
     """)
     exit(0)
 }
 
 let application = NSApplication.shared
-let delegate = KeyScribeApp()
+let delegate = GivoiceApp()
 application.delegate = delegate
 application.run()

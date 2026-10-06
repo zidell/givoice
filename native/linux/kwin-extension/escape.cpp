@@ -11,14 +11,14 @@
 #include <QSet>
 
 namespace KWin {
-static const QString app = QStringLiteral("net.gitools.keyscribe");
-static const QString path = QStringLiteral("/net/gitools/keyscribe/Escape");
-static const QString iface = QStringLiteral("net.gitools.keyscribe.Escape");
+static const QString app = QStringLiteral("com.videostew.givoice");
+static const QString path = QStringLiteral("/com/videostew/givoice/Escape");
+static const QString iface = QStringLiteral("com.videostew.givoice.Escape");
 
-class KeyScribeEscape final : public Effect, public InputEventFilter {
+class GivoiceEscape final : public Effect, public InputEventFilter {
     Q_OBJECT
 public:
-    KeyScribeEscape() : InputEventFilter(InputFilterOrder::ScreenEdge) {
+    GivoiceEscape() : InputEventFilter(InputFilterOrder::ScreenEdge) {
         auto bus = QDBusConnection::sessionBus();
         bus.connect(app, path, iface, "StateChanged", this, SLOT(stateChanged(bool)));
         auto watcher = new QDBusServiceWatcher(app, bus,
@@ -76,5 +76,5 @@ private:
     QSet<uint32_t> m_consumed;
 };
 }
-KWIN_EFFECT_FACTORY(KWin::KeyScribeEscape, "metadata.json")
+KWIN_EFFECT_FACTORY(KWin::GivoiceEscape, "metadata.json")
 #include "escape.moc"

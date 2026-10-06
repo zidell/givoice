@@ -1,4 +1,4 @@
-# KeyScribe
+# Givoice
 
 For requests to change an installed app's preferences, read
 [docs/agent-settings.md](docs/agent-settings.md) first. It describes the actual
@@ -16,10 +16,10 @@ described in [docs/releasing.md](docs/releasing.md).
 
 ## Maintainer's local macOS dev loop
 
-The maintainer runs the `dist-native/KeyScribe.app` build as a login
+The maintainer runs the `dist-native/Givoice.app` build as a login
 LaunchAgent and rebuilds it automatically on source changes. Those scripts are
 personal and live only in the gitignored `local/` directory, so a fresh clone
 does not have them. When moving to another machine, copy `local/` along and run
 `bash local/install_macos_login_app.sh` once. The app's only dependency on this
-setup is the `KEYSCRIBE_KEEPALIVE=1` relaunch check in
-`native/macos/Sources/KeyScribe/main.swift`.
+setup is the `GIVOICE_KEEPALIVE=1` relaunch check in
+`native/macos/Sources/Givoice/main.swift`.

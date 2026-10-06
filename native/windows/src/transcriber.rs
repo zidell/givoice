@@ -74,7 +74,7 @@ fn request(
 ) -> Result<(u32, Vec<u8>), String> {
     unsafe {
         let session = Internet::new(WinHttpOpen(
-            wide("KeyScribe/0.1").as_ptr(),
+            wide("Givoice/0.1").as_ptr(),
             WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
             ptr::null(),
             ptr::null(),
@@ -261,7 +261,7 @@ pub fn transcribe(
                 return Ok(String::new());
             }
             let path = std::env::temp_dir().join(format!(
-                "keyscribe-{}-{}-{index}-part.wav",
+                "givoice-{}-{}-{index}-part.wav",
                 std::process::id(),
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -314,7 +314,7 @@ fn transcribe_single(
         Provider::ElevenLabs => ("api.elevenlabs.io", "/v1/speech-to-text"),
         Provider::Groq => ("api.groq.com", "/openai/v1/audio/transcriptions"),
     };
-    let boundary = format!("KeyScribe-{}", std::process::id());
+    let boundary = format!("Givoice-{}", std::process::id());
     let (prefix, suffix) = multipart(settings, provider, &boundary);
     let content_type = format!("multipart/form-data; boundary={boundary}");
     let mut last_error = String::new();
@@ -511,12 +511,12 @@ mod tests {
     fn multipart_uses_only_the_active_provider_fields() {
         let mut settings = Settings::default();
         settings.api_key = "sk-openai-example".into();
-        settings.keyterms = vec!["KeyScribe".into()];
+        settings.keyterms = vec!["Givoice".into()];
         let (openai, suffix) = multipart(&settings, Provider::OpenAi, "boundary");
         let openai = String::from_utf8(openai).unwrap();
         assert!(openai.contains("name=\"model\"\r\n\r\ngpt-transcribe"));
         assert!(openai.contains("name=\"prompt\""));
-        assert!(openai.contains("고유명사 표기 참고: KeyScribe"));
+        assert!(openai.contains("고유명사 표기 참고: Givoice"));
         assert!(!openai.contains("이 녹음에는 다음 용어가 포함됩니다"));
         assert!(!openai.contains("name=\"model_id\""));
         assert_eq!(suffix, b"\r\n--boundary--\r\n");

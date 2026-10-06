@@ -1,1 +1,1 @@
-{"KPlugin":{"Id":"keyscribe-escape-bootstrap","Name":"KeyScribe Escape integration","Version":"1.0","License":"GPL-3.0-or-later"},"X-Plasma-API":"declarativescript","X-Plasma-MainScript":"ui/main.qml","KPackageStructure":"KWin/Script"}
+{"KPlugin":{"Id":"givoice-escape-bootstrap","Name":"Givoice Escape integration","Version":"1.0","License":"GPL-3.0-or-later"},"X-Plasma-API":"declarativescript","X-Plasma-MainScript":"ui/main.qml","KPackageStructure":"KWin/Script"}

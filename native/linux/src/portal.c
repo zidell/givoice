@@ -36,7 +36,7 @@ static GSettings *ibus_settings(guint index) {
                ? g_settings_new_full(schema, NULL, NULL) : NULL;
 }
 static char *ibus_backup_path(void) {
-    return g_build_filename(g_get_user_config_dir(), "keyscribe",
+    return g_build_filename(g_get_user_config_dir(), "givoice",
                             "ibus-shortcut-backup.ini", NULL);
 }
 static void ibus_restore(Portal *p) {
@@ -55,7 +55,7 @@ static void ibus_restore(Portal *p) {
             g_variant_parse(g_variant_get_type(current), original, NULL, NULL, NULL) : NULL;
         g_autoptr(GVariant) reserved = applied ?
             g_variant_parse(g_variant_get_type(current), applied, NULL, NULL, NULL) : NULL;
-        // Do not overwrite settings the user changed while KeyScribe was running.
+        // Do not overwrite settings the user changed while Givoice was running.
         if (old && reserved && g_variant_equal(current, reserved)) {
             g_settings_set_value(settings, ibus_keys[i], old);
             trace(p, "ibus restored schema=%s key=%s", ibus_schemas[i], ibus_keys[i]);
@@ -209,7 +209,7 @@ static void call_done(GObject *obj, GAsyncResult *result, void *user) {
 }
 static char *token(void) {
     static guint n;
-    return g_strdup_printf("keyscribe_%u_%u", g_random_int(), ++n);
+    return g_strdup_printf("givoice_%u_%u", g_random_int(), ++n);
 }
 static GVariant *options(const char *t, const char *session) {
     GVariantBuilder b;
@@ -286,8 +286,8 @@ static void session_closed(GDBusConnection *bus, const char *sender, const char 
     if (!g_strcmp0(path, p->shortcuts))
         g_clear_pointer(&p->shortcuts, g_free);
 }
-#define ESCAPE_PATH "/net/gitools/keyscribe/Escape"
-#define ESCAPE_IFACE "net.gitools.keyscribe.Escape"
+#define ESCAPE_PATH "/com/videostew/givoice/Escape"
+#define ESCAPE_IFACE "com.videostew.givoice.Escape"
 static void escape_method(GDBusConnection *bus, const char *sender, const char *path,
                           const char *interface, const char *method, GVariant *parameters,
                           GDBusMethodInvocation *invocation, void *user) {
@@ -323,12 +323,12 @@ gboolean portal_init(Portal *p, ShortcutEvent event, void *user, GError **error)
     const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
     if (desktop && strstr(desktop, "KDE"))
         g_dbus_connection_call(p->bus, "org.kde.KWin", "/Effects", "org.kde.kwin.Effects",
-            "loadEffect", g_variant_new("(s)", "keyscribe-escape"), NULL, 0, 3000,
+            "loadEffect", g_variant_new("(s)", "givoice-escape"), NULL, 0, 3000,
             NULL, NULL, NULL);
     // New portals require an application identity for unsandboxed native applications.
     g_autoptr(GVariant) registered = g_dbus_connection_call_sync(
         p->bus, DEST, PATH, "org.freedesktop.host.portal.Registry", "Register",
-        g_variant_new("(s@a{sv})", "net.gitools.keyscribe", empty()), NULL, 0, 5000, NULL, NULL);
+        g_variant_new("(s@a{sv})", "com.videostew.givoice", empty()), NULL, 0, 5000, NULL, NULL);
     p->shortcut_subscription = g_dbus_connection_signal_subscribe(
         p->bus, DEST, SHORTCUTS, NULL, PATH, NULL, 0, shortcut_signal, p, NULL);
     p->clipboard_subscription = g_dbus_connection_signal_subscribe(
@@ -481,7 +481,7 @@ static void created(GVariant *values, const GError *error, void *user) {
         s->p->shortcuts = g_strdup(session);
         GVariantBuilder list;
         g_variant_builder_init(&list, G_VARIANT_TYPE("a(sa{sv})"));
-        const char *ids[] = {"record"}, *descs[] = {"KeyScribe 녹음"},
+        const char *ids[] = {"record"}, *descs[] = {"Givoice 녹음"},
                    *triggers[] = {s->p->preferred_trigger ? s->p->preferred_trigger
                                                           : "CTRL+ALT+space"};
         for (guint i = 0; i < G_N_ELEMENTS(ids); i++) {
@@ -532,7 +532,7 @@ void portal_bind(Portal *p, PortalResult cb, void *user) {
     const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
     if (schema && desktop && strstr(desktop, "GNOME")) {
         g_autoptr(GSettings) settings = g_settings_new_full(
-            schema, NULL, "/org/gnome/settings-daemon/global-shortcuts/net.gitools.keyscribe/");
+            schema, NULL, "/org/gnome/settings-daemon/global-shortcuts/com.videostew.givoice/");
         g_autoptr(GVariant) saved = g_settings_get_value(settings, "shortcuts");
         GVariantBuilder kept;
         g_variant_builder_init(&kept, G_VARIANT_TYPE("a(sa{sv})"));

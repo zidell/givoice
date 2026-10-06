@@ -39,7 +39,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             assert ('model' in fields) != eleven
             assert self.headers.get('xi-api-key') == 'sk_fixture' if eleven else self.headers.get('Authorization') in ('Bearer gsk_fixture', 'Bearer sk-fixture')
             assert fields['language_code' if eleven else 'language'] == [b'ko']
-            assert fields['keyterms'] == [b'KeyScribe', '우분투'.encode()] if eleven else fields['prompt'] == ['고유명사 표기 참고: KeyScribe, 우분투'.encode()]
+            assert fields['keyterms'] == [b'Givoice', '우분투'.encode()] if eleven else fields['prompt'] == ['고유명사 표기 참고: Givoice, 우분투'.encode()]
             wav = fields['file'][0]
             assert wav[:4] == b'RIFF' and wav[8:12] == b'WAVE'
             assert struct.unpack_from('<I', wav, 40)[0] == len(wav) - 44
@@ -68,7 +68,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 thread = threading.Thread(target=server.serve_forever, daemon=True)
 thread.start()
-env = dict(os.environ, KEYSCRIBE_TEST_ENDPOINT=f'http://127.0.0.1:{server.server_port}/transcribe')
+env = dict(os.environ, GIVOICE_TEST_ENDPOINT=f'http://127.0.0.1:{server.server_port}/transcribe')
 binary = str(pathlib.Path(sys.argv[1]).resolve())
 
 def run(key, model, size='small', success=True):

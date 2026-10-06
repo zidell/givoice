@@ -252,7 +252,7 @@ static void wait_for(gboolean *done) {
 int main(int argc, char **argv) {
     g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
     g_setenv("XDG_CURRENT_DESKTOP", "GNOME", TRUE);
-    g_autofree char *config = g_dir_make_tmp("keyscribe-portal-XXXXXX", NULL);
+    g_autofree char *config = g_dir_make_tmp("givoice-portal-XXXXXX", NULL);
     g_assert_nonnull(config);
     g_setenv("XDG_CONFIG_HOME", config, TRUE);
     g_test_init(&argc, &argv, NULL);
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
     g_autoptr(GSettings) saved_settings = NULL;
     if (schema) {
         saved_settings = g_settings_new_full(
-            schema, NULL, "/org/gnome/settings-daemon/global-shortcuts/net.gitools.keyscribe/");
+            schema, NULL, "/org/gnome/settings-daemon/global-shortcuts/com.videostew.givoice/");
         g_autoptr(GVariant) old = g_variant_parse(
             G_VARIANT_TYPE("a(sa{sv})"),
             "[('record', {'description': <'Record'>}), "

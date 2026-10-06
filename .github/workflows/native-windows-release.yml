@@ -24,9 +24,9 @@ jobs:
     runs-on: windows-2022
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-      STORE_PACKAGE_NAME: ${{ secrets.KEYSCRIBE_STORE_PACKAGE_NAME }}
-      STORE_PUBLISHER: ${{ secrets.KEYSCRIBE_STORE_PUBLISHER }}
-      STORE_PUBLISHER_DISPLAY_NAME: ${{ secrets.KEYSCRIBE_STORE_PUBLISHER_DISPLAY_NAME }}
+      STORE_PACKAGE_NAME: ${{ secrets.GIVOICE_STORE_PACKAGE_NAME }}
+      STORE_PUBLISHER: ${{ secrets.GIVOICE_STORE_PUBLISHER }}
+      STORE_PUBLISHER_DISPLAY_NAME: ${{ secrets.GIVOICE_STORE_PUBLISHER_DISPLAY_NAME }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +45,7 @@ jobs:
               throw "Missing Partner Center identity secret: $name"
             }
           }
-          "KEYSCRIBE_VERSION=$($env:RELEASE_TAG.Substring('windows-v'.Length))" >> $env:GITHUB_ENV
+          "GIVOICE_VERSION=$($env:RELEASE_TAG.Substring('windows-v'.Length))" >> $env:GITHUB_ENV
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -54,13 +54,13 @@ jobs:
         shell: pwsh
         run: |
           ./native/windows/build.ps1
-          if (-not (Test-Path 'dist-native\KeyScribe.exe')) { throw 'Native executable is missing.' }
+          if (-not (Test-Path 'dist-native\Givoice.exe')) { throw 'Native executable is missing.' }
       - name: Package and inspect Store MSIX
         id: package
         shell: pwsh
         run: |
-          $package = ./packaging/build-msix.ps1 -Version $env:KEYSCRIBE_VERSION `
-            -ExecutablePath 'dist-native\KeyScribe.exe' `
+          $package = ./packaging/build-msix.ps1 -Version $env:GIVOICE_VERSION `
+            -ExecutablePath 'dist-native\Givoice.exe' `
             -StorePackageName $env:STORE_PACKAGE_NAME `
             -StorePublisher $env:STORE_PUBLISHER `
             -StorePublisherDisplayName $env:STORE_PUBLISHER_DISPLAY_NAME
@@ -70,7 +70,7 @@ jobs:
           $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $package).Path)
           try {
             $names = @($archive.Entries | ForEach-Object { $_.FullName })
-            if ('AppxManifest.xml' -notin $names -or 'App/KeyScribe/KeyScribe.exe' -notin $names) {
+            if ('AppxManifest.xml' -notin $names -or 'App/Givoice/Givoice.exe' -notin $names) {
               throw 'MSIX manifest or executable is missing.'
             }
             # The Store signs submitted packages itself.
@@ -80,7 +80,7 @@ jobs:
             $identity = $manifest.Package.Identity
             if ($identity.Name -ne $env:STORE_PACKAGE_NAME -or
                 $identity.Publisher -ne $env:STORE_PUBLISHER -or
-                $identity.Version -ne "$env:KEYSCRIBE_VERSION.0" -or
+                $identity.Version -ne "$env:GIVOICE_VERSION.0" -or
                 $identity.ProcessorArchitecture -ne 'x64') {
               throw 'MSIX identity does not match the Partner Center secrets.'
             }
@@ -95,11 +95,11 @@ jobs:
         id: credentials
         shell: pwsh
         env:
-          TENANT_ID: ${{ secrets.KEYSCRIBE_STORE_TENANT_ID }}
-          SELLER_ID: ${{ secrets.KEYSCRIBE_STORE_SELLER_ID }}
-          CLIENT_ID: ${{ secrets.KEYSCRIBE_STORE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.KEYSCRIBE_STORE_CLIENT_SECRET }}
-          PRODUCT_ID: ${{ secrets.KEYSCRIBE_STORE_PRODUCT_ID }}
+          TENANT_ID: ${{ secrets.GIVOICE_STORE_TENANT_ID }}
+          SELLER_ID: ${{ secrets.GIVOICE_STORE_SELLER_ID }}
+          CLIENT_ID: ${{ secrets.GIVOICE_STORE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.GIVOICE_STORE_CLIENT_SECRET }}
+          PRODUCT_ID: ${{ secrets.GIVOICE_STORE_PRODUCT_ID }}
         run: |
           $missing = @('TENANT_ID', 'SELLER_ID', 'CLIENT_ID', 'CLIENT_SECRET', 'PRODUCT_ID') |
             Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
@@ -116,11 +116,11 @@ jobs:
         if: steps.credentials.outputs.ready == 'true'
         shell: pwsh
         env:
-          TENANT_ID: ${{ secrets.KEYSCRIBE_STORE_TENANT_ID }}
-          SELLER_ID: ${{ secrets.KEYSCRIBE_STORE_SELLER_ID }}
-          CLIENT_ID: ${{ secrets.KEYSCRIBE_STORE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.KEYSCRIBE_STORE_CLIENT_SECRET }}
-          PRODUCT_ID: ${{ secrets.KEYSCRIBE_STORE_PRODUCT_ID }}
+          TENANT_ID: ${{ secrets.GIVOICE_STORE_TENANT_ID }}
+          SELLER_ID: ${{ secrets.GIVOICE_STORE_SELLER_ID }}
+          CLIENT_ID: ${{ secrets.GIVOICE_STORE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.GIVOICE_STORE_CLIENT_SECRET }}
+          PRODUCT_ID: ${{ secrets.GIVOICE_STORE_PRODUCT_ID }}
           PACKAGE: ${{ steps.package.outputs.path }}
         run: |
           msstore reconfigure --tenantId $env:TENANT_ID --sellerId $env:SELLER_ID `

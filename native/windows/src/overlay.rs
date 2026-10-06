@@ -116,7 +116,7 @@ fn wide(text: &str) -> Vec<u16> {
 }
 
 pub unsafe fn register(instance: *mut std::ffi::c_void) -> bool {
-    let class = wide("KeyScribeNativeOverlay");
+    let class = wide("GivoiceNativeOverlay");
     let definition = WNDCLASSW {
         style: 0,
         lpfnWndProc: Some(procedure),
@@ -135,7 +135,7 @@ pub unsafe fn register(instance: *mut std::ffi::c_void) -> bool {
 pub unsafe fn create(instance: *mut std::ffi::c_void, owner: HWND) -> HWND {
     let hwnd = CreateWindowExW(
         WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
-        wide("KeyScribeNativeOverlay").as_ptr(),
+        wide("GivoiceNativeOverlay").as_ptr(),
         wide("").as_ptr(),
         WS_POPUP,
         0,

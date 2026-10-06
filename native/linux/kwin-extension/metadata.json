@@ -1,1 +1,1 @@
-{"KPlugin":{"Id":"keyscribe-escape","Name":"KeyScribe recording cancellation","Description":"Consume Escape while KeyScribe records or transcribes","Version":"1.0","License":"GPL-3.0-or-later","EnabledByDefault":false}}
+{"KPlugin":{"Id":"givoice-escape","Name":"Givoice recording cancellation","Description":"Consume Escape while Givoice records or transcribes","Version":"1.0","License":"GPL-3.0-or-later","EnabledByDefault":false}}

@@ -1,12 +1,12 @@
-# KeyScribe
+# Givoice
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![CI](https://github.com/zidell/givoice/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/givoice/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
 > 개인이 만들어 무료로 공개하는 앱입니다. 자유롭게 쓰셔도 되지만 기능 제안, 버그 신고, 사용 지원은 받지 않습니다. 원하는 기능이 있으면 GPLv3에 따라 포크해서 고쳐 쓰세요.
 
-KeyScribe는 마이크로 녹음된 음성을 텍스트로 변환해 현재 입력창에 붙여넣는 보이스 입력 앱입니다. 가장 단순한 형태로 최소한의 기능만 제공하며, 네이티브로 구현해 대기 메모리 20MB 안팎을 목표로 합니다. 자체 모델은 포함하지 않으므로 OpenAI, ElevenLabs 또는 Groq API 키가 필요합니다. Groq API는 무료로도 사용할 수 있습니다.
+Givoice는 마이크로 녹음된 음성을 텍스트로 변환해 현재 입력창에 붙여넣는 보이스 입력 앱입니다. 가장 단순한 형태로 최소한의 기능만 제공하며, 네이티브로 구현해 대기 메모리 20MB 안팎을 목표로 합니다. 자체 모델은 포함하지 않으므로 OpenAI, ElevenLabs 또는 Groq API 키가 필요합니다. Groq API는 무료로도 사용할 수 있습니다.
 
 ## 특징
 
@@ -30,37 +30,37 @@ KeyScribe는 마이크로 녹음된 음성을 텍스트로 변환해 현재 입�
 
 | macOS | Windows |
 | --- | --- |
-| ![macOS 메뉴 막대에서 열린 KeyScribe 메뉴](assets/screenshots/macos-menu-preview.png) | ![Windows 트레이에서 열린 KeyScribe 메뉴](assets/screenshots/windows-menu-preview.png) |
+| ![macOS 메뉴 막대에서 열린 Givoice 메뉴](assets/screenshots/macos-menu-preview.png) | ![Windows 트레이에서 열린 Givoice 메뉴](assets/screenshots/windows-menu-preview.png) |
 
 ### 사용 흐름
 
 | macOS | Windows |
 | --- | --- |
-| ![KeyScribe가 녹음, 변환, 자동 붙여넣기를 수행하는 macOS 흐름](assets/screenshots/keyscribe-flow.gif) | ![KeyScribe가 녹음, 변환, 자동 붙여넣기를 수행하는 Windows 흐름](assets/screenshots/keyscribe-windows-flow.gif) |
+| ![Givoice가 녹음, 변환, 자동 붙여넣기를 수행하는 macOS 흐름](assets/screenshots/givoice-flow.gif) | ![Givoice가 녹음, 변환, 자동 붙여넣기를 수행하는 Windows 흐름](assets/screenshots/givoice-windows-flow.gif) |
 
 ## 설치
 
-다운로드 및 설치 방법은 [KeyScribe 다운로드 페이지](https://keyscribe.gitools.net)에서 확인하세요. macOS·Ubuntu 설치 파일은 [GitHub Releases](https://github.com/zidell/keyscribe/releases)에서, Windows 앱은 Microsoft Store로 배포합니다. 새 버전이 나오면 macOS 앱은 알려 준 뒤 설치하고, Windows 앱은 Microsoft Store가 자동으로 업데이트하며, Ubuntu 앱은 트레이 메뉴에 다운로드 항목을 띄웁니다.
+다운로드 및 설치 방법은 [Givoice 다운로드 페이지](https://zidell.github.io/givoice)에서 확인하세요. macOS·Ubuntu 설치 파일은 [GitHub Releases](https://github.com/zidell/givoice/releases)에서, Windows 앱은 Microsoft Store로 배포합니다. 새 버전이 나오면 macOS 앱은 알려 준 뒤 설치하고, Windows 앱은 Microsoft Store가 자동으로 업데이트하며, Ubuntu 앱은 트레이 메뉴에 다운로드 항목을 띄웁니다.
 
 | 운영체제 | 파일 | 설치 또는 실행 |
 | --- | --- | --- |
-| macOS Apple Silicon | `KeyScribe-macos-arm64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
-| macOS Intel | `KeyScribe-macos-x64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
+| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
+| macOS Intel | `Givoice-macos-x64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
 | Windows 10/11 x64 | Microsoft Store | Microsoft Store 출시 준비 중 |
-| Ubuntu 24.04+ amd64 | `KeyScribe-ubuntu-amd64-*.deb` | [Ubuntu 네이티브 설치 방법](native/linux/README.md) |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Ubuntu 네이티브 설치 방법](native/linux/README.md) |
 
 ## 처음 사용할 때
 
-1. 메뉴 막대 또는 트레이의 KeyScribe 아이콘에서 **설정...**을 열고 ElevenLabs, OpenAI 또는 Groq API 키와 모델을 선택합니다. Groq 기본 모델은 `whisper-large-v3-turbo`입니다.
+1. 메뉴 막대 또는 트레이의 Givoice 아이콘에서 **설정...**을 열고 ElevenLabs, OpenAI 또는 Groq API 키와 모델을 선택합니다. Groq 기본 모델은 `whisper-large-v3-turbo`입니다.
 2. macOS에서는 마이크와 **시스템 설정 → 개인 정보 보호 및 보안 → 손쉬운 사용** 권한을 허용합니다. Windows에서는 **설정 → 개인 정보 및 보안 → 마이크**에서 데스크톱 앱의 마이크 접근을 허용합니다. Ubuntu에서는 설정의 단축키 / 권한 탭에서 시스템 창이 묻는 전역 단축키 등록과 키보드 제어(자동 붙여넣기) 권한을 허용합니다.
 3. 텍스트를 입력할 창에 커서를 놓고 오른쪽 Command(macOS), 오른쪽 Alt(Windows) 또는 Ctrl+Alt+Space(Ubuntu)를 누른 채 말합니다. 키를 놓으면 전사 결과가 붙여넣어집니다.
 
-설정에서 단축키, 녹음 종료 방식, 녹음 시간 제한(10·20·30·60분, 기본 30분), 인식 언어, 녹음 시작 효과음 음량, 자동 전송 여부를 바꿀 수 있습니다. 자동 전송을 켜면 붙여넣은 뒤 Enter도 누릅니다. 관리자 권한으로 실행한 Windows 앱에 자동 입력하려면 KeyScribe도 같은 권한으로 실행해야 할 수 있습니다.
+설정에서 단축키, 녹음 종료 방식, 녹음 시간 제한(10·20·30·60분, 기본 30분), 인식 언어, 녹음 시작 효과음 음량, 자동 전송 여부를 바꿀 수 있습니다. 자동 전송을 켜면 붙여넣은 뒤 Enter도 누릅니다. 관리자 권한으로 실행한 Windows 앱에 자동 입력하려면 Givoice도 같은 권한으로 실행해야 할 수 있습니다.
 
 ## Ubuntu 지원
 
 macOS·Windows 앱과 별도로 C/GTK로 컴파일한 Ubuntu 네이티브 앱을 제공합니다.
-[최신 Ubuntu 릴리스](https://github.com/zidell/keyscribe/releases?q=linux-v&expanded=true)에서 `.deb` 설치 파일을 받을 수 있고,
+[최신 Ubuntu 릴리스](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true)에서 `.deb` 설치 파일을 받을 수 있고,
 빌드·설치·사용법은 [Ubuntu 안내](native/linux/README.md)에 있습니다.
 PipeWire/PulseAudio 녹음과 세 전사 서비스를 지원하며, GNOME과 KDE Plasma에서는
 데스크톱 포털로 전역 단축키와 자동 붙여넣기를 사용합니다. 필요한 포털이 없는
@@ -69,18 +69,18 @@ PipeWire/PulseAudio 녹음과 세 전사 서비스를 지원하며, GNOME과 KDE
 ```sh
 ./native/linux/build.sh --test
 ./native/linux/install.sh
-~/.local/bin/keyscribe
+~/.local/bin/givoice
 ```
 
 빌드 의존성 설치 명령과 현재 지원 범위는 위 안내에 있습니다. 설정과 API 키는 각각
-`~/.config/keyscribe/config.toml`과 같은 폴더의 `user_config.json`에, 녹음은
-`~/.local/share/keyscribe/logs/`에 저장됩니다. 기존 INI 설정은 자동 이관됩니다.
+`~/.config/givoice/config.toml`과 같은 폴더의 `user_config.json`에, 녹음은
+`~/.local/share/givoice/logs/`에 저장됩니다. 기존 INI 설정은 자동 이관됩니다.
 
 ## AI 에이전트로 설정 변경하기
 
 macOS·Windows·Linux 모두 텍스트 파일로 환경설정을 변경할 수 있습니다.
 설치된 앱에 포함된 `readme.txt`([내용](docs/readme.txt))에 OS별 실제 파일 위치, 항목과 허용값,
-변경 절차를 정리했습니다. 에이전트에게 이 지침을 참고해 KeyScribe 설정을 바꾸라고
+변경 절차를 정리했습니다. 에이전트에게 이 지침을 참고해 Givoice 설정을 바꾸라고
 요청하면 됩니다. `--help`에서 발견 방법을 확인하고, `--config-path`로 실제 설정 파일을
 찾을 수 있습니다. 설정 파일 자체에도 항목 설명과 허용값이 주석으로 포함됩니다.
 외부에서 편집한 설정은 앱을 재시작해야 반영됩니다.
@@ -102,7 +102,7 @@ Groq는 OpenAI 호환 전사 API를 사용합니다. 설정 창의 **Groq 키 �
 
 ### API 키 발급 방법
 
-아래 절차로 발급한 키를 KeyScribe의 **설정... → API 키**에 붙여넣고 **새로고침**을 누르세요. 키는 비밀번호와 같으므로 다른 사람에게 공유하거나 공개된 곳에 올리지 마세요.
+아래 절차로 발급한 키를 Givoice의 **설정... → API 키**에 붙여넣고 **새로고침**을 누르세요. 키는 비밀번호와 같으므로 다른 사람에게 공유하거나 공개된 곳에 올리지 마세요.
 
 키를 만드는 화면에 도달하는 과정은 서비스마다 다릅니다. 특히 ChatGPT 구독은 OpenAI API 사용료와 별개이며, ElevenLabs는 개인 API 키를 만들려면 Full Seat가 필요합니다. 무료로 가볍게 시작하려면 Groq가 가장 진입 장벽이 낮지만, 무료 한도와 속도 제한이 있습니다.
 
@@ -112,7 +112,7 @@ Groq는 OpenAI 호환 전사 API를 사용합니다. 설정 창의 **Groq 키 �
 2. API Platform의 **Billing**에서 API 결제 수단 또는 크레딧을 설정합니다. ChatGPT Plus·Pro 구독만으로는 API 사용료가 포함되지 않습니다.
 3. 사용할 프로젝트를 선택합니다. 개인 사용자는 기본 프로젝트를 그대로 써도 됩니다.
 4. **Create new secret key**를 누르고 키 이름을 정한 뒤 생성합니다.
-5. 표시된 `sk-…` 키를 복사해 KeyScribe에 붙여넣습니다.
+5. 표시된 `sk-…` 키를 복사해 Givoice에 붙여넣습니다.
 
 OpenAI API 키는 프로젝트 단위로 만들며, 프로젝트 설정에서 권한과 사용 한도를 관리할 수 있습니다. [OpenAI 공식 안내](https://help.openai.com/en/articles/9186755)
 
@@ -121,7 +121,7 @@ OpenAI API 키는 프로젝트 단위로 만들며, 프로젝트 설정에서 �
 1. [ElevenLabs API 키 페이지](https://elevenlabs.io/app/developers/api-keys)에 로그인하거나 계정을 만듭니다.
 2. 개인 API 키 발급에 필요한 **Full Seat**가 있는지 확인합니다. 권한이 없으면 해당 요금제 또는 워크스페이스 관리자 설정이 필요합니다.
 3. 개인 API 키 목록에서 새 키를 만들고, 알아보기 쉬운 이름을 정합니다.
-4. 생성된 `sk_…` 키를 복사해 KeyScribe에 붙여넣습니다.
+4. 생성된 `sk_…` 키를 복사해 Givoice에 붙여넣습니다.
 
 개인용 키는 개인 API 키 설정에서 생성·교체할 수 있습니다. [ElevenLabs 공식 안내](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys)
 
@@ -130,7 +130,7 @@ OpenAI API 키는 프로젝트 단위로 만들며, 프로젝트 설정에서 �
 1. [Groq Console API 키 페이지](https://console.groq.com/keys)에 로그인하거나 계정을 만듭니다. 무료 tier로도 키를 만들 수 있습니다.
 2. 처음이라면 프로젝트 선택 메뉴에서 프로젝트를 만들거나 기본 프로젝트를 선택합니다.
 3. **Create API Key**를 누르고 키 이름을 정한 뒤 생성합니다.
-4. 생성된 `gsk_…` 키를 복사해 KeyScribe에 붙여넣습니다.
+4. 생성된 `gsk_…` 키를 복사해 Givoice에 붙여넣습니다.
 
 Groq 키는 선택한 프로젝트에 귀속되고 무료 tier에는 요청·오디오 처리 한도가 있습니다. 한도를 늘리는 유료 Developer tier로 전환할 때는 결제 수단이 필요합니다. [Groq 공식 안내](https://console.groq.com/docs/projects), [요금제 안내](https://console.groq.com/docs/billing-faqs)
 
@@ -138,9 +138,9 @@ Groq 키는 선택한 프로젝트에 귀속되고 무료 tier에는 요청·오
 
 앱의 상태와 오류는 메뉴 막대 또는 트레이 메뉴에서 확인할 수 있습니다. 메뉴의 **로그 및 녹음 원본 폴더**는 진단 로그(`debug.log`)와 녹음 원본(`recording-*.wav`)이 있는 폴더를 엽니다.
 
-- macOS: `~/Library/Application Support/keyscribe/logs/`
-- Windows: `%APPDATA%\keyscribe\logs\`
-- Ubuntu: `~/.local/share/keyscribe/logs/` (또는 `$XDG_DATA_HOME/keyscribe/logs/`)
+- macOS: `~/Library/Application Support/givoice/logs/`
+- Windows: `%APPDATA%\givoice\logs\`
+- Ubuntu: `~/.local/share/givoice/logs/` (또는 `$XDG_DATA_HOME/givoice/logs/`)
 - 개발 실행: `dist-native/logs/`
 
 음성 전송과 API 키 저장 방식은 [개인정보 안내](docs/privacy.md)에 설명되어 있습니다.

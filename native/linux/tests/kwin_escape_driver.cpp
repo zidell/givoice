@@ -10,20 +10,20 @@
 namespace KWin {
 class EscapeDriver final : public Effect, public InputEventFilter {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.gitools.keyscribe.Driver")
+    Q_CLASSINFO("D-Bus Interface", "com.videostew.givoice.Driver")
 public:
     EscapeDriver() : InputEventFilter(InputFilterOrder::ScreenEdge) {
         auto bus = QDBusConnection::sessionBus();
-        bus.registerService("net.gitools.keyscribe.Driver");
-        bus.registerObject("/net/gitools/keyscribe/Driver", this,
+        bus.registerService("com.videostew.givoice.Driver");
+        bus.registerObject("/com/videostew/givoice/Driver", this,
                            QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals);
         input()->installInputEventFilter(this);
     }
     ~EscapeDriver() override {
         auto now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch());
         for (auto code : m_pressed) input()->keyboard()->processKey(code, KeyboardKeyState::Released, now);
-        QDBusConnection::sessionBus().unregisterObject("/net/gitools/keyscribe/Driver");
-        QDBusConnection::sessionBus().unregisterService("net.gitools.keyscribe.Driver");
+        QDBusConnection::sessionBus().unregisterObject("/com/videostew/givoice/Driver");
+        QDBusConnection::sessionBus().unregisterService("com.videostew.givoice.Driver");
     }
     bool isActive() const override { return false; }
     bool keyboardKey(KeyboardKeyEvent *event) override {

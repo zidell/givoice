@@ -84,7 +84,7 @@ pub fn directory() -> PathBuf {
     env::var_os("APPDATA")
         .map(PathBuf::from)
         .unwrap_or_else(|| env::current_dir().unwrap_or_default())
-        .join("keyscribe")
+        .join("givoice")
 }
 
 impl Settings {
@@ -134,11 +134,11 @@ impl Settings {
     fn config_text(&self) -> io::Result<String> {
         let config = toml::to_string_pretty(self).map_err(io::Error::other)?;
         let header = concat!(
-            "# KeyScribe preferences / 에이전트 설정 안내\n",
-            "# Offline guide: readme.txt beside the installed KeyScribe.exe\n",
+            "# Givoice preferences / 에이전트 설정 안내\n",
+            "# Offline guide: readme.txt beside the installed Givoice.exe\n",
             "# Quit the app before external edits; relaunch afterward to apply them.\n",
             "# Saving in Settings does not reload external edits and rewrites this file.\n",
-            "# Find this file with KeyScribe.exe --config-path.\n",
+            "# Find this file with Givoice.exe --config-path.\n",
             "# Use one top-level assignment per line; double-quoted strings and inline arrays.\n",
             "# API key: user_config.json in this directory (do not put it in this file).\n",
             "\n",

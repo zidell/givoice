@@ -421,9 +421,9 @@ gboolean settings_save(const Settings *s, const char *dir, GError **error) {
     if (!write_private(user_path, json, json_length, error))
         return FALSE;
     g_autoptr(GString) out = g_string_new(
-        "# KeyScribe preferences / 에이전트 설정 안내\n"
-        "# Offline guide: <install prefix>/share/doc/keyscribe/readme.txt\n"
-        "# Find this file with keyscribe --config-path.\n"
+        "# Givoice preferences / 에이전트 설정 안내\n"
+        "# Offline guide: <install prefix>/share/doc/givoice/readme.txt\n"
+        "# Find this file with givoice --config-path.\n"
         "# Quit before external edits; relaunch afterward to apply them.\n"
         "# GUI saves rewrite values and regenerate standard comments.\n"
         "# Top-level TOML keys, double-quoted strings, true/false, integers and string arrays.\n"

@@ -3,7 +3,7 @@
 int main(void) {
     // A private bus and memory settings keep the user's live IBus untouched.
     g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
-    g_autofree char *directory = g_dir_make_tmp("keyscribe-ibus-XXXXXX", NULL);
+    g_autofree char *directory = g_dir_make_tmp("givoice-ibus-XXXXXX", NULL);
     g_assert_nonnull(directory);
     g_setenv("XDG_CONFIG_HOME", directory, TRUE);
     g_autoptr(GTestDBus) test_bus = g_test_dbus_new(G_TEST_DBUS_NONE);

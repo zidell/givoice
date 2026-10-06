@@ -9,7 +9,7 @@ with pathlib.Path(sys.argv[1]).open('w') as out:
         out.write('};\n')
 
 with pathlib.Path(sys.argv[1]).open('a') as out:
-    data=(root/'assets'/'keyscribe-menu.png').read_bytes()
-    out.write('static const unsigned char keyscribe_menu[] = {\n')
+    data=(root/'assets'/'givoice-menu.png').read_bytes()
+    out.write('static const unsigned char givoice_menu[] = {\n')
     for start in range(0,len(data),20): out.write(','.join(str(n) for n in data[start:start+20])+',\n')
     out.write('};\n')

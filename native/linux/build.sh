@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-output="${KEYSCRIBE_BUILD_DIR:-$root/dist-native/linux}"
-version="${KEYSCRIBE_VERSION:-0.1.2}"
+output="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}"
+version="${GIVOICE_VERSION:-0.1.2}"
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo 'Version must be MAJOR.MINOR.PATCH' >&2
   exit 1
@@ -19,10 +19,10 @@ read -r -a cflags <<< "$(pkg-config --cflags "${packages[@]}")"
 read -r -a libs <<< "$(pkg-config --libs "${packages[@]}")"
 python3 "$root/native/linux/embed_sounds.py" "$output/sounds.h"
 "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${cflags[@]}" -I"$output" \
-  "-DKEYSCRIBE_VERSION=\"$version\"" \
+  "-DGIVOICE_VERSION=\"$version\"" \
   "$root/native/linux/src/main.c" "$root/native/linux/src/core.c" "${settings_sources[@]}" "$root/native/linux/src/portal.c" "$root/native/linux/src/output.c" "$root/native/linux/src/overlay.c" \
-  -o "$output/keyscribe" ${LDFLAGS:-} "${libs[@]}" -lm
+  -o "$output/givoice" ${LDFLAGS:-} "${libs[@]}" -lm
 if [[ "${1:-}" == --test ]]; then
   "$root/native/linux/test.sh"
 fi
-printf 'Built %s\n' "$output/keyscribe"
+printf 'Built %s\n' "$output/givoice"

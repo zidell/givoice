@@ -39,7 +39,7 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
 
     func present() -> Settings? {
         let alert = NSAlert()
-        alert.messageText = "KeyScribe 설정"
+        alert.messageText = "Givoice 설정"
         alert.informativeText = "API 키는 이 컴퓨터의 사용자 설정에만 저장됩니다."
         alert.addButton(withTitle: "저장")
         alert.addButton(withTitle: "취소")

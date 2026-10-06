@@ -1,20 +1,20 @@
-KeyScribe — installed app settings guide / 설치된 앱 환경설정 안내
+Givoice — installed app settings guide / 설치된 앱 환경설정 안내
 ================================================================
 
 This readme.txt is shipped with the app. No repository access or network
 connection is needed to use the instructions below.
 
 Installed guide locations:
-- macOS: KeyScribe.app/Contents/Resources/readme.txt
-- Windows: readme.txt beside KeyScribe.exe (including inside the MSIX package)
-- Linux .deb: /usr/share/doc/keyscribe/readme.txt
-- Linux local install: <install prefix>/share/doc/keyscribe/readme.txt
+- macOS: Givoice.app/Contents/Resources/readme.txt
+- Windows: readme.txt beside Givoice.exe (including inside the MSIX package)
+- Linux .deb: /usr/share/doc/givoice/readme.txt
+- Linux local install: <install prefix>/share/doc/givoice/readme.txt
 
 한국어 안내: 아래 OS별 실제 사용자 설정 파일을 수정하세요. 설치 폴더의 파일은
 안내 문서입니다. 앱을 종료한 뒤 설정을 편집하고, 다시 실행해야 반영됩니다.
 
-KeyScribe stores preferences in editable UTF-8 text files. Use this guide when a
-user asks to change KeyScribe's language, recording behavior, shortcut, widget,
+Givoice stores preferences in editable UTF-8 text files. Use this guide when a
+user asks to change Givoice's language, recording behavior, shortcut, widget,
 sound, recognition words, or replacement rules. There is currently no
 file watcher or automatic reload after an external edit.
 
@@ -22,13 +22,13 @@ file watcher or automatic reload after an external edit.
 
 | Platform | Preferences | API key |
 | --- | --- | --- |
-| macOS | `~/Library/Application Support/keyscribe/config.toml` | `user_config.json` in the same directory, property `api_key` |
-| Windows | `%APPDATA%\keyscribe\config.toml` | `user_config.json` in the same directory, property `api_key` |
-| Linux | `${XDG_CONFIG_HOME:-~/.config}/keyscribe/config.toml` | `user_config.json` in the same directory, property `api_key` |
+| macOS | `~/Library/Application Support/givoice/config.toml` | `user_config.json` in the same directory, property `api_key` |
+| Windows | `%APPDATA%\givoice\config.toml` | `user_config.json` in the same directory, property `api_key` |
+| Linux | `${XDG_CONFIG_HOME:-~/.config}/givoice/config.toml` | `user_config.json` in the same directory, property `api_key` |
 
 Resolve paths in the environment of the account running the installed app.
 Windows packaged apps may redirect application data; if the file is absent at
-the normal location, locate the existing `keyscribe` directory in that app's
+the normal location, locate the existing `givoice` directory in that app's
 package data before creating a second configuration. On macOS, first launch
 creates the annotated preferences file if missing. Windows and Linux also create
 an annotated default file on first launch, without copying environment API keys
@@ -37,8 +37,8 @@ Bundled `config.toml.example` files are templates, not the live preferences.
 
 ## Find settings from the installed executable
 
-Run `keyscribe --config-path` (Linux), `KeyScribe.exe --config-path` (Windows), or
-`/Applications/KeyScribe.app/Contents/MacOS/KeyScribe --config-path` (macOS).
+Run `givoice --config-path` (Linux), `Givoice.exe --config-path` (Windows), or
+`/Applications/Givoice.app/Contents/MacOS/Givoice --config-path` (macOS).
 Use the actual installed executable path if it differs. This prints the active
 preferences path without starting the GUI or requesting permissions. `--help`
 also documents discovery. Agents should capture stdout; on Windows, redirect or
@@ -61,7 +61,7 @@ files or silently loading old values. Fix the indicated syntax or value and retr
 1. Identify the OS and the existing preferences file. Read only the values needed
    for the request. Legacy Linux INI files contain the API key; do not dump
    credentials files or legacy INI contents into tool output or a response.
-2. Have KeyScribe idle and quit it before editing to avoid an in-memory settings
+2. Have Givoice idle and quit it before editing to avoid an in-memory settings
    save overwriting the edit. Do not interrupt an active recording or transcription.
 3. Back up the existing file privately, then change only the requested keys.
    Preserve unrelated values, comments, and API credentials. Add a missing key
@@ -147,8 +147,8 @@ overlay_position = "hidden"
 For recognition words and replacement rules:
 
 ```toml
-keyterms = ["KeyScribe", "VideoStew"]
-replacements = ["키스크라이브 => KeyScribe", "비디오 스튜 => VideoStew"]
+keyterms = ["Givoice", "VideoStew"]
+replacements = ["기보이스 => Givoice", "비디오 스튜 => VideoStew"]
 ```
 
 ### Linux migration field mapping

@@ -1,13 +1,13 @@
-# KeyScribe 환경설정 — 앱을 종료한 뒤 편집하고 다시 실행하세요.
+# Givoice 환경설정 — 앱을 종료한 뒤 편집하고 다시 실행하세요.
 # ─────────────────────────────────────────────────────────────────────────────
 # 사용자 설정 폴더의 config.toml에 저장된 값을 앱 시작 시 읽습니다.
 # 배포용 config.toml.example은 템플릿이며, 이를 편집해도 사용자 설정은 바뀌지 않습니다.
 # 실제 파일 경로는 설치된 실행 파일에 --config-path를 전달하면 출력됩니다.
 # API 키는 같은 설정 폴더의 user_config.json에 따로 저장됩니다.
 # 실제 설정 위치와 에이전트용 변경 지침:
-# macOS: KeyScribe.app/Contents/Resources/readme.txt
-# Windows: KeyScribe.exe 옆의 readme.txt
-# Linux: <설치 prefix>/share/doc/keyscribe/readme.txt
+# macOS: Givoice.app/Contents/Resources/readme.txt
+# Windows: Givoice.exe 옆의 readme.txt
+# Linux: <설치 prefix>/share/doc/givoice/readme.txt
 # 외부 편집 전 앱을 종료하고, 편집 후 다시 실행하세요.
 # 실행 중 설정 화면에서 저장하면 외부 변경을 이전 값으로 덮어쓸 수 있습니다.
 # Linux도 config.toml을 사용합니다. 기존 INI는 첫 실행 시 자동 이관됩니다.

@@ -5,7 +5,7 @@ each platform for changes since its last tag, raises the patch version by one, t
 tested commit and starts that platform's release workflow. A push that changes only
 documentation releases nothing, and `[skip release]` in the commit message skips a
 release on purpose. Windows joins the automatic releases once
-`KEYSCRIBE_WINDOWS_STORE_URL` is set.
+`GIVOICE_WINDOWS_STORE_URL` is set.
 
 | Platform | Release when these change |
 | --- | --- |
@@ -35,27 +35,27 @@ workflows on their own, so `auto-release.yml` dispatches the release workflow it
 
 Repository secrets (values never go in the repository):
 
-- macOS signing and notarization: `KEYSCRIBE_MAC_CERTIFICATE_BASE64`,
-  `KEYSCRIBE_MAC_CERTIFICATE_PASSWORD`, `KEYSCRIBE_MAC_SIGNING_IDENTITY`,
-  `KEYSCRIBE_APPLE_ID`, `KEYSCRIBE_APPLE_APP_PASSWORD`, `KEYSCRIBE_APPLE_TEAM_ID`.
-- Sparkle update signing: `KEYSCRIBE_SPARKLE_PRIVATE_KEY`. Its public half is
+- macOS signing and notarization: `GIVOICE_MAC_CERTIFICATE_BASE64`,
+  `GIVOICE_MAC_CERTIFICATE_PASSWORD`, `GIVOICE_MAC_SIGNING_IDENTITY`,
+  `GIVOICE_APPLE_ID`, `GIVOICE_APPLE_APP_PASSWORD`, `GIVOICE_APPLE_TEAM_ID`.
+- Sparkle update signing: `GIVOICE_SPARKLE_PRIVATE_KEY`. Its public half is
   `SUPublicEDKey` in `native/macos/Info.plist`. The maintainer's login keychain holds
-  the original under the `keyscribe` account (`generate_keys --account keyscribe`).
+  the original under the `givoice` account (`generate_keys --account givoice`).
   **If this key is lost, installed macOS apps can no longer accept updates**, so keep
-  an offline backup (`generate_keys --account keyscribe -x <file>`).
-- Microsoft Store package identity: `KEYSCRIBE_STORE_PACKAGE_NAME`,
-  `KEYSCRIBE_STORE_PUBLISHER`, `KEYSCRIBE_STORE_PUBLISHER_DISPLAY_NAME` (Partner Center →
+  an offline backup (`generate_keys --account givoice -x <file>`).
+- Microsoft Store package identity: `GIVOICE_STORE_PACKAGE_NAME`,
+  `GIVOICE_STORE_PUBLISHER`, `GIVOICE_STORE_PUBLISHER_DISPLAY_NAME` (Partner Center →
   the app → Product identity).
-- Microsoft Store submission API: `KEYSCRIBE_STORE_TENANT_ID`, `KEYSCRIBE_STORE_SELLER_ID`,
-  `KEYSCRIBE_STORE_PRODUCT_ID`, `KEYSCRIBE_STORE_CLIENT_ID`, `KEYSCRIBE_STORE_CLIENT_SECRET`.
+- Microsoft Store submission API: `GIVOICE_STORE_TENANT_ID`, `GIVOICE_STORE_SELLER_ID`,
+  `GIVOICE_STORE_PRODUCT_ID`, `GIVOICE_STORE_CLIENT_ID`, `GIVOICE_STORE_CLIENT_SECRET`.
   The client is a Microsoft Entra app registration added to Partner Center with the
   Manager role. **Its client secret expires** (at most 24 months); create a new one
-  before the expiry date and replace `KEYSCRIBE_STORE_CLIENT_SECRET`, or Store
+  before the expiry date and replace `GIVOICE_STORE_CLIENT_SECRET`, or Store
   submissions start failing.
 
 Repository variable:
 
-- `KEYSCRIBE_WINDOWS_STORE_URL`: the public Store listing URL. Until it is set the
+- `GIVOICE_WINDOWS_STORE_URL`: the public Store listing URL. Until it is set the
   landing page says the Windows version is coming instead of linking to the Store.
 
 ## First Microsoft Store submission
@@ -63,6 +63,6 @@ Repository variable:
 Automated submissions only update an app that is already live. For the first one,
 push a `windows-v1.0.0` tag, download the `windows-store-x64` artifact from the
 workflow run, and submit it in Partner Center together with the listing (description,
-screenshots, privacy policy URL `https://github.com/zidell/keyscribe/blob/main/docs/privacy.md`).
-After it is certified, set `KEYSCRIBE_WINDOWS_STORE_URL`; later tags are submitted
+screenshots, privacy policy URL `https://github.com/zidell/givoice/blob/main/docs/privacy.md`).
+After it is certified, set `GIVOICE_WINDOWS_STORE_URL`; later tags are submitted
 automatically when all five submission secrets exist.

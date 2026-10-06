@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://keyscribe.gitools.net/sitemap.xml
+Sitemap: https://zidell.github.io/givoice/sitemap.xml

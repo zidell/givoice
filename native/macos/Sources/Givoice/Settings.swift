@@ -21,7 +21,7 @@ struct Settings {
     static let logRetentionOptions = [1, 24, 168, 720]
 
     static let directory = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/keyscribe", isDirectory: true)
+        .appendingPathComponent("Library/Application Support/givoice", isDirectory: true)
     static let configURL = directory.appendingPathComponent("config.toml")
     static let userURL = directory.appendingPathComponent("user_config.json")
     static let legacyUserURL = FileManager.default.homeDirectoryForCurrentUser
@@ -106,11 +106,11 @@ struct Settings {
             "groq_model = \(jsonString(groqModel))",
         ]
         let header = """
-        # KeyScribe preferences / 에이전트 설정 안내
-        # Offline guide: KeyScribe.app/Contents/Resources/readme.txt
+        # Givoice preferences / 에이전트 설정 안내
+        # Offline guide: Givoice.app/Contents/Resources/readme.txt
         # Quit the app before external edits; relaunch afterward to apply them.
         # Saving in Settings does not reload external edits and rewrites this file.
-        # Find this file by passing --config-path to the installed KeyScribe executable.
+        # Find this file by passing --config-path to the installed Givoice executable.
         # Use one top-level assignment per line; double-quoted strings and inline arrays.
         # API key: user_config.json in this directory (do not put it in this file).
         """

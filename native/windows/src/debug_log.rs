@@ -106,7 +106,7 @@ pub fn init() {
 }
 
 pub fn path() -> PathBuf {
-    env::var_os("KEYSCRIBE_DEBUG_LOG")
+    env::var_os("GIVOICE_DEBUG_LOG")
         .map(PathBuf::from)
         .unwrap_or_else(|| crate::settings::directory().join("logs").join("debug.log"))
 }
@@ -144,7 +144,7 @@ pub fn ensure_file() -> std::io::Result<PathBuf> {
         fs::create_dir_all(parent)?;
     }
     // 예전에는 앱 데이터 폴더 바로 아래에 로그를 두었다.
-    if env::var_os("KEYSCRIBE_DEBUG_LOG").is_none() {
+    if env::var_os("GIVOICE_DEBUG_LOG").is_none() {
         let legacy = crate::settings::directory().join("debug.log");
         if legacy.exists() && fs::rename(&legacy, &path).is_err() {
             let _ = fs::remove_file(legacy);

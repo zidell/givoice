@@ -30,7 +30,7 @@ jobs:
     env:
       SHA: ${{ github.event.workflow_run.head_sha }}
       GH_TOKEN: ${{ github.token }}
-      WINDOWS_STORE_URL: ${{ vars.KEYSCRIBE_WINDOWS_STORE_URL }}
+      WINDOWS_STORE_URL: ${{ vars.GIVOICE_WINDOWS_STORE_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,7 +62,7 @@ jobs:
             else
               next="$first"
             fi
-            git tag -a "$platform-v$next" -m "KeyScribe $platform $next" "$SHA"
+            git tag -a "$platform-v$next" -m "Givoice $platform $next" "$SHA"
             git push origin "$platform-v$next"
             # Tags pushed with the workflow token do not start other workflows, so dispatch it.
             gh workflow run "$workflow" --ref main -f tag="$platform-v$next"

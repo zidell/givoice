@@ -1,6 +1,6 @@
 #include <gtk/gtk.h>
 #include "portal.h"
-#ifdef KEYSCRIBE_KDE_ESCAPE_TEST
+#ifdef GIVOICE_KDE_ESCAPE_TEST
 #include "input.h"
 #endif
 static Portal p;
@@ -28,14 +28,14 @@ static gboolean received(GtkWidget *w, GdkEventKey *e, void *user) {
 }
 static gboolean key(guint symbol,gboolean down) {
     GError *error=NULL;
-#ifdef KEYSCRIBE_KDE_ESCAPE_TEST
+#ifdef GIVOICE_KDE_ESCAPE_TEST
     int code=input_keycode(symbol);
     if(code<0){g_printerr("No keycode for test key\n");gtk_main_quit();return FALSE;}
     symbol=code;
 #endif
-    GVariant *reply=g_dbus_connection_call_sync(p.bus,"net.gitools.keyscribe.Driver","/net/gitools/keyscribe/Driver","net.gitools.keyscribe.Driver","Key",g_variant_new("(ub)",symbol,down),NULL,0,1000,NULL,&error);
+    GVariant *reply=g_dbus_connection_call_sync(p.bus,"com.videostew.givoice.Driver","/com/videostew/givoice/Driver","com.videostew.givoice.Driver","Key",g_variant_new("(ub)",symbol,down),NULL,0,1000,NULL,&error);
     if(!reply){g_printerr("inject: %s\n",error->message);g_clear_error(&error);gtk_main_quit();return FALSE;}
-#ifdef KEYSCRIBE_KDE_ESCAPE_TEST
+#ifdef GIVOICE_KDE_ESCAPE_TEST
     gboolean injected=FALSE;
     g_variant_get(reply,"(b)",&injected);
     if(!injected){g_printerr("Private test lost focus; injection stopped\n");gtk_main_quit();}
@@ -69,9 +69,9 @@ int main(int argc,char **argv) {
     gtk_init(&argc,&argv);
     GError *error=NULL;
     if(!portal_init(&p,event,NULL,&error)){g_printerr("init %s\n",error->message);return 1;}
-    guint own=g_bus_own_name_on_connection(p.bus,"net.gitools.keyscribe",0,NULL,NULL,NULL,NULL);
-    g_dbus_connection_signal_subscribe(p.bus, "net.gitools.keyscribe.Driver",
-        "net.gitools.keyscribe.Driver", "Record", "/net/gitools/keyscribe/Driver",
+    guint own=g_bus_own_name_on_connection(p.bus,"com.videostew.givoice",0,NULL,NULL,NULL,NULL);
+    g_dbus_connection_signal_subscribe(p.bus, "com.videostew.givoice.Driver",
+        "com.videostew.givoice.Driver", "Record", "/com/videostew/givoice/Driver",
         NULL, 0, record_signal, NULL, NULL);
     window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window),"Private Escape test");

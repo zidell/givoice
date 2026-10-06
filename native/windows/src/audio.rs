@@ -30,7 +30,7 @@ impl Recording {
         let config: StreamConfig = supported.into();
         let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(16);
         let level = Arc::new(AtomicU32::new(0));
-        let error = |err| eprintln!("KeyScribe audio: {err}");
+        let error = |err| eprintln!("Givoice audio: {err}");
         let stream = match format {
             SampleFormat::F32 => {
                 let sink = sender.clone();
@@ -187,7 +187,7 @@ mod tests {
     use super::*;
 
     fn test_path(name: &str) -> PathBuf {
-        std::env::temp_dir().join(format!("keyscribe-test-{}-{name}.wav", std::process::id()))
+        std::env::temp_dir().join(format!("givoice-test-{}-{name}.wav", std::process::id()))
     }
 
     #[test]

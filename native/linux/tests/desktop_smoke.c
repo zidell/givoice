@@ -1,4 +1,4 @@
-#define main keyscribe_app_main
+#define main givoice_app_main
 #include "../src/main.c"
 #undef main
 static gboolean finished(gpointer user) {
@@ -15,12 +15,12 @@ int main(int argc, char **argv) {
     app.settings.sound_volume = 0;
     g_free(app.settings.api_key);
     app.settings.api_key = g_strdup("gsk_smoke_no_upload");
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-desktop-XXXXXX", NULL);
+    g_autofree char *dir = g_dir_make_tmp("givoice-desktop-XXXXXX", NULL);
     app.config_dir = g_build_filename(dir, "config", NULL);
     app.logs_dir = g_build_filename(dir, "logs", NULL);
     g_mkdir_with_parents(app.logs_dir, 0700);
     GtkApplication *application =
-        gtk_application_new("net.gitools.keyscribe.smoketest", G_APPLICATION_NON_UNIQUE);
+        gtk_application_new("com.videostew.givoice.smoketest", G_APPLICATION_NON_UNIQUE);
     g_assert_true(g_application_register(G_APPLICATION(application), NULL, NULL));
     activate(application, NULL);
     g_assert_true(gtk_widget_get_visible(app.window));
@@ -113,11 +113,11 @@ int main(int argc, char **argv) {
     g_assert_cmpmem(header + 8, 4, "WAVE", 4);
     fclose(wav);
     gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(app.result)),
-                             "우분투 KeyScribe 테스트", -1);
+                             "우분투 Givoice 테스트", -1);
     copy_result(NULL, NULL);
     g_autofree char *copied =
         gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
-    g_assert_cmpstr(copied, ==, "우분투 KeyScribe 테스트");
+    g_assert_cmpstr(copied, ==, "우분투 Givoice 테스트");
     Job *first = g_new0(Job, 1), *second = g_new0(Job, 1);
     settings_init(&first->settings);
     settings_init(&second->settings);
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
         cairo_image_surface_create(CAIRO_FORMAT_ARGB32, bounds.width, bounds.height);
     cairo_t *cr = cairo_create(screenshot);
     gtk_widget_draw(app.window, cr);
-    cairo_surface_write_to_png(screenshot, "/tmp/keyscribe-settings-preview.png");
+    cairo_surface_write_to_png(screenshot, "/tmp/givoice-settings-preview.png");
     cairo_destroy(cr);
     cairo_surface_destroy(screenshot);
     g_print("PASS: native GTK window, tray, portal bus, real microphone WAV, cancellation, Korean "

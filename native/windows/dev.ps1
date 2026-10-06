@@ -3,14 +3,14 @@ param([switch]$Once)
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $build = Join-Path $PSScriptRoot 'build.ps1'
-$built = Join-Path $PSScriptRoot 'target\release\KeyScribe.exe'
-$output = Join-Path $root 'dist-native\KeyScribe.exe'
+$built = Join-Path $PSScriptRoot 'target\release\Givoice.exe'
+$output = Join-Path $root 'dist-native\Givoice.exe'
 $app = $null
 
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
-public static class KeyScribeDevStop {
+public static class GivoiceDevStop {
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     public static extern IntPtr OpenEvent(uint access, bool inheritHandle, string name);
     [DllImport("kernel32.dll")]
@@ -47,22 +47,22 @@ function Follow-RestartedApp {
     if ($null -eq $replacement) { return }
     $script:app.Dispose()
     $script:app = $replacement
-    Write-Output "Following restarted KeyScribe: PID $($script:app.Id)"
+    Write-Output "Following restarted Givoice: PID $($script:app.Id)"
 }
 
 function Stop-OwnedApp {
     Follow-RestartedApp
     if ($null -ne $script:app) {
         if (-not $script:app.HasExited) {
-            $eventName = 'Local\KeyScribeDevStop-{0}' -f $script:app.Id
-            $eventHandle = [KeyScribeDevStop]::OpenEvent(0x0002, $false, $eventName)
+            $eventName = 'Local\GivoiceDevStop-{0}' -f $script:app.Id
+            $eventHandle = [GivoiceDevStop]::OpenEvent(0x0002, $false, $eventName)
             if ($eventHandle -ne [IntPtr]::Zero) {
-                [void][KeyScribeDevStop]::SetEvent($eventHandle)
-                [void][KeyScribeDevStop]::CloseHandle($eventHandle)
+                [void][GivoiceDevStop]::SetEvent($eventHandle)
+                [void][GivoiceDevStop]::CloseHandle($eventHandle)
                 [void]$script:app.WaitForExit(5000)
             }
             if (-not $script:app.HasExited) {
-                Write-Warning 'KeyScribe did not close gracefully; forcing shutdown.'
+                Write-Warning 'Givoice did not close gracefully; forcing shutdown.'
                 $script:app.Kill()
                 [void]$script:app.WaitForExit(5000)
             }
@@ -75,7 +75,7 @@ function Stop-OwnedApp {
 try {
     while ($true) {
         $before = Get-SourceSnapshot
-        Write-Output 'Building KeyScribe...'
+        Write-Output 'Building Givoice...'
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $build -NoCopy
         $succeeded = $LASTEXITCODE -eq 0
         $after = Get-SourceSnapshot
@@ -88,14 +88,14 @@ try {
             New-Item -ItemType Directory -Path (Split-Path $output) -Force | Out-Null
             Copy-Item -LiteralPath $built -Destination $output -Force
             Copy-Item -LiteralPath (Join-Path $root 'docs\readme.txt') -Destination (Join-Path (Split-Path $output) 'readme.txt') -Force
-            $previousLog = [Environment]::GetEnvironmentVariable('KEYSCRIBE_DEBUG_LOG', 'Process')
+            $previousLog = [Environment]::GetEnvironmentVariable('GIVOICE_DEBUG_LOG', 'Process')
             try {
-                [Environment]::SetEnvironmentVariable('KEYSCRIBE_DEBUG_LOG', (Join-Path $root 'dist-native\logs\debug.log'), 'Process')
+                [Environment]::SetEnvironmentVariable('GIVOICE_DEBUG_LOG', (Join-Path $root 'dist-native\logs\debug.log'), 'Process')
                 $app = Start-Process -FilePath $output -WorkingDirectory $root -WindowStyle Hidden -PassThru
             } finally {
-                [Environment]::SetEnvironmentVariable('KEYSCRIBE_DEBUG_LOG', $previousLog, 'Process')
+                [Environment]::SetEnvironmentVariable('GIVOICE_DEBUG_LOG', $previousLog, 'Process')
             }
-            Write-Output "KeyScribe running: PID $($app.Id)"
+            Write-Output "Givoice running: PID $($app.Id)"
         } else {
             Write-Output 'Build failed; the last working app remains running.'
         }

@@ -99,16 +99,16 @@ int main(int argc, char **argv) {
         return 1;
     }
     portal.keycode_for_keysym = input_keycode;
-    g_autofree char *config = g_build_filename(g_get_user_config_dir(), "keyscribe", NULL);
+    g_autofree char *config = g_build_filename(g_get_user_config_dir(), "givoice", NULL);
     portal.keyboard_token_path = portal_keyboard_token_path(config);
     if (!g_file_get_contents(portal.keyboard_token_path, &portal.keyboard_restore_token, NULL, NULL) &&
         !authorize) {
-        g_print("SKIP: grant KeyScribe keyboard permission first\n");
+        g_print("SKIP: grant Givoice keyboard permission first\n");
         portal_clear(&portal);
         return 77;
     }
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "KeyScribe 자동 입력 검증");
+    gtk_window_set_title(GTK_WINDOW(window), "Givoice 자동 입력 검증");
     gtk_window_set_default_size(GTK_WINDOW(window), 360, 80);
     entry = gtk_entry_new();
     gtk_container_add(GTK_CONTAINER(window), entry);

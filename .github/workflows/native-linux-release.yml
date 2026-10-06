@@ -38,7 +38,7 @@ jobs:
             echo 'Tag must be linux-vMAJOR.MINOR.PATCH' >&2; exit 1;
           }
           git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null
-          echo "KEYSCRIBE_VERSION=${RELEASE_TAG#linux-v}" >> "$GITHUB_ENV"
+          echo "GIVOICE_VERSION=${RELEASE_TAG#linux-v}" >> "$GITHUB_ENV"
       - name: Install native dependencies
         run: |
           sudo apt-get update
@@ -49,18 +49,18 @@ jobs:
         shell: bash
         run: |
           ./packaging/build-deb.sh
-          package="dist-native/linux/KeyScribe-ubuntu-amd64-$KEYSCRIBE_VERSION.deb"
+          package="dist-native/linux/Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb"
           test -s "$package"
-          test "$(dpkg-deb --field "$package" Version)" = "$KEYSCRIBE_VERSION"
+          test "$(dpkg-deb --field "$package" Version)" = "$GIVOICE_VERSION"
           test "$(dpkg-deb --field "$package" Architecture)" = amd64
-          test "$(dist-native/linux/keyscribe --version)" = "KeyScribe Linux $KEYSCRIBE_VERSION"
+          test "$(dist-native/linux/givoice --version)" = "Givoice Linux $GIVOICE_VERSION"
           cd dist-native/linux
-          sha256sum "KeyScribe-ubuntu-amd64-$KEYSCRIBE_VERSION.deb" > SHA256SUMS
+          sha256sum "Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb" > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: ubuntu-amd64
           path: |
-            dist-native/linux/KeyScribe-ubuntu-amd64-*.deb
+            dist-native/linux/Givoice-ubuntu-amd64-*.deb
             dist-native/linux/SHA256SUMS
           if-no-files-found: error
       - name: Publish Ubuntu release
@@ -69,10 +69,10 @@ jobs:
         shell: bash
         run: |
           gh release create "$RELEASE_TAG" \
-            "dist-native/linux/KeyScribe-ubuntu-amd64-$KEYSCRIBE_VERSION.deb" \
+            "dist-native/linux/Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb" \
             dist-native/linux/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
-            --title "KeyScribe Ubuntu $KEYSCRIBE_VERSION" --generate-notes
+            --title "Givoice Ubuntu $GIVOICE_VERSION" --generate-notes
       - name: Redeploy landing page with the new Ubuntu version
         env:
           GH_TOKEN: ${{ github.token }}

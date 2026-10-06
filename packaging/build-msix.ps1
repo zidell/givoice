@@ -27,9 +27,9 @@ if ($storeBuild) {
     $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
         (Resolve-Path $CertificatePath).Path, $CertificatePassword
     )
-    $packageName = 'KeyScribe'
+    $packageName = 'Givoice'
     $publisherName = $certificate.Subject
-    $publisherDisplayName = 'KeyScribe'
+    $publisherDisplayName = 'Givoice'
 }
 $packageName = [System.Security.SecurityElement]::Escape($packageName)
 $publisher = [System.Security.SecurityElement]::Escape($publisherName)
@@ -37,10 +37,10 @@ $publisherDisplayName = [System.Security.SecurityElement]::Escape($publisherDisp
 $root = (Resolve-Path '.').Path
 $stageName = if ($storeBuild) { 'build\msix-store' } else { 'build\msix' }
 $stage = Join-Path $root $stageName
-$appDirectory = Join-Path $stage 'App\KeyScribe'
+$appDirectory = Join-Path $stage 'App\Givoice'
 $assetsDirectory = Join-Path $stage 'Assets'
 $suffix = if ($storeBuild) { '-store' } else { '' }
-$output = Join-Path $root "dist\KeyScribe-windows-x64-$Version$suffix.msix"
+$output = Join-Path $root "dist\Givoice-windows-x64-$Version$suffix.msix"
 New-Item (Join-Path $root 'dist') -ItemType Directory -Force | Out-Null
 
 if (-not (Test-Path $ExecutablePath)) {
@@ -49,7 +49,7 @@ if (-not (Test-Path $ExecutablePath)) {
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item $appDirectory -ItemType Directory -Force | Out-Null
 New-Item $assetsDirectory -ItemType Directory -Force | Out-Null
-Copy-Item -LiteralPath $ExecutablePath -Destination (Join-Path $appDirectory 'KeyScribe.exe')
+Copy-Item -LiteralPath $ExecutablePath -Destination (Join-Path $appDirectory 'Givoice.exe')
 Copy-Item -LiteralPath (Join-Path $root 'docs\readme.txt') -Destination (Join-Path $appDirectory 'readme.txt')
 $sourceAssets = Join-Path $root 'packaging\msix-assets'
 foreach ($name in @('StoreLogo.png', 'Logo44.png', 'Logo150.png', 'Logo310.png', 'LogoWide.png')) {
@@ -66,7 +66,7 @@ $manifest = @"
          IgnorableNamespaces="uap rescap">
   <Identity Name="$packageName" Publisher="$publisher" Version="$msixVersion" ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>KeyScribe</DisplayName>
+    <DisplayName>Givoice</DisplayName>
     <PublisherDisplayName>$publisherDisplayName</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -75,8 +75,8 @@ $manifest = @"
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
   <Applications>
-    <Application Id="KeyScribe" Executable="App\KeyScribe\KeyScribe.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="KeyScribe" Description="Voice dictation"
+    <Application Id="Givoice" Executable="App\Givoice\Givoice.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Givoice" Description="Voice dictation"
         BackgroundColor="transparent" Square150x150Logo="Assets\Logo150.png"
         Square44x44Logo="Assets\Logo44.png">
         <uap:DefaultTile Wide310x150Logo="Assets\LogoWide.png" Square310x310Logo="Assets\Logo310.png" />

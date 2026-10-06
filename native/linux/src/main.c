@@ -5,8 +5,8 @@
 #include "output.h"
 #include "overlay.h"
 #include "sounds.h"
-#ifndef KEYSCRIBE_VERSION
-#define KEYSCRIBE_VERSION "0.1.2"
+#ifndef GIVOICE_VERSION
+#define GIVOICE_VERSION "0.1.2"
 #endif
 #include <json-glib/json-glib.h>
 #include <libintl.h>
@@ -111,7 +111,7 @@ static void set_state(State state) {
                                                      : state == TRANSCRIBING ? 2
                                                                              : 0]
                                     : "audio-input-microphone",
-                                "KeyScribe");
+                                "Givoice");
     gtk_button_set_label(GTK_BUTTON(app.record_button),
                          state == CONNECTING || state == RECORDING ? "녹음 종료" : "녹음 시작");
     gtk_widget_set_sensitive(app.record_button, TRUE);
@@ -151,7 +151,7 @@ static void update_ready(GObject *obj, GAsyncResult *result, void *user) {
         debug_log("update check failed");
         return;
     }
-    if (version_compare(version, KEYSCRIBE_VERSION) <= 0 || !g_strcmp0(version, app.update_version))
+    if (version_compare(version, GIVOICE_VERSION) <= 0 || !g_strcmp0(version, app.update_version))
         return;
     debug_log("newer Ubuntu release available");
     g_free(app.update_version);
@@ -174,7 +174,7 @@ static void open_update(GtkMenuItem *item, void *user) {
     if (!app.update_version)
         return;
     g_autofree char *uri = g_strdup_printf(
-        "https://github.com/zidell/keyscribe/releases/tag/linux-v%s", app.update_version);
+        "https://github.com/zidell/givoice/releases/tag/linux-v%s", app.update_version);
     g_autoptr(GError) error = NULL;
     if (!g_app_info_launch_default_for_uri(uri, NULL, &error))
         set_status(error->message);
@@ -749,7 +749,7 @@ static void context_state(pa_context *context, void *user) {
     pa_context_state_t state = pa_context_get_state(context);
     if (state == PA_CONTEXT_READY) {
         pa_sample_spec spec = {PA_SAMPLE_S16LE, 16000, 1};
-        app.stream = pa_stream_new(context, "KeyScribe microphone", &spec, NULL);
+        app.stream = pa_stream_new(context, "Givoice microphone", &spec, NULL);
         if (!app.stream) {
             stop_recording(TRUE);
             set_status("녹음 스트림 생성 실패");
@@ -820,7 +820,7 @@ static void start_recording(gboolean from_shortcut) {
     app.from_shortcut = from_shortcut;
     set_state(CONNECTING);
     set_status("마이크 연결 중…");
-    app.context = pa_context_new(pa_glib_mainloop_get_api(app.audio_loop), "KeyScribe");
+    app.context = pa_context_new(pa_glib_mainloop_get_api(app.audio_loop), "Givoice");
     if (!app.context) {
         stop_recording(TRUE);
         set_status("오디오 초기화 실패");
@@ -1135,10 +1135,10 @@ static void discard_settings(GtkWidget *w, void *user) {
 static void create_tray_icons(void) {
     const char *names[] = {"idle", "recording", "transcribing"};
     const guint8 colors[3][3] = {{14, 165, 233}, {232, 52, 52}, {240, 158, 32}};
-    g_autofree char *dir = g_build_filename(g_get_user_cache_dir(), "keyscribe", NULL);
+    g_autofree char *dir = g_build_filename(g_get_user_cache_dir(), "givoice", NULL);
     g_mkdir_with_parents(dir, 0700);
     GInputStream *data =
-        g_memory_input_stream_new_from_data(keyscribe_menu, sizeof(keyscribe_menu), NULL);
+        g_memory_input_stream_new_from_data(givoice_menu, sizeof(givoice_menu), NULL);
     GdkPixbuf *source = gdk_pixbuf_new_from_stream(data, NULL, NULL);
     g_object_unref(data);
     if (!source)
@@ -1289,7 +1289,7 @@ static void activate(GtkApplication *application, void *user) {
                                               GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     g_object_unref(css);
     app.window = gtk_application_window_new(application);
-    gtk_window_set_title(GTK_WINDOW(app.window), "KeyScribe 설정");
+    gtk_window_set_title(GTK_WINDOW(app.window), "Givoice 설정");
     gtk_window_set_default_size(GTK_WINDOW(app.window), 560, 850);
     g_signal_connect(app.window, "delete-event", G_CALLBACK(hide_window), NULL);
     g_signal_connect(app.window, "key-press-event", G_CALLBACK(key_press), NULL);
@@ -1297,7 +1297,7 @@ static void activate(GtkApplication *application, void *user) {
     gtk_container_set_border_width(GTK_CONTAINER(outer), 18);
     gtk_container_add(GTK_CONTAINER(app.window), outer);
     GtkWidget *title = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(title), "<big><b>KeyScribe</b></big>  ·  Ubuntu");
+    gtk_label_set_markup(GTK_LABEL(title), "<big><b>Givoice</b></big>  ·  Ubuntu");
     gtk_box_pack_start(GTK_BOX(outer), title, FALSE, FALSE, 0);
     gtk_widget_set_no_show_all(title, TRUE);
     app.status = gtk_label_new("준비됨 — API 키를 설정하고 저장하세요");
@@ -1533,7 +1533,7 @@ static void activate(GtkApplication *application, void *user) {
     }
     gtk_widget_show_all(menu);
     create_tray_icons();
-    app.indicator = g_object_new(APP_INDICATOR_TYPE, "id", "keyscribe", "icon-name",
+    app.indicator = g_object_new(APP_INDICATOR_TYPE, "id", "givoice", "icon-name",
                                  "audio-input-microphone", "category", "ApplicationStatus", NULL);
     app_indicator_set_status(app.indicator, APP_INDICATOR_STATUS_ACTIVE);
     app_indicator_set_menu(app.indicator, GTK_MENU(menu));
@@ -1570,17 +1570,17 @@ static void activate(GtkApplication *application, void *user) {
 int main(int argc, char **argv) {
     // Handle discovery without starting GTK, recording, or permission portals.
     if (argc == 2 && g_str_equal(argv[1], "--config-path")) {
-        g_autofree char *dir = g_build_filename(g_get_user_config_dir(), "keyscribe", NULL);
+        g_autofree char *dir = g_build_filename(g_get_user_config_dir(), "givoice", NULL);
         g_autofree char *path = settings_path(dir);
         puts(path);
         return 0;
     }
     if (argc == 2 && (g_str_equal(argv[1], "--help") || g_str_equal(argv[1], "-h"))) {
-        puts("KeyScribe voice input\n"
+        puts("Givoice voice input\n"
              "  --config-path  Print the active preferences path; no GUI is started\n"
              "  --settings     Open Settings\n"
              "  --version      Print version\n"
-             "Offline settings guide: <install prefix>/share/doc/keyscribe/readme.txt\n"
+             "Offline settings guide: <install prefix>/share/doc/givoice/readme.txt\n"
              "Quit before editing preferences; relaunch afterward.");
         return 0;
     }
@@ -1598,15 +1598,15 @@ int main(int argc, char **argv) {
     if (argc == 2 && g_str_equal(argv[1], "--overlay"))
         return overlay_run();
     if (argc == 2 && g_str_equal(argv[1], "--version")) {
-        puts("KeyScribe Linux " KEYSCRIBE_VERSION);
+        puts("Givoice Linux " GIVOICE_VERSION);
         return 0;
     }
     signal(SIGPIPE, SIG_IGN);
     umask(0077);
     curl_global_init(CURL_GLOBAL_DEFAULT);
     settings_init(&app.settings);
-    app.config_dir = g_build_filename(g_get_user_config_dir(), "keyscribe", NULL);
-    app.logs_dir = g_build_filename(g_get_user_data_dir(), "keyscribe", "logs", NULL);
+    app.config_dir = g_build_filename(g_get_user_config_dir(), "givoice", NULL);
+    app.logs_dir = g_build_filename(g_get_user_data_dir(), "givoice", "logs", NULL);
     if (g_mkdir_with_parents(app.logs_dir, 0700) < 0) {
         fputs("Cannot create recordings directory\n", stderr);
         return 1;
@@ -1622,7 +1622,7 @@ int main(int argc, char **argv) {
     }
     prune_recordings(app.logs_dir, app.settings.retention_hours);
     GtkApplication *application =
-        gtk_application_new("net.gitools.keyscribe", G_APPLICATION_DEFAULT_FLAGS);
+        gtk_application_new("com.videostew.givoice", G_APPLICATION_DEFAULT_FLAGS);
     const GActionEntry actions[] = {
         {.name = "settings", .activate = application_action},
         {.name = "choose-shortcut", .activate = application_action},

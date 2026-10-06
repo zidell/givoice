@@ -1,12 +1,12 @@
-# KeyScribe
+# Givoice
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![CI](https://github.com/zidell/givoice/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/givoice/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-> KeyScribe es un proyecto personal publicado de forma gratuita. Puedes usarlo libremente, pero no se aceptan sugerencias de funciones, informes de errores ni solicitudes de soporte. Si necesitas algo distinto, haz un fork bajo la GPLv3 y adáptalo.
+> Givoice es un proyecto personal publicado de forma gratuita. Puedes usarlo libremente, pero no se aceptan sugerencias de funciones, informes de errores ni solicitudes de soporte. Si necesitas algo distinto, haz un fork bajo la GPLv3 y adáptalo.
 
-KeyScribe es una aplicación de dictado que transcribe las grabaciones del micrófono y pega el texto resultante en el campo activo. Mantiene deliberadamente un conjunto pequeño de funciones y está implementada de forma nativa, con un objetivo de memoria en reposo de unos 20 MB. No incluye un modelo propio, por lo que necesita una clave de API de OpenAI, ElevenLabs o Groq (Groq puede usarse gratis).
+Givoice es una aplicación de dictado que transcribe las grabaciones del micrófono y pega el texto resultante en el campo activo. Mantiene deliberadamente un conjunto pequeño de funciones y está implementada de forma nativa, con un objetivo de memoria en reposo de unos 20 MB. No incluye un modelo propio, por lo que necesita una clave de API de OpenAI, ElevenLabs o Groq (Groq puede usarse gratis).
 
 ## Funciones
 
@@ -30,38 +30,38 @@ Las siguientes imágenes muestran el menú de control y el flujo de uso de la ap
 
 | macOS | Windows |
 | --- | --- |
-| ![Menú de KeyScribe abierto desde la barra de menús de macOS](assets/screenshots/macos-menu-preview.png) | ![Menú de KeyScribe abierto desde la bandeja de Windows](assets/screenshots/windows-menu-preview.png) |
+| ![Menú de Givoice abierto desde la barra de menús de macOS](assets/screenshots/macos-menu-preview.png) | ![Menú de Givoice abierto desde la bandeja de Windows](assets/screenshots/windows-menu-preview.png) |
 
 ### Flujo de uso
 
 | macOS | Windows |
 | --- | --- |
-| ![KeyScribe grabando, transcribiendo y pegando automáticamente en macOS](assets/screenshots/keyscribe-flow.gif) | ![KeyScribe grabando, transcribiendo y pegando automáticamente en Windows](assets/screenshots/keyscribe-windows-flow.gif) |
+| ![Givoice grabando, transcribiendo y pegando automáticamente en macOS](assets/screenshots/givoice-flow.gif) | ![Givoice grabando, transcribiendo y pegando automáticamente en Windows](assets/screenshots/givoice-windows-flow.gif) |
 
 ## Instalación
 
-Consulta la [página de descargas de KeyScribe](https://keyscribe.gitools.net) para las descargas e instrucciones de instalación. Los instaladores de macOS y Ubuntu se publican en [GitHub Releases](https://github.com/zidell/keyscribe/releases) y la aplicación de Windows se distribuye a través de Microsoft Store. Cuando hay una versión nueva, la aplicación de macOS la ofrece y la instala si aceptas, Microsoft Store actualiza automáticamente la de Windows y la de Ubuntu muestra una opción de descarga en el menú de la bandeja.
+Consulta la [página de descargas de Givoice](https://zidell.github.io/givoice) para las descargas e instrucciones de instalación. Los instaladores de macOS y Ubuntu se publican en [GitHub Releases](https://github.com/zidell/givoice/releases) y la aplicación de Windows se distribuye a través de Microsoft Store. Cuando hay una versión nueva, la aplicación de macOS la ofrece y la instala si aceptas, Microsoft Store actualiza automáticamente la de Windows y la de Ubuntu muestra una opción de descarga en el menú de la bandeja.
 
 | Sistema operativo | Archivo | Instalar o ejecutar |
 | --- | --- | --- |
-| macOS Apple Silicon | `KeyScribe-macos-arm64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
-| macOS Intel | `KeyScribe-macos-x64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
+| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
+| macOS Intel | `Givoice-macos-x64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
 | Windows 10/11 x64 | Microsoft Store | Próximamente en Microsoft Store |
-| Ubuntu 24.04+ amd64 | `KeyScribe-ubuntu-amd64-*.deb` | [Instalación nativa para Ubuntu](native/linux/README.md) |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Instalación nativa para Ubuntu](native/linux/README.md) |
 
 ## Primer uso
 
-1. Abre **Configuración...** desde el icono de KeyScribe en la barra de menús o la bandeja, y elige una clave y un modelo de ElevenLabs, OpenAI o Groq. El modelo predeterminado de Groq es `whisper-large-v3-turbo`.
+1. Abre **Configuración...** desde el icono de Givoice en la barra de menús o la bandeja, y elige una clave y un modelo de ElevenLabs, OpenAI o Groq. El modelo predeterminado de Groq es `whisper-large-v3-turbo`.
 2. En macOS, permite los permisos de Micrófono y **Ajustes del Sistema → Privacidad y seguridad → Accesibilidad**. En Windows, permite el acceso al micrófono para aplicaciones de escritorio en **Configuración → Privacidad y seguridad → Micrófono**. En Ubuntu, registra el atajo global y permite el control del teclado (pegado automático) en la pestaña Atajos / Permisos cuando lo pida el diálogo del sistema.
 3. Coloca el cursor en el campo donde quieras escribir y mantén pulsada la tecla Command derecha (macOS), Alt derecha (Windows) o Ctrl+Alt+Space (Ubuntu) mientras hablas. Suelta la tecla para pegar la transcripción.
 
-En Configuración puedes cambiar el atajo, el método para detener la grabación, el límite de tiempo (10, 20, 30 o 60 minutos; 30 de forma predeterminada), el idioma de reconocimiento, el volumen del sonido de inicio y el envío automático. Cuando está activado el envío automático, KeyScribe pulsa Enter después de pegar. Para escribir automáticamente en una aplicación de Windows ejecutada como administrador, es posible que KeyScribe también deba ejecutarse como administrador.
+En Configuración puedes cambiar el atajo, el método para detener la grabación, el límite de tiempo (10, 20, 30 o 60 minutos; 30 de forma predeterminada), el idioma de reconocimiento, el volumen del sonido de inicio y el envío automático. Cuando está activado el envío automático, Givoice pulsa Enter después de pegar. Para escribir automáticamente en una aplicación de Windows ejecutada como administrador, es posible que Givoice también deba ejecutarse como administrador.
 
 ## Compatibilidad con Ubuntu
 
-Además de las aplicaciones de macOS y Windows, KeyScribe ofrece una aplicación nativa para Ubuntu
+Además de las aplicaciones de macOS y Windows, Givoice ofrece una aplicación nativa para Ubuntu
 compilada en C/GTK. Descarga el instalador `.deb` desde
-[la última versión para Ubuntu](https://github.com/zidell/keyscribe/releases?q=linux-v&expanded=true); la compilación, la instalación y el uso se
+[la última versión para Ubuntu](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true); la compilación, la instalación y el uso se
 explican en la [guía de Ubuntu](native/linux/README.md). Admite grabación con PipeWire/PulseAudio
 y los tres servicios de transcripción, y en GNOME y KDE Plasma usa los portales del escritorio para
 los atajos globales y el pegado automático. En escritorios sin los portales necesarios, graba con el
@@ -81,7 +81,7 @@ Groq usa una API de transcripción compatible con OpenAI. Obtén una clave media
 
 ### Obtener una clave de API
 
-Pega una clave creada siguiendo estos pasos en **Configuración... → Clave de API** de KeyScribe y pulsa **Actualizar**. Trata la clave como una contraseña: no la compartas ni la publiques.
+Pega una clave creada siguiendo estos pasos en **Configuración... → Clave de API** de Givoice y pulsa **Actualizar**. Trata la clave como una contraseña: no la compartas ni la publiques.
 
 La forma de crear una clave difiere según el servicio. Una suscripción a ChatGPT es independiente de la facturación de OpenAI API, y ElevenLabs requiere un Full Seat para crear una clave de API personal. Groq es la opción más sencilla para empezar gratis, pero su nivel gratuito tiene límites de uso y de velocidad.
 
@@ -91,7 +91,7 @@ La forma de crear una clave difiere según el servicio. Una suscripción a ChatG
 2. Configura un método de pago o créditos de API en **Billing** de API Platform. Una suscripción a ChatGPT Plus o Pro por sí sola no incluye uso de API.
 3. Elige el proyecto que usarás. Los usuarios individuales pueden conservar el proyecto predeterminado.
 4. Pulsa **Create new secret key**, asígnale un nombre y crea la clave.
-5. Copia la clave `sk-…` mostrada en KeyScribe.
+5. Copia la clave `sk-…` mostrada en Givoice.
 
 Las claves de OpenAI API se crean por proyecto; los permisos y límites de uso se administran en los ajustes del proyecto. [Guía oficial de OpenAI](https://help.openai.com/en/articles/9186755)
 
@@ -100,7 +100,7 @@ Las claves de OpenAI API se crean por proyecto; los permisos y límites de uso s
 1. Inicia sesión o crea una cuenta en la [página de claves de API de ElevenLabs](https://elevenlabs.io/app/developers/api-keys).
 2. Confirma que dispones del **Full Seat** necesario para crear una clave de API personal. De lo contrario, necesitarás el plan o ajuste del administrador del espacio de trabajo correspondiente.
 3. Crea una clave en la lista de claves de API personales y asígnale un nombre reconocible.
-4. Copia la clave `sk_…` resultante en KeyScribe.
+4. Copia la clave `sk_…` resultante en Givoice.
 
 Las claves personales se pueden crear y renovar en los ajustes de claves de API personales. [Guía oficial de ElevenLabs](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys)
 
@@ -109,7 +109,7 @@ Las claves personales se pueden crear y renovar en los ajustes de claves de API 
 1. Inicia sesión o crea una cuenta en la [página de claves de API de Groq Console](https://console.groq.com/keys). Se pueden crear claves en el nivel gratuito.
 2. Si es la primera vez, crea un proyecto o selecciona el predeterminado en el selector de proyectos.
 3. Pulsa **Create API Key**, asígnale un nombre y crea la clave.
-4. Copia la clave `gsk_…` resultante en KeyScribe.
+4. Copia la clave `gsk_…` resultante en Givoice.
 
 Las claves de Groq pertenecen al proyecto seleccionado y el nivel gratuito tiene límites de solicitudes y procesamiento de audio. Para pasar al nivel Developer de pago con límites mayores se necesita un método de pago. [Guía de proyectos de Groq](https://console.groq.com/docs/projects), [guía de facturación](https://console.groq.com/docs/billing-faqs)
 
@@ -117,9 +117,9 @@ Las claves de Groq pertenecen al proyecto seleccionado y el nivel gratuito tiene
 
 Puedes consultar el estado y los errores en el menú de la barra de menús o de la bandeja. **Carpeta de registros y grabaciones** abre la carpeta con el registro de diagnóstico (`debug.log`) y las grabaciones originales (`recording-*.wav`).
 
-- macOS: `~/Library/Application Support/keyscribe/logs/`
-- Windows: `%APPDATA%\keyscribe\logs\`
-- Ubuntu: `~/.local/share/keyscribe/logs/` (o `$XDG_DATA_HOME/keyscribe/logs/`)
+- macOS: `~/Library/Application Support/givoice/logs/`
+- Windows: `%APPDATA%\givoice\logs\`
+- Ubuntu: `~/.local/share/givoice/logs/` (o `$XDG_DATA_HOME/givoice/logs/`)
 - Ejecuciones de desarrollo: `dist-native/logs/`
 
 El [aviso de privacidad](docs/privacy.md) explica cómo se envía el audio y se almacenan las claves de API. El código fuente está disponible bajo la [licencia GNU GPL v3](LICENSE).

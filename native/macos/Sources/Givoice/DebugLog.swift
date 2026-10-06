@@ -3,13 +3,13 @@ import Foundation
 final class DebugLog {
     static let shared = DebugLog()
 
-    private let queue = DispatchQueue(label: "net.gitools.keyscribe.debug-log", qos: .utility)
+    private let queue = DispatchQueue(label: "com.videostew.givoice.debug-log", qos: .utility)
     let fileURL: URL
     private var timer: DispatchSourceTimer?
     private var retention: TimeInterval = TimeInterval(Settings.defaultLogRetentionHours) * 60 * 60
 
     private init() {
-        if let path = ProcessInfo.processInfo.environment["KEYSCRIBE_DEBUG_LOG"], !path.isEmpty {
+        if let path = ProcessInfo.processInfo.environment["GIVOICE_DEBUG_LOG"], !path.isEmpty {
             fileURL = URL(fileURLWithPath: path)
         } else {
             fileURL = Settings.directory.appendingPathComponent("logs/debug.log")

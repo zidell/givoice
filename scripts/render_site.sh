@@ -3,13 +3,13 @@ set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
     echo 'Usage: render_site.sh OUTPUT_DIRECTORY' >&2
-    echo 'Optional: KEYSCRIBE_WINDOWS_STORE_URL once the Microsoft Store listing is live, GH_TOKEN for API limits.' >&2
+    echo 'Optional: GIVOICE_WINDOWS_STORE_URL once the Microsoft Store listing is live, GH_TOKEN for API limits.' >&2
     exit 1
 fi
 
 output_dir="$1"
 project_root="$(cd "$(dirname "$0")/.." && pwd)"
-repo='zidell/keyscribe'
+repo='zidell/givoice'
 
 # Each platform ships from its own tag series (macos-v*, linux-v*); link the newest of each.
 latest_version() {
@@ -32,8 +32,8 @@ asset_size() {
     jq -r --arg name "$1" '.assets[] | select(.name == $name) | .size' <<< "$macos_release" |
         awk '{ printf "%.1f MB", $1 / 1000000 }'
 }
-macos_arm64_size="$(asset_size "KeyScribe-macos-arm64-$macos_version.dmg")"
-macos_x64_size="$(asset_size "KeyScribe-macos-x64-$macos_version.dmg")"
+macos_arm64_size="$(asset_size "Givoice-macos-arm64-$macos_version.dmg")"
+macos_x64_size="$(asset_size "Givoice-macos-x64-$macos_version.dmg")"
 
 mkdir -p "$output_dir"
 sed -e "s/__MACOS_VERSION__/$macos_version/g" \
@@ -43,8 +43,8 @@ sed -e "s/__MACOS_VERSION__/$macos_version/g" \
     "$project_root/site/index.html" > "$output_dir/index.html"
 # Windows is distributed only through the Microsoft Store; until the listing is live the
 # page says it is coming instead of linking to it.
-if [[ -n "${KEYSCRIBE_WINDOWS_STORE_URL:-}" ]]; then
-    store_url="${KEYSCRIBE_WINDOWS_STORE_URL//&/\\&}"
+if [[ -n "${GIVOICE_WINDOWS_STORE_URL:-}" ]]; then
+    store_url="${GIVOICE_WINDOWS_STORE_URL//&/\\&}"
     sed -i.bak -e '/data-windows-pending/d' -e "s#__WINDOWS_STORE_URL__#$store_url#g" "$output_dir/index.html"
 else
     sed -i.bak -e '/data-windows-store/d' "$output_dir/index.html"
@@ -61,13 +61,12 @@ for arch in arm64 x64; do
 done
 printf '%s\n' "$linux_version" > "$output_dir/linux-version.txt"
 
-cp "$project_root/assets/keyscribe.svg" "$output_dir/logo.svg"
+cp "$project_root/assets/givoice.svg" "$output_dir/logo.svg"
 mkdir -p "$output_dir/screenshots"
-cp "$project_root/assets/screenshots/keyscribe-flow.gif" "$output_dir/screenshots/keyscribe-flow.gif"
-cp "$project_root/assets/screenshots/keyscribe-windows-flow.gif" "$output_dir/screenshots/keyscribe-windows-flow.gif"
+cp "$project_root/assets/screenshots/givoice-flow.gif" "$output_dir/screenshots/givoice-flow.gif"
+cp "$project_root/assets/screenshots/givoice-windows-flow.gif" "$output_dir/screenshots/givoice-windows-flow.gif"
 cp "$project_root/assets/screenshots/macos-menu-preview.png" "$output_dir/screenshots/macos-menu-preview.png"
 cp "$project_root/assets/screenshots/windows-menu-preview.png" "$output_dir/screenshots/windows-menu-preview.png"
-cp "$project_root/site/CNAME" "$output_dir/CNAME"
 cp "$project_root/site/robots.txt" "$output_dir/robots.txt"
 cp "$project_root/site/sitemap.xml" "$output_dir/sitemap.xml"
 touch "$output_dir/.nojekyll"

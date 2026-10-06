@@ -1,19 +1,19 @@
 # 개인정보 안내
 
-KeyScribe는 사용자가 녹음한 음성을 설정에서 선택한 OpenAI, ElevenLabs 또는 Groq의 음성 인식 API로 전송합니다. 모델 목록을 가져올 때도 선택한 서비스의 API에 요청합니다. 각 서비스의 데이터 처리와 비용은 해당 서비스의 정책 및 사용자 계정 설정을 따릅니다.
+Givoice는 사용자가 녹음한 음성을 설정에서 선택한 OpenAI, ElevenLabs 또는 Groq의 음성 인식 API로 전송합니다. 모델 목록을 가져올 때도 선택한 서비스의 API에 요청합니다. 각 서비스의 데이터 처리와 비용은 해당 서비스의 정책 및 사용자 계정 설정을 따릅니다.
 
-API 키는 사용자 기기의 `user_config.json`에 저장합니다. 경로는 macOS의 `~/Library/Application Support/keyscribe/`, Windows의 `%APPDATA%\keyscribe\`입니다. 앱 설정은 같은 폴더의 `config.toml`에 저장합니다. 전사가 실패해도 녹음을 다시 쓸 수 있도록 녹음 원본(WAV)을 같은 폴더의 `logs/`에 진단 로그와 함께 저장합니다. 보존 기간(1시간·1일·7일·30일, 기본 7일)은 설정에서 고를 수 있고, 기간이 지난 로그와 녹음은 앱이 자동으로 삭제합니다. 앱을 종료한 뒤 이 폴더를 삭제하면 KeyScribe의 로컬 설정, API 키, 로그와 녹음 원본이 제거됩니다.
+API 키는 사용자 기기의 `user_config.json`에 저장합니다. 경로는 macOS의 `~/Library/Application Support/givoice/`, Windows의 `%APPDATA%\givoice\`입니다. 앱 설정은 같은 폴더의 `config.toml`에 저장합니다. 전사가 실패해도 녹음을 다시 쓸 수 있도록 녹음 원본(WAV)을 같은 폴더의 `logs/`에 진단 로그와 함께 저장합니다. 보존 기간(1시간·1일·7일·30일, 기본 7일)은 설정에서 고를 수 있고, 기간이 지난 로그와 녹음은 앱이 자동으로 삭제합니다. 앱을 종료한 뒤 이 폴더를 삭제하면 Givoice의 로컬 설정, API 키, 로그와 녹음 원본이 제거됩니다.
 
-KeyScribe 자체 계정이나 자체 음성 인식 서버는 없습니다. 소스 코드에는 별도 사용 통계 전송 기능이 없습니다.
+Givoice 자체 계정이나 자체 음성 인식 서버는 없습니다. 소스 코드에는 별도 사용 통계 전송 기능이 없습니다.
 
-새 버전 확인을 위해 macOS 앱은 하루 한 번 `keyscribe.gitools.net`의 업데이트 정보(`appcast-arm64.xml` 또는 `appcast-x64.xml`)를, Ubuntu 앱은 6시간마다 `linux-version.txt`를 내려받습니다. 이 요청에는 앱 이름과 버전이 담긴 일반적인 HTTP 요청 정보만 포함되며, 녹음·전사 내용·API 키·설정은 보내지 않습니다. macOS 앱은 사용자가 설치를 선택하면 GitHub Releases에서 새 버전을 내려받습니다. Windows 앱의 업데이트는 Microsoft Store가 처리합니다.
+새 버전 확인을 위해 macOS 앱은 하루 한 번 `zidell.github.io/givoice`의 업데이트 정보(`appcast-arm64.xml` 또는 `appcast-x64.xml`)를, Ubuntu 앱은 6시간마다 `linux-version.txt`를 내려받습니다. 이 요청에는 앱 이름과 버전이 담긴 일반적인 HTTP 요청 정보만 포함되며, 녹음·전사 내용·API 키·설정은 보내지 않습니다. macOS 앱은 사용자가 설치를 선택하면 GitHub Releases에서 새 버전을 내려받습니다. Windows 앱의 업데이트는 Microsoft Store가 처리합니다.
 
-Ubuntu 네이티브 앱은 설정을 `$XDG_CONFIG_HOME/keyscribe/config.toml`
-(기본 `~/.config/keyscribe/config.toml`)에, API 키를 같은 폴더의 `user_config.json`에
+Ubuntu 네이티브 앱은 설정을 `$XDG_CONFIG_HOME/givoice/config.toml`
+(기본 `~/.config/givoice/config.toml`)에, API 키를 같은 폴더의 `user_config.json`에
 분리해 저장합니다. 두 파일 권한은 0600이며 API 키는 평문으로 저장됩니다.
 기존 `config.ini` 또는 `settings.ini`는 첫 실행 시 자동 이관하고 복구용으로 남깁니다.
-원본 INI에도 이전 API 키가 남아 있을 수 있으므로 비공개로 관리해야 합니다. 녹음 원본은 `$XDG_DATA_HOME/keyscribe/logs/`
-(기본 `~/.local/share/keyscribe/logs/`)에 0600 권한으로 저장하고, 설정한 보관 기간에
+원본 INI에도 이전 API 키가 남아 있을 수 있으므로 비공개로 관리해야 합니다. 녹음 원본은 `$XDG_DATA_HOME/givoice/logs/`
+(기본 `~/.local/share/givoice/logs/`)에 0600 권한으로 저장하고, 설정한 보관 기간에
 따라 삭제합니다. Ubuntu 버전은 같은 폴더의 `debug.log`에 상태·HTTP 코드 등 진단 정보를 저장하며,
 API 키와 전사 내용은 기록하지 않습니다. 로그에도 같은 보관 기간을 적용합니다.
 자동 붙여넣기는 시스템 키보드 권한을 요청하며 화면은 캡처하지 않습니다.

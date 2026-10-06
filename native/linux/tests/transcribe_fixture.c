@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     g_free(s.models[p]);
     s.models[p] = g_strdup(argv[2]);
     g_free(s.keyterms);
-    s.keyterms = g_strdup("KeyScribe\n우분투");
+    s.keyterms = g_strdup("Givoice\n우분투");
     if (g_str_equal(argv[3], "models")) {
         g_autoptr(GCancellable) cancel = g_cancellable_new();
         g_autoptr(GError) error = NULL;
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
         return error ? 1 : 0;
     }
     char *path = NULL;
-    int fd = g_file_open_tmp("keyscribe-http-XXXXXX.wav", &path, NULL);
+    int fd = g_file_open_tmp("givoice-http-XXXXXX.wav", &path, NULL);
     FILE *f = fdopen(fd, "w+b");
     guint32 bytes = g_str_equal(argv[3], "large") ? 25 * 1024 * 1024 : 32000;
     wav_header(f, 0);

@@ -6,11 +6,11 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const APP = 'net.gitools.keyscribe';
-const PATH = '/net/gitools/keyscribe/Escape';
-const IFACE = 'net.gitools.keyscribe.Escape';
+const APP = 'com.videostew.givoice';
+const PATH = '/com/videostew/givoice/Escape';
+const IFACE = 'com.videostew.givoice.Escape';
 
-export default class KeyScribeEscape extends Extension {
+export default class GivoiceEscape extends Extension {
     enable() {
         this._active = false;
         this._down = false;

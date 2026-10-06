@@ -46,7 +46,7 @@ enum SystemAudioOutput {
 
     /// 앱이 음소거한 사실을 파일로 남긴다. 녹음 중 앱이 강제로 끝나 되돌리지 못하면
     /// 다음 실행 때 이 표시를 보고 음소거를 풀어 준다.
-    private static let leftoverMuteURL = Settings.directory.appendingPathComponent("muted-by-keyscribe.json")
+    private static let leftoverMuteURL = Settings.directory.appendingPathComponent("muted-by-givoice.json")
 
     static func rememberMute(volume: Float32?) {
         var marker: [String: Any] = [:]

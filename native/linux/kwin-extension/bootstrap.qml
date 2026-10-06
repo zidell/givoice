@@ -1,3 +1,3 @@
 import QtQml
-import "bootstrap" as KeyScribe
+import "bootstrap" as Givoice
 QtObject {}

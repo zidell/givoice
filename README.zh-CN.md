@@ -1,12 +1,12 @@
-# KeyScribe
+# Givoice
 
-[![CI](https://github.com/zidell/keyscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/keyscribe/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![CI](https://github.com/zidell/givoice/actions/workflows/ci.yml/badge.svg)](https://github.com/zidell/givoice/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
 > 这是个人开发并免费公开的应用。欢迎自由使用，但不接受功能建议、错误报告或使用支持请求。如需其他功能，请依据 GPLv3 fork 后自行修改。
 
-KeyScribe 是一款语音输入应用：它将麦克风录音转写为文字，并粘贴到当前输入框。应用以原生方式实现，只保留必要功能，目标是在空闲时使用约 20 MB 内存。它不包含自有模型，因此需要 OpenAI、ElevenLabs 或 Groq API 密钥（Groq 可免费使用）。
+Givoice 是一款语音输入应用：它将麦克风录音转写为文字，并粘贴到当前输入框。应用以原生方式实现，只保留必要功能，目标是在空闲时使用约 20 MB 内存。它不包含自有模型，因此需要 OpenAI、ElevenLabs 或 Groq API 密钥（Groq 可免费使用）。
 
 ## 功能
 
@@ -30,37 +30,37 @@ KeyScribe 是一款语音输入应用：它将麦克风录音转写为文字，�
 
 | macOS | Windows |
 | --- | --- |
-| ![macOS 菜单栏中打开的 KeyScribe 菜单](assets/screenshots/macos-menu-preview.png) | ![Windows 托盘中打开的 KeyScribe 菜单](assets/screenshots/windows-menu-preview.png) |
+| ![macOS 菜单栏中打开的 Givoice 菜单](assets/screenshots/macos-menu-preview.png) | ![Windows 托盘中打开的 Givoice 菜单](assets/screenshots/windows-menu-preview.png) |
 
 ### 使用流程
 
 | macOS | Windows |
 | --- | --- |
-| ![KeyScribe 在 macOS 上录音、转写并自动粘贴](assets/screenshots/keyscribe-flow.gif) | ![KeyScribe 在 Windows 上录音、转写并自动粘贴](assets/screenshots/keyscribe-windows-flow.gif) |
+| ![Givoice 在 macOS 上录音、转写并自动粘贴](assets/screenshots/givoice-flow.gif) | ![Givoice 在 Windows 上录音、转写并自动粘贴](assets/screenshots/givoice-windows-flow.gif) |
 
 ## 安装
 
-请在 [KeyScribe 下载页面](https://keyscribe.gitools.net)查看下载和安装说明。macOS 和 Ubuntu 安装文件通过 [GitHub Releases](https://github.com/zidell/keyscribe/releases) 发布，Windows 应用通过 Microsoft Store 分发。有新版本时，macOS 应用会提示并在确认后安装，Microsoft Store 会自动更新 Windows 应用，Ubuntu 应用会在托盘菜单中显示下载项。
+请在 [Givoice 下载页面](https://zidell.github.io/givoice)查看下载和安装说明。macOS 和 Ubuntu 安装文件通过 [GitHub Releases](https://github.com/zidell/givoice/releases) 发布，Windows 应用通过 Microsoft Store 分发。有新版本时，macOS 应用会提示并在确认后安装，Microsoft Store 会自动更新 Windows 应用，Ubuntu 应用会在托盘菜单中显示下载项。
 
 | 操作系统 | 文件 | 安装或运行 |
 | --- | --- | --- |
-| macOS Apple Silicon | `KeyScribe-macos-arm64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
-| macOS Intel | `KeyScribe-macos-x64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
+| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
+| macOS Intel | `Givoice-macos-x64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
 | Windows 10/11 x64 | Microsoft Store | 即将上架 Microsoft Store |
-| Ubuntu 24.04+ amd64 | `KeyScribe-ubuntu-amd64-*.deb` | [Ubuntu 原生版安装](native/linux/README.md) |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Ubuntu 原生版安装](native/linux/README.md) |
 
 ## 首次使用
 
-1. 从菜单栏或托盘的 KeyScribe 图标打开**设置...**，选择 ElevenLabs、OpenAI 或 Groq API 密钥和模型。Groq 默认模型为 `whisper-large-v3-turbo`。
+1. 从菜单栏或托盘的 Givoice 图标打开**设置...**，选择 ElevenLabs、OpenAI 或 Groq API 密钥和模型。Groq 默认模型为 `whisper-large-v3-turbo`。
 2. macOS 请允许麦克风及**系统设置 → 隐私与安全性 → 辅助功能**权限。Windows 请在**设置 → 隐私和安全性 → 麦克风**中允许桌面应用访问麦克风。Ubuntu 请在设置的“快捷键 / 权限”标签页中，按系统对话框提示注册全局快捷键并允许键盘控制（自动粘贴）。
 3. 将光标放到需要输入文字的位置，按住右 Command（macOS）、右 Alt（Windows）或 Ctrl+Alt+Space（Ubuntu）说话。松开按键即可粘贴转写结果。
 
-可在设置中更改快捷键、录音停止方式、录音时限（10、20、30、60 分钟；默认 30 分钟）、识别语言、录音开始提示音音量和自动发送。启用自动发送后，粘贴完成会按 Enter。若要向以管理员身份运行的 Windows 应用自动输入，KeyScribe 也可能需要以管理员身份运行。
+可在设置中更改快捷键、录音停止方式、录音时限（10、20、30、60 分钟；默认 30 分钟）、识别语言、录音开始提示音音量和自动发送。启用自动发送后，粘贴完成会按 Enter。若要向以管理员身份运行的 Windows 应用自动输入，Givoice 也可能需要以管理员身份运行。
 
 ## Ubuntu 支持
 
-除 macOS 和 Windows 应用外，KeyScribe 还提供用 C/GTK 编译的 Ubuntu 原生应用。
-可从[最新 Ubuntu 版本](https://github.com/zidell/keyscribe/releases?q=linux-v&expanded=true)下载 `.deb` 安装文件，构建、安装和使用说明见
+除 macOS 和 Windows 应用外，Givoice 还提供用 C/GTK 编译的 Ubuntu 原生应用。
+可从[最新 Ubuntu 版本](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true)下载 `.deb` 安装文件，构建、安装和使用说明见
 [Ubuntu 指南](native/linux/README.md)。支持 PipeWire/PulseAudio 录音和三种转写服务，
 在 GNOME 和 KDE Plasma 上通过桌面门户使用全局快捷键和自动粘贴。在缺少所需门户的桌面上，
 请用应用中的录音按钮录音，再复制结果粘贴。
@@ -79,7 +79,7 @@ Groq 使用兼容 OpenAI 的转写 API。可通过设置中的 **Groq 密钥 ↗
 
 ### 获取 API 密钥
 
-将按以下步骤创建的密钥粘贴到 KeyScribe 的**设置... → API 密钥**，然后点按**刷新**。密钥和密码一样重要，请勿分享或公开发布。
+将按以下步骤创建的密钥粘贴到 Givoice 的**设置... → API 密钥**，然后点按**刷新**。密钥和密码一样重要，请勿分享或公开发布。
 
 ChatGPT 订阅与 OpenAI API 计费相互独立；ElevenLabs 创建个人 API 密钥需要 Full Seat。Groq 最易免费开始使用，但免费层有用量和速率限制。
 
@@ -89,7 +89,7 @@ ChatGPT 订阅与 OpenAI API 计费相互独立；ElevenLabs 创建个人 API �
 2. 在 API Platform 的 **Billing** 中设置 API 付款方式或额度；ChatGPT Plus 或 Pro 不含 API 用量。
 3. 选择项目（个人用户可使用默认项目）。
 4. 点击 **Create new secret key**，命名后创建密钥。
-5. 将显示的 `sk-…` 密钥复制到 KeyScribe。
+5. 将显示的 `sk-…` 密钥复制到 Givoice。
 
 OpenAI API 密钥按项目创建，可在项目设置中管理权限和用量限制。[OpenAI 官方说明](https://help.openai.com/en/articles/9186755)
 
@@ -98,7 +98,7 @@ OpenAI API 密钥按项目创建，可在项目设置中管理权限和用量限
 1. 登录或注册 [ElevenLabs API 密钥页面](https://elevenlabs.io/app/developers/api-keys)。
 2. 确认拥有创建个人 API 密钥所需的 **Full Seat**；否则需相应套餐或工作区管理员设置。
 3. 在个人 API 密钥列表中新建密钥并命名。
-4. 将生成的 `sk_…` 密钥复制到 KeyScribe。
+4. 将生成的 `sk_…` 密钥复制到 Givoice。
 
 个人密钥可在个人 API 密钥设置中创建和轮换。[ElevenLabs 官方说明](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys)
 
@@ -107,7 +107,7 @@ OpenAI API 密钥按项目创建，可在项目设置中管理权限和用量限
 1. 登录或注册 [Groq Console API 密钥页面](https://console.groq.com/keys)；免费层也可创建密钥。
 2. 首次使用时，在项目选择器中新建或选择默认项目。
 3. 点击 **Create API Key**，命名后创建密钥。
-4. 将生成的 `gsk_…` 密钥复制到 KeyScribe。
+4. 将生成的 `gsk_…` 密钥复制到 Givoice。
 
 Groq 密钥归属于所选项目，免费层有请求和音频处理限制。提高额度的付费 Developer 层需要付款方式。[Groq 项目说明](https://console.groq.com/docs/projects)，[计费说明](https://console.groq.com/docs/billing-faqs)
 
@@ -115,9 +115,9 @@ Groq 密钥归属于所选项目，免费层有请求和音频处理限制。提
 
 可在菜单栏或托盘菜单查看应用状态和错误；**日志和原始录音文件夹**会打开存放诊断日志（`debug.log`）和原始录音（`recording-*.wav`）的文件夹。
 
-- macOS：`~/Library/Application Support/keyscribe/logs/`
-- Windows：`%APPDATA%\keyscribe\logs\`
-- Ubuntu：`~/.local/share/keyscribe/logs/`（或 `$XDG_DATA_HOME/keyscribe/logs/`）
+- macOS：`~/Library/Application Support/givoice/logs/`
+- Windows：`%APPDATA%\givoice\logs\`
+- Ubuntu：`~/.local/share/givoice/logs/`（或 `$XDG_DATA_HOME/givoice/logs/`）
 - 开发运行：`dist-native/logs/`
 
 [隐私说明](docs/privacy.md)介绍音频传输和 API 密钥存储方式。源代码采用 [GNU GPL v3 许可证](LICENSE)发布。

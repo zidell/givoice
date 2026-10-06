@@ -17,8 +17,8 @@ static void text(void) {
     g_autofree char *s = clean_text("  안녕 [noise] \n 세계  [unfinished");
     g_assert_cmpstr(s, ==, "안녕 세계 [unfinished");
     g_autofree char *r = apply_replacements(
-        "안녕 키스크라이브", "키스크라이브 => KeyScribe\n안녕 -> 반가워\n => invalid");
-    g_assert_cmpstr(r, ==, "반가워 KeyScribe");
+        "안녕 기보이스", "기보이스 => Givoice\n안녕 -> 반가워\n => invalid");
+    g_assert_cmpstr(r, ==, "반가워 Givoice");
 }
 static void settings_cleanup(const char *dir) {
     const char *names[] = {"config.toml", "user_config.json", "config.ini", "settings.ini"};
@@ -50,7 +50,7 @@ static void settings_private_file(const char *dir, const char *name) {
 }
 static void settings(void) {
     g_autoptr(GError) error = NULL;
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-settings-XXXXXX", &error);
+    g_autofree char *dir = g_dir_make_tmp("givoice-settings-XXXXXX", &error);
     g_assert_no_error(error);
     settings_write(dir, "user_config.json",
                    "{\"api_key\":\"gsk_old_dummy\",\"metadata\":{\"keep\":true},\"revision\":7}");
@@ -111,7 +111,7 @@ static void settings(void) {
 }
 static void initial_settings(void) {
     g_autoptr(GError) error = NULL;
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-initial-settings-XXXXXX", &error);
+    g_autofree char *dir = g_dir_make_tmp("givoice-initial-settings-XXXXXX", &error);
     g_assert_no_error(error);
     g_autofree char *path = settings_path(dir);
     g_assert_true(g_str_has_suffix(path, "/config.toml"));
@@ -149,10 +149,10 @@ static void legacy_settings(void) {
         "hold=false\nauto_send=false\nno_verbatim=false\nmute_during_recording=false\n"
         "sound_volume=175\noverlay_position=top_right\nshortcut=CTRL+ALT+r\n"
         "shortcuts_enabled=true\nlimit_minutes=60\nretention_hours=24\n"
-        "keyterms=KeyScribe, VideoStew\\n한글\nreplacements=one => two\\nthree => four\n";
+        "keyterms=Givoice, VideoStew\\n한글\nreplacements=one => two\\nthree => four\n";
     for (guint i = 0; i < G_N_ELEMENTS(sources); i++) {
         g_autoptr(GError) error = NULL;
-        g_autofree char *dir = g_dir_make_tmp("keyscribe-legacy-settings-XXXXXX", &error);
+        g_autofree char *dir = g_dir_make_tmp("givoice-legacy-settings-XXXXXX", &error);
         g_assert_no_error(error);
         settings_write(dir, sources[i], legacy_text);
         if (g_str_equal(sources[i], "config.ini"))
@@ -181,7 +181,7 @@ static void legacy_settings(void) {
         g_assert_cmpint(value.limit_minutes, ==, 60);
         g_assert_cmpint(value.retention_hours, ==, 24);
         g_assert_cmpstr(value.replacements, ==, "one => two\nthree => four");
-        g_assert_cmpstr(value.keyterms, ==, "KeyScribe\nVideoStew\n한글");
+        g_assert_cmpstr(value.keyterms, ==, "Givoice\nVideoStew\n한글");
         g_autofree char *migrated_terms = g_strdup(value.keyterms);
         g_autofree char *after = settings_path(dir);
         g_assert_cmpstr(after, ==, current);
@@ -212,7 +212,7 @@ static void migration_credentials(void) {
     };
     const char *keys[] = {"gsk_json_dummy", "gsk_legacy_dummy"};
     for (guint i = 0; i < G_N_ELEMENTS(users); i++) {
-        g_autofree char *dir = g_dir_make_tmp("keyscribe-migration-credentials-XXXXXX", NULL);
+        g_autofree char *dir = g_dir_make_tmp("givoice-migration-credentials-XXXXXX", NULL);
         const char *legacy = "[settings]\nlanguage=ja\napi_key=gsk_legacy_dummy\n";
         settings_write(dir, "config.ini", legacy);
         settings_write(dir, "user_config.json", users[i]);
@@ -237,7 +237,7 @@ static void migration_credentials(void) {
     }
 }
 static void toml_boundaries(void) {
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-toml-boundaries-XXXXXX", NULL);
+    g_autofree char *dir = g_dir_make_tmp("givoice-toml-boundaries-XXXXXX", NULL);
     g_autoptr(GString) config = g_string_new(
         "recording_start_sound_volume = 200\nrecording_time_limit_minutes = 10\n"
         "log_retention_hours = 720\nkeyterms = [");
@@ -261,7 +261,7 @@ static void toml_boundaries(void) {
 }
 static void toml_syntax(void) {
     g_autoptr(GError) error = NULL;
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-toml-syntax-XXXXXX", &error);
+    g_autofree char *dir = g_dir_make_tmp("givoice-toml-syntax-XXXXXX", &error);
     g_assert_no_error(error);
     settings_write(dir, "config.toml",
         "# TOML edited by an agent\nlanguage = 'ja' # inline comment\n"
@@ -313,7 +313,7 @@ static void invalid_toml(void) {
         "recording_start_sound_volume = 201\n",
         "recording_start_sound_volume = -1\n",
         "overlay_position = \"somewhere\"\n",
-        "keyterms = [\"KeyScribe\", 42]\n",
+        "keyterms = [\"Givoice\", 42]\n",
         "replacements = \"one => two\"\n",
         "shortcuts_enabled = \"true\"\n",
         "no_verbatim = 1\n",
@@ -323,7 +323,7 @@ static void invalid_toml(void) {
         too_many_terms->str,
     };
     for (guint i = 0; i < G_N_ELEMENTS(invalid); i++) {
-        g_autofree char *dir = g_dir_make_tmp("keyscribe-invalid-toml-XXXXXX", NULL);
+        g_autofree char *dir = g_dir_make_tmp("givoice-invalid-toml-XXXXXX", NULL);
         settings_write(dir, "config.toml", invalid[i]);
         settings_write(dir, "config.ini", "[settings]\nlanguage=ja\napi_key=gsk_legacy_dummy\n");
         const char *credentials = "{\"api_key\":\"gsk_preserve_dummy\",\"keep\":true}";
@@ -343,7 +343,7 @@ static void invalid_toml(void) {
     }
 }
 static void invalid_legacy(void) {
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-invalid-legacy-XXXXXX", NULL);
+    g_autofree char *dir = g_dir_make_tmp("givoice-invalid-legacy-XXXXXX", NULL);
     const char *legacy = "[settings\nlanguage=ja\napi_key=gsk_dummy\n";
     settings_write(dir, "config.ini", legacy);
     Settings value;
@@ -364,7 +364,7 @@ static void invalid_credentials(void) {
     const char *invalid[] = {"{broken json", "[]", "{\"api_key\":42}"};
     const char *config = "language = \"ja\"\nauto_send = false\n";
     for (guint i = 0; i < G_N_ELEMENTS(invalid); i++) {
-        g_autofree char *dir = g_dir_make_tmp("keyscribe-invalid-user-XXXXXX", NULL);
+        g_autofree char *dir = g_dir_make_tmp("givoice-invalid-user-XXXXXX", NULL);
         settings_write(dir, "config.toml", config);
         settings_write(dir, "user_config.json", invalid[i]);
         Settings value;
@@ -383,7 +383,7 @@ static void invalid_credentials(void) {
         settings_cleanup(dir);
     }
     // Failed credential parsing must not partially migrate a legacy configuration.
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-invalid-migration-XXXXXX", NULL);
+    g_autofree char *dir = g_dir_make_tmp("givoice-invalid-migration-XXXXXX", NULL);
     const char *legacy = "[settings]\nlanguage=ja\napi_key=gsk_legacy_dummy\n";
     settings_write(dir, "settings.ini", legacy);
     settings_write(dir, "user_config.json", invalid[0]);
@@ -415,7 +415,7 @@ static void wav(void) {
     fclose(f);
 }
 static void retention(void) {
-    g_autofree char *dir = g_dir_make_tmp("keyscribe-retention-XXXXXX", NULL);
+    g_autofree char *dir = g_dir_make_tmp("givoice-retention-XXXXXX", NULL);
     g_autofree char *old = g_build_filename(dir, "recording-old.wav", NULL),
                     *recent = g_build_filename(dir, "recording-new.wav", NULL),
                     *other = g_build_filename(dir, "unrelated.wav", NULL);
@@ -435,7 +435,7 @@ static void retention(void) {
 }
 static void cancellation(void) {
     g_autofree char *path = NULL;
-    int fd = g_file_open_tmp("keyscribe-cancel-XXXXXX.wav", &path, NULL);
+    int fd = g_file_open_tmp("givoice-cancel-XXXXXX.wav", &path, NULL);
     FILE *f = fdopen(fd, "wb");
     g_assert_true(wav_header(f, 0));
     fclose(f);

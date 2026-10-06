@@ -1,4 +1,4 @@
-# KeyScribe for Ubuntu (GNOME and KDE Plasma)
+# Givoice for Ubuntu (GNOME and KDE Plasma)
 
 Ubuntu support is an additional native implementation alongside `native/macos`
 and `native/windows`. This app is compiled C with GTK 3, Ayatana AppIndicator,
@@ -12,9 +12,9 @@ intend to distribute them to. A binary built on a newer system may require newer
 libraries. Ubuntu 26.04 GNOME/Wayland is the local development environment.
 
 Download the Ubuntu amd64 `.deb` and its SHA-256 checksum from
-[the latest Ubuntu release](https://github.com/zidell/keyscribe/releases?q=linux-v&expanded=true).
+[the latest Ubuntu release](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true).
 Open the downloaded package to install, or run
-`sudo apt install ./KeyScribe-ubuntu-amd64-<version>.deb`.
+`sudo apt install ./Givoice-ubuntu-amd64-<version>.deb`.
 The installed app checks the landing page's `linux-version.txt` every six hours and adds a
 **새 버전 … 다운로드** item to the tray menu when a newer release is out; install that
 package the same way to update.
@@ -25,18 +25,18 @@ sudo apt install build-essential pkg-config libgtk-3-dev \
   libayatana-appindicator3-dev libpulse-dev libcurl4-openssl-dev libjson-glib-dev
 ./native/linux/build.sh --test
 ./native/linux/install.sh
-~/.local/bin/keyscribe
+~/.local/bin/givoice
 ```
 
 `install.sh` installs the binary and application launcher under `~/.local` without
-root. Run **KeyScribe** from Ubuntu's applications menu. Closing the window keeps
+root. Run **Givoice** from Ubuntu's applications menu. Closing the window keeps
 the app running in the tray; choose **종료** (Quit) in the tray to exit. Ubuntu's
 AppIndicator extension must be enabled to show the tray icon. Settings are also
 accessible by launching the app again. Only one app instance runs per session.
 
 Create an installable package with `./packaging/build-deb.sh`, optionally setting
-`KEYSCRIBE_VERSION`. The resulting `.deb` is in `dist-native/linux/` and can be
-installed with `sudo apt install ./dist-native/linux/KeyScribe-ubuntu-*.deb`.
+`GIVOICE_VERSION`. The resulting `.deb` is in `dist-native/linux/` and can be
+installed with `sudo apt install ./dist-native/linux/Givoice-ubuntu-*.deb`.
 Ubuntu-only releases use `linux-vMAJOR.MINOR.PATCH` tags and are built on Ubuntu
 24.04 in GitHub Actions before publication.
 
@@ -79,7 +79,7 @@ separately for GNOME and KDE so switching cannot overwrite the other grant.
    it before recording so a permission dialog does not move the text cursor.
    Permission restoration is saved privately and requested again at launch,
    so an accepted persistent grant survives application restarts.
-   If GNOME closes the keyboard session while the app is running, KeyScribe
+   If GNOME closes the keyboard session while the app is running, Givoice
    requests restoration using that saved grant and holds completed results until
    restoration finishes. Failed restoration shows the permission error. A shortcut
    press without keyboard permission requests access before recording; after
@@ -97,10 +97,10 @@ the desktop provides these portals. There is no root input daemon or unrestricte
 keyboard hook. Permissions last for the running session. If a portal is missing
 or permission is denied/revoked, record with the app button, copy the result,
 and paste it manually with Ctrl+V. Older GNOME versions may lack GlobalShortcuts;
-use the button/tray in that case. On GNOME 50, the bundled KeyScribe Escape
+use the button/tray in that case. On GNOME 50, the bundled Givoice Escape
 extension cancels recording/transcription before Escape reaches the focused app.
 The native installer enables it; log out and back in once after first installation.
-For a Debian package installation, enable “KeyScribe recording cancellation” in
+For a Debian package installation, enable “Givoice recording cancellation” in
 Extensions after logging back in. KDE Plasma 6 can use the native KWin Escape helper below. It consumes the logical
 Escape press, repeats and release during recording/transcription, including while
 the recording key or other modifiers are held. Idle Escape reaches the focused app.
@@ -112,7 +112,7 @@ silent, check the desktop's output mute and selected speaker first. Recording
 output mute starts after the chime and restores the previous output state.
 
 Configured launches start in the tray; use the tray's Settings item or
-`keyscribe --settings` to open the window explicitly.
+`givoice --settings` to open the window explicitly.
 
 Some Korean keyboards report the key labelled Hangul as `Alt_R` (evdev key 100,
 XKB key 108). On the local GNOME desktop, a bare right-Alt portal binding emitted
@@ -122,14 +122,14 @@ local GNOME session required reloading input sources before the new map took
 effect. The resulting keymap and both portal events were checked with Mutter's
 keyboard session API; a short press started and stopped recording without an API
 upload. The local original keyboard options are backed up in
-`~/.config/keyscribe/keyboard-map-backup.json`.
+`~/.config/givoice/keyboard-map-backup.json`.
 
 On GNOME Wayland, IBus processes text-field keys before global shortcuts. The
 Hangul engine normally consumes `Hangul` to change language, which prevents the
 recording shortcut from firing while typing in a browser. While Hangul is the
-recording trigger, KeyScribe reserves it by removing that key from the IBus
+recording trigger, Givoice reserves it by removing that key from the IBus
 language-toggle bindings. Other toggles, including Shift+Space, stay available.
-Original bindings are saved to `~/.config/keyscribe/ibus-shortcut-backup.ini` and
+Original bindings are saved to `~/.config/givoice/ibus-shortcut-backup.ini` and
 restored on exit or when selecting a different trigger. The next launch recovers
 the backup after an interrupted run. Independent user preference edits are preserved.
 
@@ -141,7 +141,7 @@ keyboard permission request in the private test window.
 ## Features
 
 The shared `vMAJOR.MINOR.PATCH` release workflow builds and tests Ubuntu amd64,
-packages `KeyScribe-ubuntu-amd64-MAJOR.MINOR.PATCH.deb`, and attaches it to the same
+packages `Givoice-ubuntu-amd64-MAJOR.MINOR.PATCH.deb`, and attaches it to the same
 GitHub Release as macOS and Windows. The publish job requires all three OS builds
 and checks that the Ubuntu asset exists before publishing.
 
@@ -195,16 +195,16 @@ python3 native/linux/kwin-extension/build.py
 ./native/linux/install.sh
 ```
 
-If headers are extracted rather than installed, set `KEYSCRIBE_KWIN_INCLUDE_DIR`
+If headers are extracted rather than installed, set `GIVOICE_KWIN_INCLUDE_DIR`
 to the extracted `usr/include` directory. The installer includes the helper when
 built and enables its small declarative KWin bootstrap to discover user plugins
-at login. Build with the same `KEYSCRIBE_INSTALL_PREFIX` used for installation.
+at login. Build with the same `GIVOICE_INSTALL_PREFIX` used for installation.
 Log in again after the initial helper installation, or load the bootstrap in KWin.
-KeyScribe also requests helper loading at startup. The helper observes KeyScribe's
+Givoice also requests helper loading at startup. The helper observes Givoice's
 D-Bus recording state, releases its cancellation state when the app exits, and
 keeps a consumed Escape held through key-up without touching the recording shortcut.
 
-Quit idle KeyScribe, then run `native/linux/test.sh --kde-escape` in a live KDE
+Quit idle Givoice, then run `native/linux/test.sh --kde-escape` in a live KDE
 session. The private test injects keys only while its test window has focus,
 checks held recording-key releases, toggle/modifier cancellation and idle Escape,
 and unloads its temporary driver on completion. It does not record or upload audio.
@@ -212,7 +212,7 @@ GNOME's isolated equivalent is `native/linux/test.sh --escape`.
 
 ## Local files and checks
 
-Preferences: `${XDG_CONFIG_HOME:-~/.config}/keyscribe/config.toml`.
+Preferences: `${XDG_CONFIG_HOME:-~/.config}/givoice/config.toml`.
 API key: `user_config.json` in the same directory (property `api_key`).
 Both files are written atomically with mode `0600`. Preferences use the same TOML
 keys and string arrays as macOS/Windows, with Linux-only `shortcuts_enabled`.
@@ -221,8 +221,8 @@ On startup, absent TOML is automatically migrated from `config.ini`, then
 `settings.ini`; old files remain unchanged for recovery and may contain old keys.
 New TOML wins over both legacy files. Invalid TOML or credential JSON stops startup
 with an error instead of overwriting files or falling back to old values.
-`keyscribe --config-path` reports the active path without migrating or opening GUI.
-Recordings/diagnostic log: `${XDG_DATA_HOME:-~/.local/share}/keyscribe/logs/`
+`givoice --config-path` reports the active path without migrating or opening GUI.
+Recordings/diagnostic log: `${XDG_DATA_HOME:-~/.local/share}/givoice/logs/`
 (`recording-*.wav` and `debug.log`).
 API keys are stored locally in plaintext with user-only file permissions. The app
 never prints keys or transcripts to diagnostic output. Recordings are uploaded

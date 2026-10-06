@@ -40,12 +40,12 @@ jobs:
           ref: ${{ inputs.tag || github.ref_name }}
       - name: Check tag and signing settings
         env:
-          CERTIFICATE: ${{ secrets.KEYSCRIBE_MAC_CERTIFICATE_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.KEYSCRIBE_MAC_CERTIFICATE_PASSWORD }}
-          SIGNING_IDENTITY: ${{ secrets.KEYSCRIBE_MAC_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.KEYSCRIBE_APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.KEYSCRIBE_APPLE_APP_PASSWORD }}
-          TEAM_ID: ${{ secrets.KEYSCRIBE_APPLE_TEAM_ID }}
+          CERTIFICATE: ${{ secrets.GIVOICE_MAC_CERTIFICATE_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.GIVOICE_MAC_CERTIFICATE_PASSWORD }}
+          SIGNING_IDENTITY: ${{ secrets.GIVOICE_MAC_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.GIVOICE_APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.GIVOICE_APPLE_APP_PASSWORD }}
+          TEAM_ID: ${{ secrets.GIVOICE_APPLE_TEAM_ID }}
         run: |
           [[ "$RELEASE_TAG" =~ ^macos-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo 'Tag must be macos-vMAJOR.MINOR.PATCH' >&2; exit 1;
@@ -59,44 +59,44 @@ jobs:
         shell: bash
       - name: Import Developer ID certificate
         env:
-          CERTIFICATE: ${{ secrets.KEYSCRIBE_MAC_CERTIFICATE_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.KEYSCRIBE_MAC_CERTIFICATE_PASSWORD }}
+          CERTIFICATE: ${{ secrets.GIVOICE_MAC_CERTIFICATE_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.GIVOICE_MAC_CERTIFICATE_PASSWORD }}
         run: |
-          echo "$CERTIFICATE" | base64 -D > "$RUNNER_TEMP/keyscribe.p12"
-          security create-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/keyscribe.keychain-db"
-          security unlock-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/keyscribe.keychain-db"
-          security set-keychain-settings -lut 21600 "$RUNNER_TEMP/keyscribe.keychain-db"
-          security import "$RUNNER_TEMP/keyscribe.p12" -k "$RUNNER_TEMP/keyscribe.keychain-db" \
+          echo "$CERTIFICATE" | base64 -D > "$RUNNER_TEMP/givoice.p12"
+          security create-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/givoice.keychain-db"
+          security unlock-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/givoice.keychain-db"
+          security set-keychain-settings -lut 21600 "$RUNNER_TEMP/givoice.keychain-db"
+          security import "$RUNNER_TEMP/givoice.p12" -k "$RUNNER_TEMP/givoice.keychain-db" \
             -P "$CERT_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s \
-            -k "$RUNNER_TEMP" "$RUNNER_TEMP/keyscribe.keychain-db"
-          security list-keychains -d user -s "$RUNNER_TEMP/keyscribe.keychain-db"
+            -k "$RUNNER_TEMP" "$RUNNER_TEMP/givoice.keychain-db"
+          security list-keychains -d user -s "$RUNNER_TEMP/givoice.keychain-db"
         shell: bash
       - name: Build and verify signed native app
         env:
-          KEYSCRIBE_CODESIGN_IDENTITY: ${{ secrets.KEYSCRIBE_MAC_SIGNING_IDENTITY }}
+          GIVOICE_CODESIGN_IDENTITY: ${{ secrets.GIVOICE_MAC_SIGNING_IDENTITY }}
         run: |
-          export KEYSCRIBE_VERSION="${RELEASE_TAG#macos-v}"
+          export GIVOICE_VERSION="${RELEASE_TAG#macos-v}"
           bash native/macos/build.sh
-          codesign --verify --deep --strict --verbose=2 dist-native/KeyScribe.app
-          binary_arch="$(lipo -archs dist-native/KeyScribe.app/Contents/MacOS/KeyScribe)"
+          codesign --verify --deep --strict --verbose=2 dist-native/Givoice.app
+          binary_arch="$(lipo -archs dist-native/Givoice.app/Contents/MacOS/Givoice)"
           [[ "$binary_arch" == '${{ matrix.binary_arch }}' ]] || {
             echo "Unexpected app architecture: $binary_arch" >&2; exit 1;
           }
         shell: bash
       - name: Create and notarize DMG
         env:
-          APPLE_ID: ${{ secrets.KEYSCRIBE_APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.KEYSCRIBE_APPLE_APP_PASSWORD }}
-          TEAM_ID: ${{ secrets.KEYSCRIBE_APPLE_TEAM_ID }}
-          SIGNING_IDENTITY: ${{ secrets.KEYSCRIBE_MAC_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.GIVOICE_APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.GIVOICE_APPLE_APP_PASSWORD }}
+          TEAM_ID: ${{ secrets.GIVOICE_APPLE_TEAM_ID }}
+          SIGNING_IDENTITY: ${{ secrets.GIVOICE_MAC_SIGNING_IDENTITY }}
         run: |
           version="${RELEASE_TAG#macos-v}"
-          dmg="KeyScribe-macos-${{ matrix.arch }}-$version.dmg"
+          dmg="Givoice-macos-${{ matrix.arch }}-$version.dmg"
           mkdir -p "$RUNNER_TEMP/dmg-root"
-          cp -R dist-native/KeyScribe.app "$RUNNER_TEMP/dmg-root/KeyScribe.app"
+          cp -R dist-native/Givoice.app "$RUNNER_TEMP/dmg-root/Givoice.app"
           ln -s /Applications "$RUNNER_TEMP/dmg-root/Applications"
-          hdiutil create -volname KeyScribe -srcfolder "$RUNNER_TEMP/dmg-root" \
+          hdiutil create -volname Givoice -srcfolder "$RUNNER_TEMP/dmg-root" \
             -format UDZO -ov "$dmg"
           codesign --sign "$SIGNING_IDENTITY" --timestamp "$dmg"
           codesign --verify --verbose=2 "$dmg"
@@ -113,9 +113,9 @@ jobs:
         shell: bash
       - name: Write Sparkle update feed
         env:
-          SPARKLE_PRIVATE_KEY: ${{ secrets.KEYSCRIBE_SPARKLE_PRIVATE_KEY }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.GIVOICE_SPARKLE_PRIVATE_KEY }}
         run: |
-          [[ -n "$SPARKLE_PRIVATE_KEY" ]] || { echo 'Missing KEYSCRIBE_SPARKLE_PRIVATE_KEY' >&2; exit 1; }
+          [[ -n "$SPARKLE_PRIVATE_KEY" ]] || { echo 'Missing GIVOICE_SPARKLE_PRIVATE_KEY' >&2; exit 1; }
           sparkle_version=2.10.0
           curl -fsSL -o "$RUNNER_TEMP/sparkle.tar.xz" \
             "https://github.com/sparkle-project/Sparkle/releases/download/$sparkle_version/Sparkle-$sparkle_version.tar.xz"
@@ -124,13 +124,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/sparkle" "$RUNNER_TEMP/feed"
           tar -xf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle"
           version="${RELEASE_TAG#macos-v}"
-          cp "KeyScribe-macos-${{ matrix.arch }}-$version.dmg" "$RUNNER_TEMP/feed/"
+          cp "Givoice-macos-${{ matrix.arch }}-$version.dmg" "$RUNNER_TEMP/feed/"
           # The installed app reads appcast-<arch>.xml from the landing page; the
           # enclosure points at this release's DMG.
           printf '%s' "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/sparkle/bin/generate_appcast" \
             --ed-key-file - \
             --download-url-prefix "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/" \
-            --link https://keyscribe.gitools.net \
+            --link https://zidell.github.io/givoice \
             -o "appcast-${{ matrix.arch }}.xml" "$RUNNER_TEMP/feed"
           grep -q 'sparkle:edSignature=' "appcast-${{ matrix.arch }}.xml"
           grep -q "<sparkle:version>$version</sparkle:version>" "appcast-${{ matrix.arch }}.xml"
@@ -139,14 +139,14 @@ jobs:
         with:
           name: native-macos-${{ matrix.arch }}
           path: |
-            KeyScribe-macos-*.dmg
+            Givoice-macos-*.dmg
             appcast-*.xml
           if-no-files-found: error
       - name: Remove signing keychain
         if: always()
         run: |
-          security delete-keychain "$RUNNER_TEMP/keyscribe.keychain-db" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/keyscribe.p12"
+          security delete-keychain "$RUNNER_TEMP/givoice.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/givoice.p12"
 
   publish:
     name: Publish macOS prerelease
@@ -168,7 +168,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#macos-v}"
           for arch in arm64 x64; do
-            test -s "release-assets/KeyScribe-macos-$arch-$version.dmg" || {
+            test -s "release-assets/Givoice-macos-$arch-$version.dmg" || {
               echo "Missing macOS $arch DMG" >&2; exit 1;
             }
             test -s "release-assets/appcast-$arch.xml" || {
@@ -181,7 +181,7 @@ jobs:
           fi
           gh release create "$RELEASE_TAG" release-assets/*.dmg release-assets/appcast-*.xml \
             --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --title "KeyScribe macOS $version" --generate-notes \
+            --title "Givoice macOS $version" --generate-notes \
             --prerelease --latest=false
         shell: bash
       - name: Redeploy landing page with the new update feed

@@ -114,7 +114,7 @@ static char *transcribe_single(const char *path, const Settings *s, GCancellable
         FAIL("설정에서 OpenAI, ElevenLabs 또는 Groq API 키를 입력하세요");
         return NULL;
     }
-#ifndef KEYSCRIBE_TEST_ENDPOINT
+#ifndef GIVOICE_TEST_ENDPOINT
     const char *urls[] = {"", "https://api.openai.com/v1/audio/transcriptions",
                           "https://api.elevenlabs.io/v1/speech-to-text",
                           "https://api.groq.com/openai/v1/audio/transcriptions"};
@@ -154,8 +154,8 @@ static char *transcribe_single(const char *path, const Settings *s, GCancellable
         p == PROVIDER_ELEVENLABS ? "xi-api-key: %s" : "Authorization: Bearer %s", s->api_key);
     struct curl_slist *headers = curl_slist_append(NULL, auth);
     Transfer t = {g_string_new(NULL), cancel};
-#ifdef KEYSCRIBE_TEST_ENDPOINT
-    curl_easy_setopt(curl, CURLOPT_URL, KEYSCRIBE_TEST_ENDPOINT);
+#ifdef GIVOICE_TEST_ENDPOINT
+    curl_easy_setopt(curl, CURLOPT_URL, GIVOICE_TEST_ENDPOINT);
 #else
     curl_easy_setopt(curl, CURLOPT_URL, urls[p]);
 #endif
@@ -250,7 +250,7 @@ char *transcribe(const char *path, const Settings *s, GCancellable *cancel, GErr
             break;
         }
         g_autofree char *tmp = NULL;
-        int fd = g_file_open_tmp("keyscribe-part-XXXXXX.wav", &tmp, error);
+        int fd = g_file_open_tmp("givoice-part-XXXXXX.wav", &tmp, error);
         if (fd < 0) {
             ok = FALSE;
             break;
@@ -364,8 +364,8 @@ char **fetch_models(const char *api_key, GCancellable *cancel, GError **error) {
         p == PROVIDER_ELEVENLABS ? "xi-api-key: %s" : "Authorization: Bearer %s", api_key);
     struct curl_slist *headers = curl_slist_append(NULL, auth);
     Transfer t = {g_string_new(NULL), cancel};
-#ifdef KEYSCRIBE_TEST_ENDPOINT
-    curl_easy_setopt(curl, CURLOPT_URL, KEYSCRIBE_TEST_ENDPOINT);
+#ifdef GIVOICE_TEST_ENDPOINT
+    curl_easy_setopt(curl, CURLOPT_URL, GIVOICE_TEST_ENDPOINT);
 #else
     const char *urls[] = {"", "https://api.openai.com/v1/models",
                           "https://api.elevenlabs.io/v1/models",
@@ -590,10 +590,10 @@ char *fetch_latest_version(GCancellable *cancel, GError **error) {
         return NULL;
     }
     Transfer t = {g_string_new(NULL), cancel};
-#ifdef KEYSCRIBE_TEST_ENDPOINT
-    curl_easy_setopt(curl, CURLOPT_URL, KEYSCRIBE_TEST_ENDPOINT);
+#ifdef GIVOICE_TEST_ENDPOINT
+    curl_easy_setopt(curl, CURLOPT_URL, GIVOICE_TEST_ENDPOINT);
 #else
-    curl_easy_setopt(curl, CURLOPT_URL, "https://keyscribe.gitools.net/linux-version.txt");
+    curl_easy_setopt(curl, CURLOPT_URL, "https://zidell.github.io/givoice/linux-version.txt");
 #endif
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
