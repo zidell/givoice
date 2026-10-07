@@ -89,9 +89,9 @@ pub fn directory() -> PathBuf {
 
 impl Settings {
     pub fn load() -> Self {
-        // Portable EXE downloads have no installer to copy the offline guide.
-        // MSIX already includes it. Do not overwrite an existing readme or let
-        // a read-only installation directory prevent the app from starting.
+        // The portable EXE has no installer to copy the offline guide. Do not
+        // overwrite an existing readme or let a read-only directory prevent the
+        // app from starting.
         if let Ok(executable) = env::current_exe() {
             if let Some(parent) = executable.parent() {
                 if let Ok(mut file) = fs::OpenOptions::new()

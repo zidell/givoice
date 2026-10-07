@@ -20,112 +20,56 @@ concurrency:
 
 jobs:
   windows:
-    name: Build and submit Microsoft Store package
+    name: Build and publish Windows x64
     runs-on: windows-2022
+    permissions:
+      contents: write
+      actions: write
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-      STORE_PACKAGE_NAME: ${{ secrets.GIVOICE_STORE_PACKAGE_NAME }}
-      STORE_PUBLISHER: ${{ secrets.GIVOICE_STORE_PUBLISHER }}
-      STORE_PUBLISHER_DISPLAY_NAME: ${{ secrets.GIVOICE_STORE_PUBLISHER_DISPLAY_NAME }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag || github.ref_name }}
-      - name: Check tag and Store identity
+      - name: Check release tag
         shell: pwsh
         run: |
-          # The Store requires a nonzero major version, so Windows tags start at windows-v1.0.0.
-          if ($env:RELEASE_TAG -notmatch '^windows-v[1-9]\d*\.\d+\.\d+$') {
-            throw 'Tag must be windows-vMAJOR.MINOR.PATCH with MAJOR of at least 1.'
+          if ($env:RELEASE_TAG -notmatch '^windows-v\d+\.\d+\.\d+$') {
+            throw 'Tag must be windows-vMAJOR.MINOR.PATCH.'
           }
           git ls-remote --exit-code --tags origin "refs/tags/$env:RELEASE_TAG" | Out-Null
           if ($LASTEXITCODE -ne 0) { throw 'Release tag must already exist on origin.' }
-          foreach ($name in 'STORE_PACKAGE_NAME', 'STORE_PUBLISHER', 'STORE_PUBLISHER_DISPLAY_NAME') {
-            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
-              throw "Missing Partner Center identity secret: $name"
-            }
-          }
+          # The app shows this version in its tray menu.
           "GIVOICE_VERSION=$($env:RELEASE_TAG.Substring('windows-v'.Length))" >> $env:GITHUB_ENV
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
-      - name: Build native executable
+      - name: Build portable executable
         shell: pwsh
         run: |
           ./native/windows/build.ps1
           if (-not (Test-Path 'dist-native\Givoice.exe')) { throw 'Native executable is missing.' }
-      - name: Package and inspect Store MSIX
-        id: package
-        shell: pwsh
-        run: |
-          $package = ./packaging/build-msix.ps1 -Version $env:GIVOICE_VERSION `
-            -ExecutablePath 'dist-native\Givoice.exe' `
-            -StorePackageName $env:STORE_PACKAGE_NAME `
-            -StorePublisher $env:STORE_PUBLISHER `
-            -StorePublisherDisplayName $env:STORE_PUBLISHER_DISPLAY_NAME
-          $package = @($package | Where-Object { $_ -like '*.msix' })[-1]
-          if (-not (Test-Path $package)) { throw 'Store MSIX was not created.' }
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $package).Path)
-          try {
-            $names = @($archive.Entries | ForEach-Object { $_.FullName })
-            if ('AppxManifest.xml' -notin $names -or 'App/Givoice/Givoice.exe' -notin $names) {
-              throw 'MSIX manifest or executable is missing.'
-            }
-            # The Store signs submitted packages itself.
-            if ('AppxSignature.p7x' -in $names) { throw 'Store submission MSIX must remain unsigned.' }
-            $reader = [System.IO.StreamReader]::new($archive.GetEntry('AppxManifest.xml').Open())
-            try { [xml]$manifest = $reader.ReadToEnd() } finally { $reader.Dispose() }
-            $identity = $manifest.Package.Identity
-            if ($identity.Name -ne $env:STORE_PACKAGE_NAME -or
-                $identity.Publisher -ne $env:STORE_PUBLISHER -or
-                $identity.Version -ne "$env:GIVOICE_VERSION.0" -or
-                $identity.ProcessorArchitecture -ne 'x64') {
-              throw 'MSIX identity does not match the Partner Center secrets.'
-            }
-          } finally { $archive.Dispose() }
-          "path=$((Resolve-Path $package).Path)" >> $env:GITHUB_OUTPUT
+          # A fixed file name lets the landing page link straight to the download.
+          New-Item release -ItemType Directory -Force | Out-Null
+          Copy-Item 'dist-native\Givoice.exe' 'release\Givoice-windows-x64.exe'
+          $hash = (Get-FileHash 'release\Givoice-windows-x64.exe' -Algorithm SHA256).Hash.ToLower()
+          "$hash  Givoice-windows-x64.exe" | Set-Content 'release\SHA256SUMS' -Encoding ascii
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-store-x64
-          path: ${{ steps.package.outputs.path }}
+          name: windows-x64
+          path: release/*
           if-no-files-found: error
-      - name: Check Store submission credentials
-        id: credentials
-        shell: pwsh
+      - name: Publish Windows release
         env:
-          TENANT_ID: ${{ secrets.GIVOICE_STORE_TENANT_ID }}
-          SELLER_ID: ${{ secrets.GIVOICE_STORE_SELLER_ID }}
-          CLIENT_ID: ${{ secrets.GIVOICE_STORE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.GIVOICE_STORE_CLIENT_SECRET }}
-          PRODUCT_ID: ${{ secrets.GIVOICE_STORE_PRODUCT_ID }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          $missing = @('TENANT_ID', 'SELLER_ID', 'CLIENT_ID', 'CLIENT_SECRET', 'PRODUCT_ID') |
-            Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
-          if ($missing.Count -eq 0) {
-            'ready=true' >> $env:GITHUB_OUTPUT
-          } else {
-            'ready=false' >> $env:GITHUB_OUTPUT
-            # The first submission is made by hand in Partner Center; automated updates start after it is live.
-            "Store submission skipped (missing: $($missing -join ', ')). Upload the windows-store-x64 artifact in Partner Center." >> $env:GITHUB_STEP_SUMMARY
-          }
-      - uses: microsoft/microsoft-store-apppublisher@v1.1
-        if: steps.credentials.outputs.ready == 'true'
-      - name: Submit to Microsoft Store
-        if: steps.credentials.outputs.ready == 'true'
-        shell: pwsh
+          gh release create "$RELEASE_TAG" release/Givoice-windows-x64.exe release/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
+            --title "Givoice Windows $GIVOICE_VERSION" --generate-notes
+      - name: Redeploy landing page with the new Windows version
         env:
-          TENANT_ID: ${{ secrets.GIVOICE_STORE_TENANT_ID }}
-          SELLER_ID: ${{ secrets.GIVOICE_STORE_SELLER_ID }}
-          CLIENT_ID: ${{ secrets.GIVOICE_STORE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.GIVOICE_STORE_CLIENT_SECRET }}
-          PRODUCT_ID: ${{ secrets.GIVOICE_STORE_PRODUCT_ID }}
-          PACKAGE: ${{ steps.package.outputs.path }}
-        run: |
-          msstore reconfigure --tenantId $env:TENANT_ID --sellerId $env:SELLER_ID `
-            --clientId $env:CLIENT_ID --clientSecret $env:CLIENT_SECRET
-          if ($LASTEXITCODE -ne 0) { throw 'Microsoft Store CLI configuration failed.' }
-          msstore publish $env:PACKAGE -id $env:PRODUCT_ID
-          if ($LASTEXITCODE -ne 0) { throw 'Microsoft Store submission failed.' }
-          "Submitted $env:RELEASE_TAG to the Microsoft Store; it goes live after certification." >> $env:GITHUB_STEP_SUMMARY
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main

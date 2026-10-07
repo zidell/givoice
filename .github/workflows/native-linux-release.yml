@@ -49,18 +49,18 @@ jobs:
         shell: bash
         run: |
           ./packaging/build-deb.sh
-          package="dist-native/linux/Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb"
+          package=dist-native/linux/Givoice-ubuntu-amd64.deb
           test -s "$package"
           test "$(dpkg-deb --field "$package" Version)" = "$GIVOICE_VERSION"
           test "$(dpkg-deb --field "$package" Architecture)" = amd64
           test "$(dist-native/linux/givoice --version)" = "Givoice Linux $GIVOICE_VERSION"
           cd dist-native/linux
-          sha256sum "Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb" > SHA256SUMS
+          sha256sum Givoice-ubuntu-amd64.deb > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: ubuntu-amd64
           path: |
-            dist-native/linux/Givoice-ubuntu-amd64-*.deb
+            dist-native/linux/Givoice-ubuntu-amd64.deb
             dist-native/linux/SHA256SUMS
           if-no-files-found: error
       - name: Publish Ubuntu release
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           gh release create "$RELEASE_TAG" \
-            "dist-native/linux/Givoice-ubuntu-amd64-$GIVOICE_VERSION.deb" \
+            dist-native/linux/Givoice-ubuntu-amd64.deb \
             dist-native/linux/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --verify-tag --latest=false \
             --title "Givoice Ubuntu $GIVOICE_VERSION" --generate-notes

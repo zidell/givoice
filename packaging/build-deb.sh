@@ -31,4 +31,4 @@ Description: Native voice input for the Ubuntu desktop
  Records microphone audio, transcribes it with OpenAI, ElevenLabs or Groq,
  and pastes text into the active application using desktop portals.
 CONTROL
-dpkg-deb --root-owner-group --build "$stage" "$output/Givoice-ubuntu-$arch-$version.deb"
+dpkg-deb --root-owner-group --build "$stage" "$output/Givoice-ubuntu-$arch.deb"

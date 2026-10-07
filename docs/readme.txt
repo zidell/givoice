@@ -6,7 +6,7 @@ connection is needed to use the instructions below.
 
 Installed guide locations:
 - macOS: Givoice.app/Contents/Resources/readme.txt
-- Windows: readme.txt beside Givoice.exe (including inside the MSIX package)
+- Windows: readme.txt beside Givoice.exe (created on first launch)
 - Linux .deb: /usr/share/doc/givoice/readme.txt
 - Linux local install: <install prefix>/share/doc/givoice/readme.txt
 

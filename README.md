@@ -40,14 +40,14 @@ The images below show the app's control menu and usage flow.
 
 ## Install
 
-See the [Givoice download page](https://zidell.github.io/givoice) for downloads and installation instructions. macOS and Ubuntu installers are published on [GitHub Releases](https://github.com/zidell/givoice/releases); the Windows app is distributed through the Microsoft Store. The macOS app offers new versions and installs them on request, the Microsoft Store updates the Windows app automatically, and the Ubuntu app shows a download item in the tray menu when a new version is out.
+See the [Givoice download page](https://zidell.github.io/givoice) for downloads and installation instructions. Every file is published on [GitHub Releases](https://github.com/zidell/givoice/releases) under a fixed name, and the download page links to the newest one directly. The macOS app offers new versions and installs them on request, and the Ubuntu app shows a download item in the tray menu when a new version is out. On Windows, download the new EXE from the download page.
 
 | Operating system | File | Install or run |
 | --- | --- | --- |
-| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | Open the DMG and copy the app to Applications |
-| macOS Intel | `Givoice-macos-x64-*.dmg` | Open the DMG and copy the app to Applications |
-| Windows 10/11 x64 | Microsoft Store | Coming soon to the Microsoft Store |
-| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Native Linux installation](native/linux/README.md) |
+| macOS Apple Silicon | `Givoice-macos-arm64.dmg` | Open the DMG and copy the app to Applications |
+| macOS Intel | `Givoice-macos-x64.dmg` | Open the DMG and copy the app to Applications |
+| Windows 10/11 x64 | `Givoice-windows-x64.exe` | Run the EXE; no installation needed |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64.deb` | [Native Linux installation](native/linux/README.md) |
 
 ### Ubuntu (native Linux app)
 

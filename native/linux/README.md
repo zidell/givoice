@@ -11,10 +11,11 @@ Target: Ubuntu 24.04 or newer. Build packages on the oldest Ubuntu release you
 intend to distribute them to. A binary built on a newer system may require newer
 libraries. Ubuntu 26.04 GNOME/Wayland is the local development environment.
 
-Download the Ubuntu amd64 `.deb` and its SHA-256 checksum from
+Download `Givoice-ubuntu-amd64.deb` from the [landing page](https://zidell.github.io/givoice),
+or the package and its SHA-256 checksum from
 [the latest Ubuntu release](https://github.com/zidell/givoice/releases?q=linux-v&expanded=true).
 Open the downloaded package to install, or run
-`sudo apt install ./Givoice-ubuntu-amd64-<version>.deb`.
+`sudo apt install ./Givoice-ubuntu-amd64.deb`.
 The installed app checks the landing page's `linux-version.txt` every six hours and adds a
 **새 버전 … 다운로드** item to the tray menu when a newer release is out; install that
 package the same way to update.
@@ -36,7 +37,7 @@ accessible by launching the app again. Only one app instance runs per session.
 
 Create an installable package with `./packaging/build-deb.sh`, optionally setting
 `GIVOICE_VERSION`. The resulting `.deb` is in `dist-native/linux/` and can be
-installed with `sudo apt install ./dist-native/linux/Givoice-ubuntu-*.deb`.
+installed with `sudo apt install ./dist-native/linux/Givoice-ubuntu-amd64.deb`.
 Ubuntu-only releases use `linux-vMAJOR.MINOR.PATCH` tags and are built on Ubuntu
 24.04 in GitHub Actions before publication.
 
@@ -140,10 +141,9 @@ keyboard permission request in the private test window.
 
 ## Features
 
-The shared `vMAJOR.MINOR.PATCH` release workflow builds and tests Ubuntu amd64,
-packages `Givoice-ubuntu-amd64-MAJOR.MINOR.PATCH.deb`, and attaches it to the same
-GitHub Release as macOS and Windows. The publish job requires all three OS builds
-and checks that the Ubuntu asset exists before publishing.
+The `linux-vMAJOR.MINOR.PATCH` release workflow builds and tests Ubuntu amd64,
+packages `Givoice-ubuntu-amd64.deb` (the file name carries no version, so the
+landing page links to it directly), and attaches it to that tag's GitHub Release.
 
 This port follows the existing macOS/Windows implementation:
 

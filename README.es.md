@@ -40,14 +40,14 @@ Las siguientes imágenes muestran el menú de control y el flujo de uso de la ap
 
 ## Instalación
 
-Consulta la [página de descargas de Givoice](https://zidell.github.io/givoice) para las descargas e instrucciones de instalación. Los instaladores de macOS y Ubuntu se publican en [GitHub Releases](https://github.com/zidell/givoice/releases) y la aplicación de Windows se distribuye a través de Microsoft Store. Cuando hay una versión nueva, la aplicación de macOS la ofrece y la instala si aceptas, Microsoft Store actualiza automáticamente la de Windows y la de Ubuntu muestra una opción de descarga en el menú de la bandeja.
+Consulta la [página de descargas de Givoice](https://zidell.github.io/givoice) para las descargas e instrucciones de instalación. Todos los archivos se publican en [GitHub Releases](https://github.com/zidell/givoice/releases) con un nombre fijo, y la página de descargas enlaza directamente a la versión más reciente. Cuando hay una versión nueva, la aplicación de macOS la ofrece y la instala si aceptas, y la de Ubuntu muestra una opción de descarga en el menú de la bandeja. En Windows, descarga el nuevo EXE desde la página de descargas.
 
 | Sistema operativo | Archivo | Instalar o ejecutar |
 | --- | --- | --- |
-| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
-| macOS Intel | `Givoice-macos-x64-*.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
-| Windows 10/11 x64 | Microsoft Store | Próximamente en Microsoft Store |
-| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Instalación nativa para Ubuntu](native/linux/README.md) |
+| macOS Apple Silicon | `Givoice-macos-arm64.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
+| macOS Intel | `Givoice-macos-x64.dmg` | Abre el DMG y copia la aplicación a Aplicaciones |
+| Windows 10/11 x64 | `Givoice-windows-x64.exe` | Ejecuta el EXE; no requiere instalación |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64.deb` | [Instalación nativa para Ubuntu](native/linux/README.md) |
 
 ## Primer uso
 

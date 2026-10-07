@@ -3,7 +3,7 @@ set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
     echo 'Usage: render_site.sh OUTPUT_DIRECTORY' >&2
-    echo 'Optional: GIVOICE_WINDOWS_STORE_URL once the Microsoft Store listing is live, GH_TOKEN for API limits.' >&2
+    echo 'Optional: GH_TOKEN for API limits.' >&2
     exit 1
 fi
 
@@ -11,19 +11,22 @@ output_dir="$1"
 project_root="$(cd "$(dirname "$0")/.." && pwd)"
 repo='zidell/givoice'
 
-# Each platform ships from its own tag series (macos-v*, linux-v*); link the newest of each.
+# Each platform ships from its own tag series (macos-v*, linux-v*, windows-v*) with fixed
+# asset names, so the page links straight to the files of the newest tag of each.
 latest_version() {
-    local version
-    version="$(git -C "$project_root" ls-remote --tags --refs origin "refs/tags/$1-v*" |
-        sed "s#.*refs/tags/$1-v##" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
-    if [[ -z "$version" ]]; then
-        echo "$1 릴리스 버전을 찾지 못했습니다" >&2
-        exit 1
-    fi
-    printf '%s' "$version"
+    git -C "$project_root" ls-remote --tags --refs origin "refs/tags/$1-v*" |
+        sed "s#.*refs/tags/$1-v##" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true
 }
 macos_version="$(latest_version macos)"
 linux_version="$(latest_version linux)"
+windows_version="$(latest_version windows)"
+for platform in macos linux; do
+    version_var="${platform}_version"
+    if [[ -z "${!version_var}" ]]; then
+        echo "$platform 릴리스 버전을 찾지 못했습니다" >&2
+        exit 1
+    fi
+done
 
 auth=()
 if [[ -n "${GH_TOKEN:-}" ]]; then auth=(-H "Authorization: Bearer $GH_TOKEN"); fi
@@ -32,24 +35,23 @@ asset_size() {
     jq -r --arg name "$1" '.assets[] | select(.name == $name) | .size' <<< "$macos_release" |
         awk '{ printf "%.1f MB", $1 / 1000000 }'
 }
-macos_arm64_size="$(asset_size "Givoice-macos-arm64-$macos_version.dmg")"
-macos_x64_size="$(asset_size "Givoice-macos-x64-$macos_version.dmg")"
+macos_arm64_size="$(asset_size Givoice-macos-arm64.dmg)"
+macos_x64_size="$(asset_size Givoice-macos-x64.dmg)"
+macos_arm64_label="${macos_arm64_size:+$macos_arm64_size · }DMG"
+macos_x64_label="${macos_x64_size:+$macos_x64_size · }DMG"
 
 mkdir -p "$output_dir"
 sed -e "s/__MACOS_VERSION__/$macos_version/g" \
     -e "s/__LINUX_VERSION__/$linux_version/g" \
-    -e "s/__MACOS_ARM64_SIZE__/${macos_arm64_size:-DMG}/g" \
-    -e "s/__MACOS_X64_SIZE__/${macos_x64_size:-DMG}/g" \
+    -e "s/__WINDOWS_VERSION__/$windows_version/g" \
+    -e "s/__MACOS_ARM64_SIZE__/$macos_arm64_label/g" \
+    -e "s/__MACOS_X64_SIZE__/$macos_x64_label/g" \
     "$project_root/site/index.html" > "$output_dir/index.html"
-# Windows is distributed only through the Microsoft Store; until the listing is live the
-# page says it is coming instead of linking to it.
-if [[ -n "${GIVOICE_WINDOWS_STORE_URL:-}" ]]; then
-    store_url="${GIVOICE_WINDOWS_STORE_URL//&/\\&}"
-    sed -i.bak -e '/data-windows-pending/d' -e "s#__WINDOWS_STORE_URL__#$store_url#g" "$output_dir/index.html"
-else
-    sed -i.bak -e '/data-windows-store/d' "$output_dir/index.html"
+# Until the first windows-v* release exists, leave the Windows download out.
+if [[ -z "$windows_version" ]]; then
+    sed -i.bak -e '/data-windows/d' "$output_dir/index.html"
+    rm -f "$output_dir/index.html.bak"
 fi
-rm -f "$output_dir/index.html.bak"
 
 # Sparkle in the macOS app reads appcast-<arch>.xml; the Linux app compares linux-version.txt.
 for arch in arm64 x64; do

@@ -40,14 +40,14 @@ Givoice는 마이크로 녹음된 음성을 텍스트로 변환해 현재 입력
 
 ## 설치
 
-다운로드 및 설치 방법은 [Givoice 다운로드 페이지](https://zidell.github.io/givoice)에서 확인하세요. macOS·Ubuntu 설치 파일은 [GitHub Releases](https://github.com/zidell/givoice/releases)에서, Windows 앱은 Microsoft Store로 배포합니다. 새 버전이 나오면 macOS 앱은 알려 준 뒤 설치하고, Windows 앱은 Microsoft Store가 자동으로 업데이트하며, Ubuntu 앱은 트레이 메뉴에 다운로드 항목을 띄웁니다.
+다운로드 및 설치 방법은 [Givoice 다운로드 페이지](https://zidell.github.io/givoice)에서 확인하세요. 모든 파일은 [GitHub Releases](https://github.com/zidell/givoice/releases)에 고정된 이름으로 올라가고, 다운로드 페이지가 최신 파일을 바로 내려받게 연결합니다. 새 버전이 나오면 macOS 앱은 알려 준 뒤 설치하고, Ubuntu 앱은 트레이 메뉴에 다운로드 항목을 띄웁니다. Windows는 다운로드 페이지에서 새 EXE를 받으면 됩니다.
 
 | 운영체제 | 파일 | 설치 또는 실행 |
 | --- | --- | --- |
-| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
-| macOS Intel | `Givoice-macos-x64-*.dmg` | DMG를 열고 앱을 Applications로 복사 |
-| Windows 10/11 x64 | Microsoft Store | Microsoft Store 출시 준비 중 |
-| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Ubuntu 네이티브 설치 방법](native/linux/README.md) |
+| macOS Apple Silicon | `Givoice-macos-arm64.dmg` | DMG를 열고 앱을 Applications로 복사 |
+| macOS Intel | `Givoice-macos-x64.dmg` | DMG를 열고 앱을 Applications로 복사 |
+| Windows 10/11 x64 | `Givoice-windows-x64.exe` | EXE를 바로 실행(설치 불필요) |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64.deb` | [Ubuntu 네이티브 설치 방법](native/linux/README.md) |
 
 ## 처음 사용할 때
 

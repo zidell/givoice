@@ -30,7 +30,6 @@ jobs:
     env:
       SHA: ${{ github.event.workflow_run.head_sha }}
       GH_TOKEN: ${{ github.token }}
-      WINDOWS_STORE_URL: ${{ vars.GIVOICE_WINDOWS_STORE_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,7 +70,4 @@ jobs:
 
           release macos native-macos-release.yml 0.1.0 native/macos packaging/macos-entitlements.plist
           release linux native-linux-release.yml 0.1.0 native/linux packaging/build-deb.sh
-          # Windows ships through the Microsoft Store, so it joins once the listing is live.
-          if [[ -n "$WINDOWS_STORE_URL" ]]; then
-            release windows native-windows-release.yml 1.0.0 native/windows packaging/build-msix.ps1 packaging/msix-assets
-          fi
+          release windows native-windows-release.yml 0.1.0 native/windows

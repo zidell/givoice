@@ -91,8 +91,8 @@ jobs:
           TEAM_ID: ${{ secrets.GIVOICE_APPLE_TEAM_ID }}
           SIGNING_IDENTITY: ${{ secrets.GIVOICE_MAC_SIGNING_IDENTITY }}
         run: |
-          version="${RELEASE_TAG#macos-v}"
-          dmg="Givoice-macos-${{ matrix.arch }}-$version.dmg"
+          # A fixed file name lets the landing page link straight to the DMG.
+          dmg="Givoice-macos-${{ matrix.arch }}.dmg"
           mkdir -p "$RUNNER_TEMP/dmg-root"
           cp -R dist-native/Givoice.app "$RUNNER_TEMP/dmg-root/Givoice.app"
           ln -s /Applications "$RUNNER_TEMP/dmg-root/Applications"
@@ -124,7 +124,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/sparkle" "$RUNNER_TEMP/feed"
           tar -xf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle"
           version="${RELEASE_TAG#macos-v}"
-          cp "Givoice-macos-${{ matrix.arch }}-$version.dmg" "$RUNNER_TEMP/feed/"
+          cp "Givoice-macos-${{ matrix.arch }}.dmg" "$RUNNER_TEMP/feed/"
           # The installed app reads appcast-<arch>.xml from the landing page; the
           # enclosure points at this release's DMG.
           printf '%s' "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/sparkle/bin/generate_appcast" \
@@ -168,7 +168,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#macos-v}"
           for arch in arm64 x64; do
-            test -s "release-assets/Givoice-macos-$arch-$version.dmg" || {
+            test -s "release-assets/Givoice-macos-$arch.dmg" || {
               echo "Missing macOS $arch DMG" >&2; exit 1;
             }
             test -s "release-assets/appcast-$arch.xml" || {

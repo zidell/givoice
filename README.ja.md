@@ -40,14 +40,14 @@ Givoiceは、マイクの録音を文字起こしし、現在の入力欄へ貼�
 
 ## インストール
 
-ダウンロードとインストール方法は[Givoiceダウンロードページ](https://zidell.github.io/givoice)をご覧ください。macOS版とUbuntu版のインストーラーは[GitHub Releases](https://github.com/zidell/givoice/releases)で、Windows版はMicrosoft Storeで配布しています。新しいバージョンが出ると、macOS版はお知らせしたうえでインストールし、Windows版はMicrosoft Storeが自動で更新し、Ubuntu版はトレイメニューにダウンロード項目を表示します。
+ダウンロードとインストール方法は[Givoiceダウンロードページ](https://zidell.github.io/givoice)をご覧ください。すべてのファイルは[GitHub Releases](https://github.com/zidell/givoice/releases)に固定のファイル名で公開され、ダウンロードページから最新版を直接ダウンロードできます。新しいバージョンが出ると、macOS版はお知らせしたうえでインストールし、Ubuntu版はトレイメニューにダウンロード項目を表示します。Windows版はダウンロードページから新しいEXEを入手してください。
 
 | OS | ファイル | インストールまたは実行 |
 | --- | --- | --- |
-| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | DMGを開き、アプリをApplicationsへコピー |
-| macOS Intel | `Givoice-macos-x64-*.dmg` | DMGを開き、アプリをApplicationsへコピー |
-| Windows 10/11 x64 | Microsoft Store | Microsoft Storeでの公開を準備中 |
-| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Ubuntuネイティブ版のインストール](native/linux/README.md) |
+| macOS Apple Silicon | `Givoice-macos-arm64.dmg` | DMGを開き、アプリをApplicationsへコピー |
+| macOS Intel | `Givoice-macos-x64.dmg` | DMGを開き、アプリをApplicationsへコピー |
+| Windows 10/11 x64 | `Givoice-windows-x64.exe` | EXEをそのまま実行（インストール不要） |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64.deb` | [Ubuntuネイティブ版のインストール](native/linux/README.md) |
 
 ## 最初の使用
 

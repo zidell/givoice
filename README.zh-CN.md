@@ -40,14 +40,14 @@ Givoice 是一款语音输入应用：它将麦克风录音转写为文字，并
 
 ## 安装
 
-请在 [Givoice 下载页面](https://zidell.github.io/givoice)查看下载和安装说明。macOS 和 Ubuntu 安装文件通过 [GitHub Releases](https://github.com/zidell/givoice/releases) 发布，Windows 应用通过 Microsoft Store 分发。有新版本时，macOS 应用会提示并在确认后安装，Microsoft Store 会自动更新 Windows 应用，Ubuntu 应用会在托盘菜单中显示下载项。
+请在 [Givoice 下载页面](https://zidell.github.io/givoice)查看下载和安装说明。所有文件都以固定文件名发布在 [GitHub Releases](https://github.com/zidell/givoice/releases)，下载页面直接链接到最新文件。有新版本时，macOS 应用会提示并在确认后安装，Ubuntu 应用会在托盘菜单中显示下载项。Windows 版请从下载页面下载新的 EXE。
 
 | 操作系统 | 文件 | 安装或运行 |
 | --- | --- | --- |
-| macOS Apple Silicon | `Givoice-macos-arm64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
-| macOS Intel | `Givoice-macos-x64-*.dmg` | 打开 DMG 并将应用复制到 Applications |
-| Windows 10/11 x64 | Microsoft Store | 即将上架 Microsoft Store |
-| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64-*.deb` | [Ubuntu 原生版安装](native/linux/README.md) |
+| macOS Apple Silicon | `Givoice-macos-arm64.dmg` | 打开 DMG 并将应用复制到 Applications |
+| macOS Intel | `Givoice-macos-x64.dmg` | 打开 DMG 并将应用复制到 Applications |
+| Windows 10/11 x64 | `Givoice-windows-x64.exe` | 直接运行 EXE，无需安装 |
+| Ubuntu 24.04+ amd64 | `Givoice-ubuntu-amd64.deb` | [Ubuntu 原生版安装](native/linux/README.md) |
 
 ## 首次使用
 

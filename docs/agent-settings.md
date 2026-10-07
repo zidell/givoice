@@ -4,7 +4,7 @@ The complete, offline settings guide is [readme.txt](readme.txt). The same file 
 included in installed apps:
 
 - macOS: `Givoice.app/Contents/Resources/readme.txt`
-- Windows: `readme.txt` beside `Givoice.exe`, including inside the MSIX package
+- Windows: `readme.txt` beside `Givoice.exe` (created on first launch)
 - Linux .deb: `/usr/share/doc/givoice/readme.txt`
 - Linux local install: `<install prefix>/share/doc/givoice/readme.txt`
 

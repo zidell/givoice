@@ -21,7 +21,6 @@ jobs:
       - name: Render static site
         env:
           GH_TOKEN: ${{ github.token }}
-          GIVOICE_WINDOWS_STORE_URL: ${{ vars.GIVOICE_WINDOWS_STORE_URL }}
         run: bash scripts/render_site.sh "$RUNNER_TEMP/static-site"
         shell: bash
       - uses: actions/upload-pages-artifact@v3
