@@ -51,7 +51,7 @@ jobs:
             local platform="$1" workflow="$2" first="$3"; shift 3
             local latest next
             latest="$(git tag -l "$platform-v*" | sed "s#^$platform-v##" |
-              grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
+              { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)"
             if [[ -n "$latest" ]]; then
               if git diff --quiet "$platform-v$latest" "$SHA" -- "$@" "${shared[@]}"; then
                 echo "$platform: no changes since $platform-v$latest"; return

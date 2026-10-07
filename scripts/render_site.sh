@@ -11,11 +11,17 @@ output_dir="$1"
 project_root="$(cd "$(dirname "$0")/.." && pwd)"
 repo='zidell/givoice'
 
+auth=()
+if [[ -n "${GH_TOKEN:-}" ]]; then auth=(-H "Authorization: Bearer $GH_TOKEN"); fi
+
 # Each platform ships from its own tag series (macos-v*, linux-v*, windows-v*) with fixed
-# asset names, so the page links straight to the files of the newest tag of each.
+# asset names, so the page links straight to the files of the newest release of each.
+# Read published releases rather than tags: a tag exists while its release is still building.
+releases="$(curl -fsSL ${auth[@]+"${auth[@]}"} "https://api.github.com/repos/$repo/releases?per_page=100")"
 latest_version() {
-    git -C "$project_root" ls-remote --tags --refs origin "refs/tags/$1-v*" |
-        sed "s#.*refs/tags/$1-v##" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true
+    jq -r --arg prefix "$1-v" '.[] | select(.draft | not) | .tag_name |
+        select(startswith($prefix)) | ltrimstr($prefix)' <<< "$releases" |
+        { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1
 }
 macos_version="$(latest_version macos)"
 linux_version="$(latest_version linux)"
@@ -28,8 +34,6 @@ for platform in macos linux; do
     fi
 done
 
-auth=()
-if [[ -n "${GH_TOKEN:-}" ]]; then auth=(-H "Authorization: Bearer $GH_TOKEN"); fi
 macos_release="$(curl -fsSL ${auth[@]+"${auth[@]}"} "https://api.github.com/repos/$repo/releases/tags/macos-v$macos_version")"
 asset_size() {
     jq -r --arg name "$1" '.assets[] | select(.name == $name) | .size' <<< "$macos_release" |
