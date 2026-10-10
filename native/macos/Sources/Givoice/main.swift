@@ -5,6 +5,7 @@ import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 import Sparkle
+import Speech
 
 private enum Phase {
     case idle, recording, transcribing
@@ -404,7 +405,26 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             setStatus("종료음 재생 중")
             return
         }
-        guard !settings.apiKey.isEmpty else {
+        if settings.engine == .system {
+            if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
+                SFSpeechRecognizer.requestAuthorization { [weak self] _ in
+                    DispatchQueue.main.async {
+                        guard let self, self.settings.engine == .system, self.phase != .recording else { return }
+                        self.startRecording()
+                    }
+                }
+                return
+            }
+            if let problem = SystemSpeech.problem(language: settings.language) {
+                setStatus("시스템 음성 인식 설정 필요")
+                let alert = NSAlert()
+                alert.messageText = "시스템 음성 인식 설정 필요"
+                alert.informativeText = problem
+                alert.addButton(withTitle: "확인")
+                alert.runModal()
+                return
+            }
+        } else if settings.apiKey.isEmpty {
             setStatus("API 설정 필요")
             showTransientOverlay(.apiSetupRequired)
             return

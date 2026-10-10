@@ -1,7 +1,30 @@
 import Foundation
 
+enum TranscriptionEngine: String, CaseIterable {
+    case system, openai, elevenlabs, groq
+    var title: String {
+        switch self { case .system: return "시스템 제공"; case .openai: return "OpenAI"; case .elevenlabs: return "ElevenLabs"; case .groq: return "Groq" }
+    }
+    var provider: TranscriptionProvider? {
+        switch self { case .system: return nil; case .openai: return .openAI; case .elevenlabs: return .elevenLabs; case .groq: return .groq }
+    }
+}
+
+extension TranscriptionProvider {
+    var code: String {
+        switch self { case .openAI: return "openai"; case .elevenLabs: return "elevenlabs"; case .groq: return "groq" }
+    }
+}
+
 struct Settings {
     var apiKey = ""
+    var apiKeys: [String: String] = [:]
+    // "auto" is retained only for older configuration files.
+    var transcriptionEngine = "auto"
+    var engine: TranscriptionEngine {
+        TranscriptionEngine(rawValue: transcriptionEngine)
+            ?? TranscriptionEngine(rawValue: TranscriptionProvider(apiKey: apiKey)?.code ?? "openai")!
+    }
     var shortcut = "right_command"
     var recordingTimeLimitMinutes = 30
     var logRetentionHours = Settings.defaultLogRetentionHours
@@ -39,6 +62,10 @@ struct Settings {
         }
         if let contents = try? String(contentsOf: configURL, encoding: .utf8) {
             let values = parseTOML(contents)
+            if let engine = values["transcription_engine"] as? String,
+               engine == "auto" || TranscriptionEngine(rawValue: engine) != nil {
+                result.transcriptionEngine = engine
+            }
             result.shortcut = values["shortcut"] as? String ?? result.shortcut
             if result.shortcut == "right_cmd" { result.shortcut = "right_command" }
             if let limit = values["recording_time_limit_minutes"] as? Int,
@@ -76,13 +103,29 @@ struct Settings {
         if let data = try? Data(contentsOf: userURL),
            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
             result.apiKey = json["api_key"] as? String ?? ""
+            result.apiKeys = json["api_keys"] as? [String: String] ?? [:]
         }
-        if result.apiKey.isEmpty {
-            let environment = ProcessInfo.processInfo.environment
-            result.apiKey = environment["ELEVENLABS_API_KEY"]
-                ?? environment["GROQ_API_KEY"]
-                ?? environment["OPENAI_API_KEY"]
-                ?? ""
+        if let provider = TranscriptionProvider(apiKey: result.apiKey), result.apiKeys[provider.code] == nil {
+            result.apiKeys[provider.code] = result.apiKey
+        }
+        let environment = ProcessInfo.processInfo.environment
+        let migrateSystem = result.transcriptionEngine == "system"
+        if migrateSystem {
+            result.transcriptionEngine = "auto"
+            if TranscriptionProvider(apiKey: result.apiKey) == nil {
+                result.apiKey = ["openai", "elevenlabs", "groq"]
+                    .compactMap { result.apiKeys[$0] }.first { !$0.isEmpty } ?? ""
+            }
+        }
+        if result.transcriptionEngine == "auto", result.apiKey.isEmpty {
+            result.apiKey = environment["ELEVENLABS_API_KEY"] ?? environment["GROQ_API_KEY"] ?? environment["OPENAI_API_KEY"] ?? ""
+        }
+        if migrateSystem {
+            result.transcriptionEngine = TranscriptionProvider(apiKey: result.apiKey)?.code ?? "openai"
+        }
+        if let provider = result.engine.provider {
+            let name = provider == .openAI ? "OPENAI_API_KEY" : provider == .groq ? "GROQ_API_KEY" : "ELEVENLABS_API_KEY"
+            result.apiKey = result.apiKeys[provider.code] ?? environment[name] ?? ""
         }
         return result
     }
@@ -90,6 +133,7 @@ struct Settings {
     func save() throws {
         try FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
         let fields = [
+            "transcription_engine = \(jsonString(transcriptionEngine))",
             "shortcut = \(jsonString(shortcut))",
             "recording_time_limit_minutes = \(recordingTimeLimitMinutes)",
             "log_retention_hours = \(logRetentionHours)",
@@ -140,6 +184,9 @@ struct Settings {
         var user = ((try? Data(contentsOf: Self.userURL))
             .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }) ?? [:]
         user["api_key"] = apiKey
+        var keys = apiKeys
+        if let provider = engine.provider { keys[provider.code] = apiKey }
+        user["api_keys"] = keys
         let data = try JSONSerialization.data(withJSONObject: user, options: [.prettyPrinted, .sortedKeys])
         try data.write(to: Self.userURL, options: .atomic)
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.userURL.path)

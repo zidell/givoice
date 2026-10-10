@@ -16,12 +16,14 @@ enum TranscriptionError: LocalizedError {
 }
 
 final class Transcriber {
+    private let systemSpeech = SystemSpeech()
     private var task: URLSessionUploadTask?
     private var bodyURL: URL?
     private var chunkURLs: [URL] = []
     private var generation = UUID()
 
     func cancel() {
+        systemSpeech.cancel()
         generation = UUID()
         task?.cancel()
         task = nil
@@ -34,13 +36,24 @@ final class Transcriber {
     func transcribe(audioURL: URL, settings: Settings,
                     completion: @escaping (Result<String, Error>) -> Void) {
         cancel()
+        if settings.engine == .system {
+            systemSpeech.transcribe(audioURL: audioURL, settings: settings) { result in
+                completion(result.map(cleanText))
+            }
+            return
+        }
         guard !settings.apiKey.isEmpty else {
             completion(.failure(TranscriptionError.missingKey))
             return
         }
+        guard TranscriptionProvider(apiKey: settings.apiKey) == settings.engine.provider else {
+            completion(.failure(NSError(domain: "Givoice", code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "선택한 엔진의 API 키를 입력해 주세요."])))
+            return
+        }
         let currentGeneration = generation
         let audioSize = (try? audioURL.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        if let provider = TranscriptionProvider(apiKey: settings.apiKey),
+        if let provider = settings.engine.provider,
            provider != .elevenLabs, audioSize > 24 * 1024 * 1024 {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 do {
@@ -93,7 +106,7 @@ final class Transcriber {
 
     private func transcribeOne(audioURL: URL, settings: Settings, generation: UUID,
                                completion: @escaping (Result<String, Error>) -> Void) {
-        guard let provider = TranscriptionProvider(apiKey: settings.apiKey) else {
+        guard let provider = settings.engine.provider else {
             completion(.failure(TranscriptionError.missingKey))
             return
         }
@@ -200,9 +213,9 @@ final class Transcriber {
     }
 }
 
-private func splitWAV(_ audioURL: URL) throws -> [URL] {
+func splitWAV(_ audioURL: URL, seconds: Double = 9 * 60) throws -> [URL] {
     let source = try AVAudioFile(forReading: audioURL)
-    let framesPerChunk = AVAudioFramePosition(source.processingFormat.sampleRate * 9 * 60)
+    let framesPerChunk = AVAudioFramePosition(source.processingFormat.sampleRate * seconds)
     guard framesPerChunk > 0 else { throw TranscriptionError.invalidResponse }
     var output: [URL] = []
     do {

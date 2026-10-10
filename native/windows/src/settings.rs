@@ -8,7 +8,37 @@ pub enum Provider {
     Groq,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Engine {
+    #[default]
+    Auto,
+    System,
+    OpenAi,
+    ElevenLabs,
+    Groq,
+}
+
+impl Engine {
+    pub fn provider(self, key: &str) -> Option<Provider> {
+        match self {
+            Self::Auto => Provider::from_api_key(key),
+            Self::System => None,
+            Self::OpenAi => Some(Provider::OpenAi),
+            Self::ElevenLabs => Some(Provider::ElevenLabs),
+            Self::Groq => Some(Provider::Groq),
+        }
+    }
+}
+
 impl Provider {
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::OpenAi => "openai",
+            Self::ElevenLabs => "elevenlabs",
+            Self::Groq => "groq",
+        }
+    }
     pub fn from_api_key(key: &str) -> Option<Self> {
         if key.starts_with("sk-") {
             Some(Self::OpenAi)
@@ -29,6 +59,7 @@ impl Provider {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
+    pub transcription_engine: Engine,
     pub shortcut: String,
     #[serde(
         default = "default_recording_limit",
@@ -55,11 +86,14 @@ pub struct Settings {
     pub groq_model: String,
     #[serde(skip)]
     pub api_key: String,
+    #[serde(skip)]
+    pub api_keys: std::collections::HashMap<String, String>,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            transcription_engine: Engine::Auto,
             shortcut: "right_option".into(),
             recording_time_limit_minutes: default_recording_limit(),
             log_retention_hours: default_log_retention(),
@@ -76,6 +110,7 @@ impl Default for Settings {
             elevenlabs_model: "scribe_v2".into(),
             groq_model: "whisper-large-v3-turbo".into(),
             api_key: String::new(),
+            api_keys: Default::default(),
         }
     }
 }
@@ -120,15 +155,60 @@ impl Settings {
                     .and_then(|v| v.as_str())
                     .unwrap_or("")
                     .into();
+                value.api_keys = json
+                    .get("api_keys")
+                    .cloned()
+                    .and_then(|keys| serde_json::from_value(keys).ok())
+                    .unwrap_or_default();
             }
         }
-        if value.api_key.is_empty() {
-            value.api_key = env::var("ELEVENLABS_API_KEY")
-                .or_else(|_| env::var("GROQ_API_KEY"))
-                .or_else(|_| env::var("OPENAI_API_KEY"))
+        value.resolve_api_key(|name| env::var(name).ok());
+        value
+    }
+
+    fn resolve_api_key(&mut self, environment: impl Fn(&str) -> Option<String>) {
+        let migrate_system = self.transcription_engine == Engine::System;
+        if migrate_system {
+            self.transcription_engine = Engine::Auto;
+            if Provider::from_api_key(&self.api_key).is_none() {
+                self.api_key = ["openai", "elevenlabs", "groq"]
+                    .iter()
+                    .find_map(|name| self.api_keys.get(*name).filter(|key| !key.is_empty()))
+                    .cloned()
+                    .unwrap_or_default();
+            }
+        }
+        if let Some(provider) = Provider::from_api_key(&self.api_key) {
+            self.api_keys
+                .entry(provider.code().into())
+                .or_insert(self.api_key.clone());
+        }
+        if self.transcription_engine == Engine::Auto && self.api_key.is_empty() {
+            self.api_key = ["ELEVENLABS_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY"]
+                .iter()
+                .find_map(|name| environment(name).filter(|key| !key.is_empty()))
                 .unwrap_or_default();
         }
-        value
+        if migrate_system {
+            self.transcription_engine = match self.provider() {
+                Some(Provider::ElevenLabs) => Engine::ElevenLabs,
+                Some(Provider::Groq) => Engine::Groq,
+                _ => Engine::OpenAi,
+            };
+        }
+        if let Some(provider) = self.provider() {
+            let name = match provider {
+                Provider::OpenAi => "OPENAI_API_KEY",
+                Provider::ElevenLabs => "ELEVENLABS_API_KEY",
+                Provider::Groq => "GROQ_API_KEY",
+            };
+            self.api_key = self
+                .api_keys
+                .get(provider.code())
+                .cloned()
+                .or_else(|| environment(name))
+                .unwrap_or_default();
+        }
     }
 
     fn config_text(&self) -> io::Result<String> {
@@ -179,7 +259,17 @@ impl Settings {
     pub fn save(&self) -> io::Result<()> {
         self.save_config()?;
         let directory = directory();
-        let user = serde_json::json!({"api_key": self.api_key});
+        let mut user = fs::read_to_string(directory.join("user_config.json"))
+            .ok()
+            .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+            .filter(|json| json.is_object())
+            .unwrap_or_else(|| serde_json::json!({}));
+        user["api_key"] = serde_json::json!(self.api_key);
+        let mut keys = self.api_keys.clone();
+        if let Some(provider) = self.provider() {
+            keys.insert(provider.code().into(), self.api_key.clone());
+        }
+        user["api_keys"] = serde_json::json!(keys);
         fs::write(
             directory.join("user_config.json"),
             serde_json::to_vec_pretty(&user).map_err(io::Error::other)?,
@@ -188,7 +278,7 @@ impl Settings {
     }
 
     pub fn provider(&self) -> Option<Provider> {
-        Provider::from_api_key(&self.api_key)
+        self.transcription_engine.provider(&self.api_key)
     }
 
     /// 전사 결과를 붙여넣기 직전에 치환 규칙대로 고친다. 규칙은 적힌 순서대로 적용된다.
@@ -277,6 +367,67 @@ where
 #[cfg(test)]
 mod tests {
     use super::{parse_replacement, Settings};
+
+    #[test]
+    fn engine_migration_and_provider_credentials_stay_separate() {
+        use super::{Engine, Provider};
+        let mut settings = Settings::from_config("").unwrap();
+        assert_eq!(settings.transcription_engine, Engine::Auto);
+        settings.api_key = "gsk_legacy_fixture".into();
+        settings.resolve_api_key(|_| None);
+        assert_eq!(settings.provider(), Some(Provider::Groq));
+        assert_eq!(settings.api_key, "gsk_legacy_fixture");
+        settings.transcription_engine = Engine::OpenAi;
+        settings.resolve_api_key(|_| None);
+        assert!(settings.api_key.is_empty());
+        assert_eq!(settings.api_keys.get("groq").unwrap(), "gsk_legacy_fixture");
+        settings.resolve_api_key(|name| {
+            Some(
+                if name == "OPENAI_API_KEY" {
+                    "sk-openai_fixture"
+                } else {
+                    "sk_wrong_provider"
+                }
+                .into(),
+            )
+        });
+        assert_eq!(settings.api_key, "sk-openai_fixture");
+        assert!(!settings.api_keys.contains_key("elevenlabs"));
+        settings.transcription_engine = Engine::System;
+        settings.resolve_api_key(|_| None);
+        assert_eq!(settings.api_key, "sk-openai_fixture");
+        assert_eq!(settings.provider(), Some(Provider::OpenAi));
+        let config = settings.config_text().unwrap();
+        let loaded = Settings::from_config(&config).unwrap();
+        assert_eq!(loaded.transcription_engine, Engine::OpenAi);
+        assert!(config.contains("openai, elevenlabs, groq"));
+        assert!(!config.contains("sk-openai_fixture"));
+        assert!(!config.contains("gsk_legacy_fixture"));
+    }
+
+    #[test]
+    fn retired_system_engine_restores_saved_provider_or_defaults_to_openai() {
+        use super::{Engine, Provider};
+        let mut settings = Settings::from_config("transcription_engine = \"system\"").unwrap();
+        settings
+            .api_keys
+            .insert("groq".into(), "gsk_saved_fixture".into());
+        settings.resolve_api_key(|_| None);
+        assert_eq!(settings.transcription_engine, Engine::Groq);
+        assert_eq!(settings.api_key, "gsk_saved_fixture");
+        assert_eq!(settings.provider(), Some(Provider::Groq));
+
+        let mut empty = Settings::from_config("transcription_engine = \"system\"").unwrap();
+        empty.resolve_api_key(|_| None);
+        assert_eq!(empty.transcription_engine, Engine::OpenAi);
+        assert!(empty.api_key.is_empty());
+
+        let mut environment = Settings::from_config("transcription_engine = \"system\"").unwrap();
+        environment
+            .resolve_api_key(|name| (name == "ELEVENLABS_API_KEY").then(|| "sk_fixture".into()));
+        assert_eq!(environment.transcription_engine, Engine::ElevenLabs);
+        assert_eq!(environment.api_key, "sk_fixture");
+    }
 
     #[test]
     fn documented_config_roundtrips_values_and_excludes_api_key() {

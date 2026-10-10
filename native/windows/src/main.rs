@@ -6,6 +6,7 @@ mod keys;
 mod mute;
 mod overlay;
 mod settings;
+mod system_speech;
 mod transcriber;
 mod ui;
 

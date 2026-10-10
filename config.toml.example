@@ -73,7 +73,13 @@ no_verbatim = true
 
 # ── 전사 모델 ────────────────────────────────────────────────────────────────
 
-# API 키 접두사에 따라 서비스가 자동 선택됩니다.
+# macOS/Windows 음성 인식 엔진: openai, elevenlabs, groq
+# auto는 기존 설정 호환용 기본값이며 API 키 접두사로 선택합니다.
+# 이전 system 설정은 보관된 키에 맞는 API 엔진으로 전환합니다. 키가 없으면 OpenAI가 선택됩니다.
+# 설정 화면에서 저장하면 선택한 엔진을 기록합니다. Linux는 이 항목을 사용하지 않습니다.
+transcription_engine = "auto"
+
+# API 서비스 선택 후 해당 서비스의 키를 입력하세요. Linux는 키 접두사에 따라 서비스가 자동 선택됩니다.
 # OpenAI: sk-..., ElevenLabs: sk_..., Groq: gsk_...
 # OpenAI 전사 모델 이름 (문자열, 기본 gpt-transcribe)
 openai_model = "gpt-transcribe"

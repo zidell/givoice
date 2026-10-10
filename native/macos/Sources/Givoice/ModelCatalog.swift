@@ -30,8 +30,8 @@ enum ModelCatalogError: LocalizedError {
 }
 
 enum ModelCatalog {
-    static func fetch(apiKey: String, completion: @escaping (Result<[String], Error>) -> Void) {
-        guard let provider = TranscriptionProvider(apiKey: apiKey) else {
+    static func fetch(apiKey: String, provider: TranscriptionProvider, completion: @escaping (Result<[String], Error>) -> Void) {
+        guard TranscriptionProvider(apiKey: apiKey) == provider else {
             completion(.failure(ModelCatalogError.invalidKey))
             return
         }

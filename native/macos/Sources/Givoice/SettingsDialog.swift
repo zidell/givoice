@@ -1,6 +1,7 @@
 import AppKit
 import AVFoundation
 import Foundation
+import Speech
 
 final class SettingsDialog: NSObject, NSTextFieldDelegate {
     private static let elevenLabsAPIKeysURL = URL(string: "https://elevenlabs.io/app/developers/api-keys")!
@@ -11,7 +12,10 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
     private var shownProvider: TranscriptionProvider?
     private var requestID = UUID()
     private var pasteboardChangeCount = NSPasteboard.general.changeCount
+    private var apiKeys: [String: String]
 
+    private let engine = NSPopUpButton()
+    private let keyButton = NSButton()
     private let apiKey = NSSecureTextField()
     private let model = NSPopUpButton()
     private let refreshButton = NSButton()
@@ -32,6 +36,8 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
 
     init(settings: Settings) {
         original = settings
+        apiKeys = settings.apiKeys
+        if let provider = settings.engine.provider { apiKeys[provider.code] = settings.apiKey }
         selectedModels = [.openAI: settings.openAIModel, .elevenLabs: settings.elevenLabsModel,
                           .groq: settings.groqModel]
         super.init()
@@ -55,7 +61,12 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
             selectedModels[provider] = selected
         }
         var updated = original
-        updated.apiKey = apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        updated.transcriptionEngine = selectedEngine.rawValue
+        if let provider = shownProvider {
+            updated.apiKey = apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            apiKeys[provider.code] = updated.apiKey
+        }
+        updated.apiKeys = apiKeys
         updated.openAIModel = selectedModels[.openAI] ?? original.openAIModel
         updated.elevenLabsModel = selectedModels[.elevenLabs] ?? original.elevenLabsModel
         updated.groqModel = selectedModels[.groq] ?? original.groqModel
@@ -80,7 +91,7 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
 
     private func makeForm() -> NSView {
         let width: CGFloat = 480
-        let form = NSView(frame: NSRect(x: 0, y: 0, width: width, height: 580))
+        let form = NSView(frame: NSRect(x: 0, y: 0, width: width, height: 620))
         func addLabel(_ title: String, y: CGFloat, height: CGFloat = 24) {
             let label = NSTextField(labelWithString: title)
             label.frame = NSRect(x: 0, y: y, width: 124, height: height)
@@ -103,24 +114,22 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
             }
         }
 
+        addLabel("음성 인식 엔진", y: 492)
+        populate(engine, options: TranscriptionEngine.allCases.filter { $0 != .system }.map { ($0.rawValue, $0.title) }, selected: original.engine.rawValue)
+        addPicker(engine, y: 490)
+        engine.target = self
+        engine.action = #selector(engineChanged(_:))
         addLabel("API 키", y: 452)
-        apiKey.frame = NSRect(x: 125, y: 452, width: 350, height: 24)
+        apiKey.frame = NSRect(x: 125, y: 452, width: 250, height: 24)
         apiKey.stringValue = original.apiKey
         apiKey.placeholderString = "sk_… (ElevenLabs), sk-… (OpenAI), gsk_… (Groq)"
         apiKey.delegate = self
         form.addSubview(apiKey)
-        addLabel("API 키 발급", y: 431, height: 18)
-        func addKeyLink(_ title: String, x: CGFloat, width: CGFloat, action: Selector) {
-            let button = NSButton(title: title, target: self, action: action)
-            button.frame = NSRect(x: x, y: 431, width: width, height: 18)
-            button.isBordered = false
-            button.contentTintColor = .linkColor
-            button.font = .systemFont(ofSize: 11)
-            form.addSubview(button)
-        }
-        addKeyLink("ElevenLabs 키 ↗", x: 125, width: 115, action: #selector(openElevenLabsAPIKeys(_:)))
-        addKeyLink("OpenAI 키 ↗", x: 245, width: 105, action: #selector(openOpenAIAPIKeys(_:)))
-        addKeyLink("Groq 키 ↗", x: 355, width: 100, action: #selector(openGroqAPIKeys(_:)))
+        keyButton.frame = NSRect(x: 385, y: 450, width: 90, height: 26)
+        keyButton.title = "키 생성 ↗"
+        keyButton.target = self
+        keyButton.action = #selector(openEngineSettings(_:))
+        form.addSubview(keyButton)
 
         addLabel("전사 모델", y: 399)
         addPicker(model, y: 398, width: 255)
@@ -144,6 +153,8 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         }.sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }
         populate(language, options: languageOptions, selected: original.language)
         addPicker(language, y: 346)
+        language.target = self
+        language.action = #selector(languageChanged(_:))
 
         addLabel("녹음 단축키", y: 308)
         let shortcuts = [
@@ -248,21 +259,54 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
     }
 
     private func updateProvider() {
-        let provider = TranscriptionProvider(apiKey: apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines))
+        let provider = selectedEngine.provider
         if provider != shownProvider {
             if let shownProvider, let selected = model.titleOfSelectedItem {
                 selectedModels[shownProvider] = selected
             }
+            if let previous = shownProvider {
+                apiKeys[previous.code] = apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
             shownProvider = provider
+            apiKey.stringValue = provider.flatMap { apiKeys[$0.code] } ?? ""
             model.removeAllItems()
             if let provider, let selected = selectedModels[provider] {
                 model.addItem(withTitle: selected)
                 model.selectItem(at: 0)
             }
         }
+        apiKey.isEnabled = provider != nil
+        keyButton.title = provider == nil ? "시스템 설정" : "키 생성 ↗"
+        apiKey.placeholderString = provider == nil ? "API 키 필요 없음" : "선택한 서비스의 API 키"
         model.isEnabled = provider != nil
-        refreshButton.isEnabled = provider != nil
+        refreshButton.isEnabled = true
+        refreshButton.title = provider == nil ? "설정 안내" : "새로고침"
         updateNoVerbatim()
+    }
+
+    private var selectedEngine: TranscriptionEngine {
+        TranscriptionEngine(rawValue: engine.selectedItem?.representedObject as? String ?? "") ?? original.engine
+    }
+
+    private var selectedLanguage: String {
+        language.selectedItem?.representedObject as? String ?? original.language
+    }
+
+    @objc private func engineChanged(_ sender: Any?) {
+        requestID = UUID()
+        updateProvider()
+        refreshModels(nil)
+    }
+
+    @objc private func languageChanged(_ sender: Any?) {
+        if selectedEngine == .system { updateSystemStatus() }
+    }
+
+    private func updateSystemStatus() {
+        let problem = SystemSpeech.problem(language: selectedLanguage, checkMicrophone: true)
+        modelHint.stringValue = problem == nil ? SystemSpeech.status(language: selectedLanguage) : "사용 준비 필요 · 설정 안내를 눌러 확인하세요"
+        modelHint.toolTip = SystemSpeech.status(language: selectedLanguage)
+        modelHint.textColor = problem == nil ? .secondaryLabelColor : .systemRed
     }
 
     private func updateNoVerbatim() {
@@ -282,8 +326,25 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         let key = apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let preserveCurrentModel = sender == nil
         updateProvider()
-        guard TranscriptionProvider(apiKey: key) != nil else {
-            modelHint.stringValue = ModelCatalogError.invalidKey.localizedDescription
+        if selectedEngine == .system {
+            updateSystemStatus()
+            if sender != nil {
+                if SFSpeechRecognizer.authorizationStatus() == .notDetermined
+                    || AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
+                    SystemSpeech.requestPermissions { [weak self] in self?.updateSystemStatus() }
+                } else {
+                    let alert = NSAlert()
+                    alert.messageText = "시스템 음성 인식"
+                    alert.informativeText = SystemSpeech.status(language: selectedLanguage)
+                    alert.addButton(withTitle: "확인")
+                    alert.runModal()
+                }
+            }
+            return
+        }
+        modelHint.toolTip = nil
+        guard let provider = selectedEngine.provider, TranscriptionProvider(apiKey: key) == provider else {
+            modelHint.stringValue = "선택한 엔진의 API 키를 입력해 주세요."
             modelHint.textColor = .secondaryLabelColor
             return
         }
@@ -292,7 +353,7 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         modelHint.stringValue = "사용 가능한 전사 모델을 불러오는 중…"
         modelHint.textColor = .secondaryLabelColor
         refreshButton.isEnabled = false
-        ModelCatalog.fetch(apiKey: key) { [weak self] result in
+        ModelCatalog.fetch(apiKey: key, provider: provider) { [weak self] result in
             guard let self, self.requestID == request,
                   self.apiKey.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) == key else { return }
             self.refreshButton.isEnabled = true
@@ -374,15 +435,21 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         • 키를 섞으면 조각마다 잠깐 기다렸다 이어서 붙이므로, 길면 조금 느립니다.
         """
 
-    @objc private func openElevenLabsAPIKeys(_ sender: Any?) {
-        NSWorkspace.shared.open(Self.elevenLabsAPIKeysURL)
-    }
-
-    @objc private func openOpenAIAPIKeys(_ sender: Any?) {
-        NSWorkspace.shared.open(Self.openAIAPIKeysURL)
-    }
-
-    @objc private func openGroqAPIKeys(_ sender: Any?) {
-        NSWorkspace.shared.open(Self.groqAPIKeysURL)
+    @objc private func openEngineSettings(_ sender: Any?) {
+        let url: URL
+        switch selectedEngine {
+        case .system:
+            let path: String
+            if SFSpeechRecognizer.authorizationStatus() == .denied {
+                path = "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition"
+            } else if AVCaptureDevice.authorizationStatus(for: .audio) == .denied {
+                path = "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"
+            } else { path = "x-apple.systempreferences:com.apple.Keyboard-Settings.extension" }
+            url = URL(string: path)!
+        case .openai: url = Self.openAIAPIKeysURL
+        case .elevenlabs: url = Self.elevenLabsAPIKeysURL
+        case .groq: url = Self.groqAPIKeysURL
+        }
+        NSWorkspace.shared.open(url)
     }
 }

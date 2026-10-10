@@ -244,8 +244,15 @@ pub fn transcribe(
     settings: &Settings,
     cancelled: &AtomicBool,
 ) -> Result<String, String> {
+    if settings.transcription_engine == crate::settings::Engine::System {
+        return crate::system_speech::transcribe(wav, &settings.language, cancelled)
+            .map(|text| clean_text(&text));
+    }
     if settings.api_key.is_empty() {
         return Err("API 키를 설정해 주세요".into());
+    }
+    if settings.provider() != Provider::from_api_key(&settings.api_key) {
+        return Err("선택한 엔진의 API 키를 입력해 주세요".into());
     }
     if settings.provider().is_some_and(Provider::openai_compatible)
         && std::fs::metadata(wav).map_err(|e| e.to_string())?.len() > 24 * 1024 * 1024
@@ -405,6 +412,9 @@ fn transcribe_single(
 
 pub fn models(settings: &Settings) -> Result<Vec<String>, String> {
     let provider = settings.provider().ok_or("API 키 형식을 확인해 주세요")?;
+    if Provider::from_api_key(&settings.api_key) != Some(provider) {
+        return Err("선택한 엔진의 API 키를 입력해 주세요".into());
+    }
     let (host, path) = match provider {
         Provider::OpenAi => ("api.openai.com", "/v1/models"),
         Provider::ElevenLabs => ("api.elevenlabs.io", "/v1/models"),
@@ -497,6 +507,35 @@ fn is_prompt_echo(text: &str, keyterms: &[String]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn system_engine_checks_language_before_requesting_api_credentials_or_audio() {
+        let mut settings = Settings::default();
+        settings.transcription_engine = crate::settings::Engine::System;
+        settings.language = "not-a-language".into();
+        let error = transcribe(
+            Path::new("missing-fixture.wav"),
+            &settings,
+            &AtomicBool::new(false),
+        )
+        .unwrap_err();
+        assert!(error.contains("not-a-language"));
+        assert!(!error.contains("API 키"));
+    }
+
+    #[test]
+    fn explicit_provider_rejects_another_services_key_before_network_access() {
+        let mut settings = Settings::default();
+        settings.transcription_engine = crate::settings::Engine::OpenAi;
+        settings.api_key = "gsk_fixture".into();
+        let error = transcribe(
+            Path::new("missing-fixture.wav"),
+            &settings,
+            &AtomicBool::new(false),
+        )
+        .unwrap_err();
+        assert!(error.contains("선택한 엔진"));
+        assert!(models(&settings).unwrap_err().contains("선택한 엔진"));
+    }
     #[test]
     fn cleans_transcript() {
         assert_eq!(clean_text("안녕 [noise]  하세요"), "안녕 하세요");

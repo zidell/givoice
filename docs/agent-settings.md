@@ -11,3 +11,10 @@ included in installed apps:
 It describes actual per-user settings locations, platform-specific keys, supported
 values, examples, and the quit/edit/relaunch procedure. Repository access is not
 required. Keep `readme.txt` consistent with all three platform settings loaders.
+
+macOS/Windows support `transcription_engine = "openai" | "elevenlabs" | "groq"`;
+legacy `auto` keeps API-key-prefix selection. Linux continues to select by API
+key. Each provider's credentials and model are retained when switching engines.
+Legacy `system` settings switch to the provider matching a saved API key (or an
+environment key); without a key, OpenAI is selected. The system engine is no longer
+offered in Settings.

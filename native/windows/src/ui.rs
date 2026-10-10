@@ -1,7 +1,7 @@
 use crate::{
     audio::Recording,
     keys, mute, overlay,
-    settings::{self, Provider, Settings},
+    settings::{self, Engine, Provider, Settings},
     transcriber,
 };
 use std::{
@@ -60,10 +60,16 @@ const ID_REFRESH: usize = 203;
 const ID_API_KEY: usize = 204;
 const ID_MODEL: usize = 205;
 const ID_ELEVENLABS_KEY: usize = 206;
-const ID_OPENAI_KEY: usize = 207;
-const ID_GROQ_KEY: usize = 209;
 const ID_LOG: usize = 208;
 const ID_REPLACEMENT_HELP: usize = 210;
+const ID_ENGINE: usize = 211;
+const ID_LANGUAGE: usize = 212;
+const SYSTEM_STATUS_MESSAGE: u32 = WM_APP + 6;
+const ENGINES: [(Engine, &str); 3] = [
+    (Engine::OpenAi, "OpenAI"),
+    (Engine::ElevenLabs, "ElevenLabs"),
+    (Engine::Groq, "Groq"),
+];
 const SHORTCUTS: [(&str, &str, u16); 6] = [
     ("right_alt", "오른쪽 Alt", VK_RMENU),
     ("left_alt", "왼쪽 Alt", VK_LMENU),
@@ -182,10 +188,7 @@ mod icon_tests {
     fn custom_icon_loads() {
         unsafe {
             let icons = tray_icons();
-            assert!(
-                icons.owned,
-                "Windows did not decode the Givoice PNG icons"
-            );
+            assert!(icons.owned, "Windows did not decode the Givoice PNG icons");
             assert!(!icons.idle.is_null());
             assert_ne!(icons.idle, icons.recording);
             assert_ne!(icons.idle, icons.transcribing);
@@ -271,9 +274,17 @@ struct Job {
 
 struct Dialog {
     root: HWND,
+    engine: HWND,
+    key_button: HWND,
+    api_keys: HashMap<String, String>,
+    changing_engine: bool,
     api_key: HWND,
     model: HWND,
     model_hint: HWND,
+    api_label: HWND,
+    model_label: HWND,
+    system_hint: HWND,
+    system_ready: bool,
     refresh: HWND,
     shown_provider: Option<Provider>,
     openai_model: String,
@@ -305,6 +316,11 @@ struct ModelsMessage {
     request_id: u64,
     key: String,
     preserve: bool,
+}
+
+struct SystemStatusMessage {
+    request_id: u64,
+    result: Result<String, String>,
 }
 
 pub fn run() -> Result<(), String> {
@@ -678,6 +694,31 @@ unsafe extern "system" fn root_proc(
             complete_job(hwnd, message.job, message.result);
             0
         }
+        SYSTEM_STATUS_MESSAGE => {
+            let message = Box::from_raw(lparam as *mut SystemStatusMessage);
+            let dialog = app(hwnd).dialog;
+            if !dialog.is_null() && dialog_state(dialog).request_id == message.request_id {
+                let state = dialog_state(dialog);
+                state.system_ready = message.result.is_ok();
+                let hint = format!(
+                    "{} · {}\n{}",
+                    selected_model(state.language),
+                    if state.system_ready {
+                        "사용 가능"
+                    } else {
+                        "사용 불가"
+                    },
+                    message.result.as_ref().unwrap_or_else(|error| error)
+                );
+                SetWindowTextW(state.system_hint, wide(&hint).as_ptr());
+                EnableWindow(
+                    GetDlgItem(dialog, ID_SAVE as i32),
+                    i32::from(state.system_ready),
+                );
+                EnableWindow(state.refresh, 1);
+            }
+            0
+        }
         MODELS_MESSAGE => {
             let result = Box::from_raw(lparam as *mut ModelsMessage);
             if let Ok(models) = &result.result {
@@ -829,9 +870,17 @@ unsafe fn tray_menu(hwnd: HWND) {
     );
     let (paste_flags, paste_label) = match &app(hwnd).last_result {
         Some(text) => (MF_STRING, last_result_label(text)),
-        None => (MF_STRING | MF_GRAYED, "다시 붙여넣기 (결과 없음)".to_string()),
+        None => (
+            MF_STRING | MF_GRAYED,
+            "다시 붙여넣기 (결과 없음)".to_string(),
+        ),
     };
-    AppendMenuW(menu, paste_flags, ID_PASTE_LAST, wide(&paste_label).as_ptr());
+    AppendMenuW(
+        menu,
+        paste_flags,
+        ID_PASTE_LAST,
+        wide(&paste_label).as_ptr(),
+    );
     AppendMenuW(menu, MF_SEPARATOR, 0, ptr::null());
     AppendMenuW(menu, MF_STRING, ID_SETTINGS, wide("설정...").as_ptr());
     AppendMenuW(
@@ -881,7 +930,10 @@ fn last_result_label(text: &str) -> String {
     if line.chars().count() > 24 {
         preview.push('…');
     }
-    format!("다시 붙여넣기: \u{201C}{}\u{201D}", preview.replace('&', "&&"))
+    format!(
+        "다시 붙여넣기: \u{201C}{}\u{201D}",
+        preview.replace('&', "&&")
+    )
 }
 
 /// 붙여넣을 수 있는 다른 앱의 창이면 기억해 둔다. Givoice 자신의 창과
@@ -1108,7 +1160,13 @@ unsafe fn start(hwnd: HWND) {
         set_status(hwnd, "종료음 재생 중");
         return;
     }
-    if app(hwnd).settings.api_key.is_empty() {
+    if app(hwnd).settings.transcription_engine == Engine::System {
+        if let Err(error) = crate::system_speech::check(&app(hwnd).settings.language) {
+            set_status(hwnd, "시스템 음성 인식 설정 필요");
+            info(hwnd, &error);
+            return;
+        }
+    } else if app(hwnd).settings.api_key.is_empty() {
         set_status(hwnd, "API 설정 필요");
         transient_overlay(hwnd, overlay::State::ApiSetupRequired);
         return;
@@ -1637,7 +1695,7 @@ unsafe fn show_settings(root: HWND) {
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         560,
-        807,
+        847,
         root,
         ptr::null_mut(),
         instance,
@@ -1648,6 +1706,10 @@ unsafe fn show_settings(root: HWND) {
         return;
     }
     let settings = app(root).settings.clone();
+    let mut saved_keys = settings.api_keys.clone();
+    if let Some(provider) = settings.provider() {
+        saved_keys.insert(provider.code().into(), settings.api_key.clone());
+    }
     let label = |text: &str, y: i32| {
         control(
             dialog,
@@ -1659,9 +1721,42 @@ unsafe fn show_settings(root: HWND) {
             145,
             24,
             0,
-        );
+        )
     };
-    label("API 키", 20);
+    let api_label = label("API 키", 20);
+    let engine = control(
+        dialog,
+        "COMBOBOX",
+        "",
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST as u32,
+        165,
+        -22,
+        365,
+        160,
+        ID_ENGINE,
+    );
+    label("음성 인식 엔진", -20);
+    for (_, title) in ENGINES {
+        SendMessageW(engine, CB_ADDSTRING, 0, wide(title).as_ptr() as isize);
+    }
+    let initial = if settings.transcription_engine == Engine::Auto {
+        match settings.provider() {
+            Some(Provider::ElevenLabs) => Engine::ElevenLabs,
+            Some(Provider::Groq) => Engine::Groq,
+            _ => Engine::OpenAi,
+        }
+    } else {
+        settings.transcription_engine
+    };
+    SendMessageW(
+        engine,
+        CB_SETCURSEL,
+        ENGINES
+            .iter()
+            .position(|(value, _)| *value == initial)
+            .unwrap_or(0),
+        0,
+    );
     let api_key = control(
         dialog,
         "EDIT",
@@ -1669,45 +1764,22 @@ unsafe fn show_settings(root: HWND) {
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_PASSWORD as u32 | ES_AUTOHSCROLL as u32,
         165,
         18,
-        365,
+        265,
         26,
         ID_API_KEY,
     );
-    label("API 키 발급", 48);
-    control(
+    let key_button = control(
         dialog,
         "BUTTON",
-        "ElevenLabs 키 ↗",
+        "키 생성 ↗",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON as u32,
-        165,
-        47,
-        115,
-        20,
+        440,
+        18,
+        90,
+        26,
         ID_ELEVENLABS_KEY,
     );
-    control(
-        dialog,
-        "BUTTON",
-        "OpenAI 키 ↗",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON as u32,
-        285,
-        47,
-        105,
-        20,
-        ID_OPENAI_KEY,
-    );
-    control(
-        dialog,
-        "BUTTON",
-        "Groq 키 ↗",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON as u32,
-        400,
-        47,
-        100,
-        20,
-        ID_GROQ_KEY,
-    );
-    label("전사 모델", 80);
+    let model_label = label("전사 모델", 80);
     let model = control(
         dialog,
         "COMBOBOX",
@@ -1741,6 +1813,7 @@ unsafe fn show_settings(root: HWND) {
         24,
         0,
     );
+    let system_hint = control(dialog, "STATIC", "", WS_CHILD, 18, 18, 410, 116, 213);
     label("인식 언어", 142);
     let language = control(
         dialog,
@@ -1751,7 +1824,7 @@ unsafe fn show_settings(root: HWND) {
         140,
         365,
         280,
-        0,
+        ID_LANGUAGE,
     );
     let options = language_options(&settings.language);
     for (_, title) in &options {
@@ -2017,9 +2090,17 @@ unsafe fn show_settings(root: HWND) {
     );
     let state = Box::new(Dialog {
         root,
+        engine,
+        key_button,
+        api_keys: saved_keys,
+        changing_engine: false,
         api_key,
         model,
         model_hint,
+        api_label,
+        model_label,
+        system_hint,
+        system_ready: false,
         refresh,
         shown_provider: None,
         openai_model: settings.openai_model,
@@ -2067,7 +2148,7 @@ unsafe fn control(
         wide(title).as_ptr(),
         style,
         x,
-        y,
+        y + 40,
         width,
         height,
         parent,
@@ -2156,12 +2237,16 @@ unsafe fn display_models(hwnd: HWND, models: &[String], preserve: bool) {
 
 unsafe fn cached_or_refresh_models(hwnd: HWND) {
     update_provider(hwnd);
+    if selected_engine(hwnd) == Engine::System {
+        check_system(hwnd);
+        return;
+    }
     let controls = dialog_state(hwnd);
     let key = text(controls.api_key).trim().to_owned();
-    if provider(&key).is_none() {
+    if provider(&key) != controls.shown_provider {
         SetWindowTextW(
             controls.model_hint,
-            wide("OpenAI(sk-), ElevenLabs(sk_) 또는 Groq(gsk_) API 키를 입력해 주세요.").as_ptr(),
+            wide("선택한 엔진의 API 키를 입력해 주세요.").as_ptr(),
         );
         return;
     }
@@ -2201,8 +2286,13 @@ unsafe fn model_changed(dialog: HWND) {
 
 unsafe fn update_provider(dialog: HWND) {
     let state = dialog_state(dialog);
-    let next = provider(text(state.api_key).trim());
+    let next = selected_engine(dialog).provider("");
     if state.shown_provider != next {
+        if let Some(previous) = state.shown_provider {
+            state
+                .api_keys
+                .insert(previous.code().into(), text(state.api_key).trim().into());
+        }
         if state.shown_provider.is_some() {
             let selected = selected_model(state.model);
             if !selected.is_empty() {
@@ -2215,6 +2305,13 @@ unsafe fn update_provider(dialog: HWND) {
             }
         }
         state.shown_provider = next;
+        state.changing_engine = true;
+        let key = next
+            .and_then(|provider| state.api_keys.get(provider.code()))
+            .cloned()
+            .unwrap_or_default();
+        SetWindowTextW(state.api_key, wide(&key).as_ptr());
+        state.changing_engine = false;
         SendMessageW(state.model, CB_RESETCONTENT, 0, 0);
         let saved = match next {
             Some(Provider::OpenAi) => &state.openai_model,
@@ -2228,8 +2325,83 @@ unsafe fn update_provider(dialog: HWND) {
         }
     }
     EnableWindow(state.model, i32::from(next.is_some()));
-    EnableWindow(state.refresh, i32::from(next.is_some()));
+    EnableWindow(state.api_key, i32::from(next.is_some()));
+    EnableWindow(state.keyterms, i32::from(next.is_some()));
+    for control in [
+        state.api_label,
+        state.api_key,
+        state.model_label,
+        state.model,
+        state.model_hint,
+    ] {
+        ShowWindow(control, if next.is_some() { SW_SHOW } else { SW_HIDE });
+    }
+    ShowWindow(
+        state.system_hint,
+        if next.is_none() { SW_SHOW } else { SW_HIDE },
+    );
+    EnableWindow(
+        GetDlgItem(dialog, ID_SAVE as i32),
+        i32::from(next.is_some() || state.system_ready),
+    );
+    EnableWindow(state.refresh, 1);
+    SetWindowTextW(
+        state.key_button,
+        wide(if next.is_some() {
+            "키 생성 ↗"
+        } else {
+            "언어 설정"
+        })
+        .as_ptr(),
+    );
+    SetWindowTextW(
+        state.refresh,
+        wide(if next.is_some() {
+            "새로고침"
+        } else {
+            "다시 확인"
+        })
+        .as_ptr(),
+    );
     update_no_verbatim(dialog);
+}
+
+unsafe fn selected_engine(dialog: HWND) -> Engine {
+    ENGINES
+        .get(SendMessageW(dialog_state(dialog).engine, CB_GETCURSEL, 0, 0) as usize)
+        .map(|(engine, _)| *engine)
+        .unwrap_or(Engine::OpenAi)
+}
+
+unsafe fn check_system(dialog: HWND) {
+    let state = dialog_state(dialog);
+    state.request_id = NEXT_REQUEST.fetch_add(1, Ordering::Relaxed);
+    state.pending_key = None;
+    state.system_ready = false;
+    EnableWindow(GetDlgItem(dialog, ID_SAVE as i32), 0);
+    let request_id = state.request_id;
+    let language = state
+        .language_codes
+        .get(SendMessageW(state.language, CB_GETCURSEL, 0, 0) as usize)
+        .cloned()
+        .unwrap_or_else(|| "ko".into());
+    SetWindowTextW(
+        state.system_hint,
+        wide("시스템 음성 인식 준비 상태 확인 중…").as_ptr(),
+    );
+    EnableWindow(state.refresh, 0);
+    let root = state.root as isize;
+    std::thread::spawn(move || {
+        let message = Box::into_raw(Box::new(SystemStatusMessage {
+            request_id,
+            result: crate::system_speech::check(&language),
+        }));
+        unsafe {
+            if PostMessageW(root as HWND, SYSTEM_STATUS_MESSAGE, 0, message as isize) == 0 {
+                drop(Box::from_raw(message));
+            }
+        }
+    });
 }
 
 unsafe extern "system" fn dialog_proc(
@@ -2279,14 +2451,38 @@ unsafe extern "system" fn dialog_proc(
                 ID_CANCEL => {
                     DestroyWindow(hwnd);
                 }
-                ID_REFRESH => refresh_models(hwnd, false),
-                ID_ELEVENLABS_KEY => {
-                    open_api_key_page(hwnd, "https://elevenlabs.io/app/developers/api-keys")
+                ID_REFRESH => {
+                    if selected_engine(hwnd) == Engine::System {
+                        check_system(hwnd);
+                    } else {
+                        refresh_models(hwnd, false);
+                    }
                 }
-                ID_OPENAI_KEY => open_api_key_page(hwnd, "https://platform.openai.com/api-keys"),
-                ID_GROQ_KEY => open_api_key_page(hwnd, "https://console.groq.com/keys"),
+                ID_ELEVENLABS_KEY => {
+                    let url = match selected_engine(hwnd) {
+                        Engine::System => "ms-settings:regionlanguage",
+                        Engine::ElevenLabs => "https://elevenlabs.io/app/developers/api-keys",
+                        Engine::Groq => "https://console.groq.com/keys",
+                        _ => "https://platform.openai.com/api-keys",
+                    };
+                    open_api_key_page(hwnd, url);
+                }
+                ID_ENGINE if (wparam >> 16) == CBN_SELCHANGE as usize => {
+                    KillTimer(hwnd, 2);
+                    dialog_state(hwnd).request_id = NEXT_REQUEST.fetch_add(1, Ordering::Relaxed);
+                    dialog_state(hwnd).pending_key = None;
+                    cached_or_refresh_models(hwnd);
+                }
+                ID_LANGUAGE if (wparam >> 16) == CBN_SELCHANGE as usize => {
+                    if selected_engine(hwnd) == Engine::System {
+                        check_system(hwnd);
+                    }
+                }
                 ID_REPLACEMENT_HELP => info(hwnd, &replacement_help()),
                 ID_API_KEY if (wparam >> 16) == EN_CHANGE as usize => {
+                    if dialog_state(hwnd).changing_engine {
+                        return 0;
+                    }
                     dialog_state(hwnd).request_id = NEXT_REQUEST.fetch_add(1, Ordering::Relaxed);
                     dialog_state(hwnd).pending_key = None;
                     update_provider(hwnd);
@@ -2328,11 +2524,24 @@ unsafe extern "system" fn dialog_proc(
 }
 
 unsafe fn save_dialog(hwnd: HWND) {
+    if selected_engine(hwnd) == Engine::System && !dialog_state(hwnd).system_ready {
+        check_system(hwnd);
+        return;
+    }
     model_changed(hwnd);
     let dialog = dialog_state(hwnd);
     let root = dialog.root;
     let mut updated = app(root).settings.clone();
+    updated.transcription_engine = selected_engine(hwnd);
     updated.api_key = text(dialog.api_key).trim().into();
+    if let Some(provider) = dialog.shown_provider {
+        dialog
+            .api_keys
+            .insert(provider.code().into(), updated.api_key.clone());
+    } else {
+        updated.api_key = app(root).settings.api_key.clone();
+    }
+    updated.api_keys = dialog.api_keys.clone();
     updated.openai_model = dialog.openai_model.clone();
     updated.elevenlabs_model = dialog.elevenlabs_model.clone();
     updated.groq_model = dialog.groq_model.clone();
@@ -2403,10 +2612,11 @@ unsafe fn refresh_models(hwnd: HWND, preserve: bool) {
     let dialog = dialog_state(hwnd);
     let mut settings = app(dialog.root).settings.clone();
     settings.api_key = text(dialog.api_key).trim().into();
-    if provider(&settings.api_key).is_none() {
+    settings.transcription_engine = selected_engine(hwnd);
+    if provider(&settings.api_key) != dialog.shown_provider {
         SetWindowTextW(
             dialog.model_hint,
-            wide("OpenAI(sk-), ElevenLabs(sk_) 또는 Groq(gsk_) API 키를 입력해 주세요.").as_ptr(),
+            wide("선택한 엔진의 API 키를 입력해 주세요.").as_ptr(),
         );
         return;
     }

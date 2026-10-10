@@ -86,8 +86,9 @@ but arbitrary user comments are currently not preserved by GUI saves.
 Defaults below are the code defaults. An existing file or the macOS bundled
 template can supply different values; keep those unless the user requests a change.
 
-| Meaning | Key on all platforms | Values / default |
+| Meaning | Key | Values / default |
 | --- | --- | --- |
+| Transcription engine | `transcription_engine` | macOS/Windows only: `openai`, `elevenlabs`, `groq`; absent / `auto` preserves legacy API-key-prefix selection |
 | Transcription language (also UI language where supported) | `language` | String, e.g. `"ko"`, `"en"`, `"ja"`; default `ko` |
 | Recording time limit | `recording_time_limit_minutes` | Integer: `10`, `20`, `30`, `60`; default `30` |
 | Log and recording retention | `log_retention_hours` | Integer hours: `1`, `24`, `168`, `720`; default `168` |
@@ -104,12 +105,23 @@ template can supply different values; keep those unless the user requests a chan
 | Recording trigger | `shortcut` | Platform-specific, see below. A tap records until the next press; holding over one second stops on release |
 | Linux shortcut authorization state | `shortcuts_enabled` | Linux only; app-managed boolean, default `false`; do not edit to bypass portal authorization |
 
-Provider selection comes from the API-key prefix (`sk-`, `sk_`, `gsk_`), not from
-the model name. Changing a model alone does not switch providers. Leave credentials
+On macOS/Windows, choose the engine at the top of Settings. API engines show one
+key field and one Create Key button for the selected service. Each service's key
+and model are retained when switching engines. `user_config.json` keeps the active
+`api_key` and an `api_keys` object keyed by `openai`, `elevenlabs`, and `groq`.
+Never put credentials in config.toml.
+Older macOS/Windows configs (`auto` or no engine) and Linux select the provider
+from the API-key prefix (`sk-`, `sk_`, `gsk_`), not from the model name.
+Changing a model alone does not switch providers. Leave credentials
 alone unless the user requests an API-key/provider change. Never print the key.
-When no stored key is present, the app checks `ELEVENLABS_API_KEY`, `GROQ_API_KEY`,
-then `OPENAI_API_KEY` in its process environment. A desktop launch may have a
+When no stored key is present, legacy auto mode and Linux check `ELEVENLABS_API_KEY`,
+`GROQ_API_KEY`, then `OPENAI_API_KEY`. Explicit API engines on macOS/Windows check
+only the corresponding provider's environment variable. A desktop launch may have a
 different environment from the agent's shell.
+
+Legacy `system` settings switch to the API provider matching a saved key (or an
+environment key), defaulting to OpenAI when no key is available. The system engine
+is no longer offered in Settings. Saved service keys and models are retained.
 
 ### Shortcuts
 

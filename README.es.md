@@ -6,7 +6,7 @@
 
 > Givoice es un proyecto personal publicado de forma gratuita. Puedes usarlo libremente, pero no se aceptan sugerencias de funciones, informes de errores ni solicitudes de soporte. Si necesitas algo distinto, haz un fork bajo la GPLv3 y adáptalo.
 
-Givoice es una aplicación de dictado que transcribe las grabaciones del micrófono y pega el texto resultante en el campo activo. Mantiene deliberadamente un conjunto pequeño de funciones y está implementada de forma nativa, con un objetivo de memoria en reposo de unos 20 MB. No incluye un modelo propio, por lo que necesita una clave de API de OpenAI, ElevenLabs o Groq (Groq puede usarse gratis).
+Givoice es una aplicación de dictado que transcribe las grabaciones del micrófono y pega el texto resultante en el campo activo. Mantiene deliberadamente un conjunto pequeño de funciones y está implementada de forma nativa, con un objetivo de memoria en reposo de unos 20 MB. Puedes usar una API de OpenAI, ElevenLabs o Groq (Groq puede usarse gratis). No incluye un modelo propio.
 
 ## Funciones
 
@@ -51,7 +51,7 @@ Consulta la [página de descargas de Givoice](https://zidell.github.io/givoice) 
 
 ## Primer uso
 
-1. Abre **Configuración...** desde el icono de Givoice en la barra de menús o la bandeja, y elige una clave y un modelo de ElevenLabs, OpenAI o Groq. El modelo predeterminado de Groq es `whisper-large-v3-turbo`.
+1. Abre **Configuración...** desde el icono de Givoice en la barra de menús o la bandeja y elige OpenAI, ElevenLabs o Groq en el selector superior. A la derecha del campo de clave aparece un único botón para crearla en el servicio seleccionado. El modelo predeterminado de Groq es `whisper-large-v3-turbo`.
 2. En macOS, permite los permisos de Micrófono y **Ajustes del Sistema → Privacidad y seguridad → Accesibilidad**. En Windows, permite el acceso al micrófono para aplicaciones de escritorio en **Configuración → Privacidad y seguridad → Micrófono**. En Ubuntu, registra el atajo global y permite el control del teclado (pegado automático) en la pestaña Atajos / Permisos cuando lo pida el diálogo del sistema.
 3. Coloca el cursor en el campo donde quieras escribir y mantén pulsada la tecla Command derecha (macOS), Alt derecha (Windows) o Ctrl+Alt+Space (Ubuntu) mientras hablas. Suelta la tecla para pegar la transcripción.
 
@@ -69,7 +69,7 @@ botón de la aplicación y copia el resultado para pegarlo.
 
 ## Proveedores de STT
 
-El proveedor se selecciona automáticamente según el prefijo de la clave de API. El último modelo elegido se guarda por separado para cada proveedor.
+En macOS/Windows se elige el motor en Configuración y se conservan la clave y el modelo de cada servicio. Ubuntu y las configuraciones antiguas siguen eligiendo el proveedor según el prefijo de la clave.
 
 | Proveedor | Prefijo de clave de API | Modelo predeterminado |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ El proveedor se selecciona automáticamente según el prefijo de la clave de API
 | ElevenLabs | `sk_` | `scribe_v2` |
 | Groq | `gsk_` | `whisper-large-v3-turbo` |
 
-Groq usa una API de transcripción compatible con OpenAI. Obtén una clave mediante **Clave de Groq ↗** en Configuración; después de introducirla podrás cargar la lista de modelos.
+Groq usa una API de transcripción compatible con OpenAI. Selecciona Groq y utiliza el botón para crear una clave en Configuración; después de introducirla podrás cargar la lista de modelos.
 
 ### Obtener una clave de API
 

@@ -6,7 +6,7 @@
 
 > Givoice is a personal project released for free. You are welcome to use it, but feature requests, bug reports, and support requests are not accepted. If you need something different, fork it under the GPLv3 and adapt it.
 
-Givoice is a voice-input app that transcribes microphone recordings and pastes the resulting text into the active input field. It deliberately keeps the feature set small and is implemented natively, with an idle-memory target of roughly 20 MB. It does not include its own model, so an OpenAI, ElevenLabs, or Groq API key is required (Groq can be used for free).
+Givoice is a voice-input app that transcribes microphone recordings and pastes the resulting text into the active input field. It deliberately keeps the feature set small and is implemented natively, with an idle-memory target of roughly 20 MB. Use an OpenAI, ElevenLabs, or Groq API key (Groq can be used for free). It does not bundle a model.
 
 ## Features
 
@@ -60,7 +60,7 @@ global shortcuts and automatic paste on supported GNOME and KDE Plasma desktops.
 
 ## First use
 
-1. Open **Settings...** from the Givoice menu-bar or tray icon, then choose an ElevenLabs, OpenAI, or Groq API key and model. Groq's default model is `whisper-large-v3-turbo`.
+1. Open **Settings...** from the Givoice menu-bar or tray icon and choose **OpenAI**, **ElevenLabs**, or **Groq**. The key field has one **Create Key ↗** button for the selected service. Groq's default model is `whisper-large-v3-turbo`.
 2. On macOS, allow Microphone and **System Settings → Privacy & Security → Accessibility** permissions. On Windows, allow desktop-app microphone access under **Settings → Privacy & security → Microphone**. On Ubuntu, register the global shortcut and allow keyboard control (automatic paste) in the Shortcuts / Permissions tab when the system dialog asks.
 3. Put the cursor in the field where you want text, then hold Right Command (macOS), Right Alt (Windows), or Ctrl+Alt+Space (Ubuntu) while speaking. Release the key to paste the transcription.
 
@@ -80,7 +80,7 @@ for reusable design conventions, format tradeoffs, examples, and blind-agent tes
 
 ## STT providers
 
-The provider is selected automatically from the API-key prefix. The last selected model is saved separately for each provider.
+On macOS/Windows, choose the engine at the top of Settings; each API service retains its own key and model. Linux and older configurations select the provider from the API-key prefix.
 
 | Provider | API key prefix | Default model |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ The provider is selected automatically from the API-key prefix. The last selecte
 | ElevenLabs | `sk_` | `scribe_v2` |
 | Groq | `gsk_` | `whisper-large-v3-turbo` |
 
-Groq uses an OpenAI-compatible transcription API. Get an API key through **Groq Key ↗** in Settings; after entering it, you can load the model list.
+Groq uses an OpenAI-compatible transcription API. Select Groq and use **Create Key ↗** in Settings; after entering the key, you can load the model list.
 
 ### Getting an API key
 
