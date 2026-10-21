@@ -70,6 +70,7 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
     private var lastResultItem: NSMenuItem!
     private var recorder: AVAudioRecorder?
     private var recordingStartSound: AVAudioPlayer?
+    private var preparedRecordingStartSound: AVAudioPlayer?
     private var recordingLimitSound: AVAudioPlayer?
     private var recordingLimitTimer: Timer?
     private var recordingURL: URL?
@@ -109,6 +110,7 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
                                                    userDriverDelegate: nil)
         }
         setupMenu()
+        prepareRecordingStartSound()
         installEventTap()
         installEscapeMonitor()
         installEscapeHotKey()
@@ -399,6 +401,12 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
         keyCodes[settings.shortcut] ?? 54
     }
 
+    private func prepareRecordingStartSound() {
+        preparedRecordingStartSound = settings.recordingStartSoundVolume > 0
+            ? RecordingStartSound.make(volume: settings.recordingStartSoundVolume) : nil
+        preparedRecordingStartSound?.prepareToPlay()
+    }
+
     private func startRecording() {
         DebugLog.shared.record("recording start requested")
         guard recordingLimitSound?.isPlaying != true else {
@@ -453,6 +461,16 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             return
         }
         session = UUID()
+        // Keep file loading and player preparation outside the shortcut path.
+        // Each attempt gets its own player so a previous stop cannot cut it off.
+        let sound = preparedRecordingStartSound
+        preparedRecordingStartSound = nil
+        recordingStartSound = sound
+        let chimeEndsAt = sound?.play() == true
+            ? ProcessInfo.processInfo.systemUptime + (sound?.duration ?? 0) : nil
+        defer {
+            DispatchQueue.main.async { [weak self] in self?.prepareRecordingStartSound() }
+        }
         let url = DebugLog.shared.newRecordingURL()
         let format: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatLinearPCM), AVSampleRateKey: 16_000,
@@ -480,28 +498,23 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             recordingLimitTimer = timer
             RunLoop.main.add(timer, forMode: .common)
             DebugLog.shared.record("recording started")
-            showActiveOverlay(.recording)
-            updateRecordingElapsed()
-            if settings.recordingStartSoundVolume > 0,
-               let sound = RecordingStartSound.make(volume: settings.recordingStartSoundVolume) {
-                recordingStartSound = sound
-                sound.prepareToPlay()
-                if sound.play() {
-                    if settings.muteDuringRecording {
-                        let currentSession = session
-                        DispatchQueue.main.asyncAfter(deadline: .now() + sound.duration + 0.03) { [weak self] in
-                            guard let self, self.phase == .recording, self.session == currentSession else { return }
-                            self.muteSystemAudio()
-                        }
+            if settings.muteDuringRecording {
+                if let chimeEndsAt {
+                    let remaining = max(0, chimeEndsAt - ProcessInfo.processInfo.systemUptime)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + remaining + 0.03) { [weak self] in
+                        guard let self, self.phase == .recording, self.session == currentSession else { return }
+                        self.muteSystemAudio()
                     }
-                } else if settings.muteDuringRecording {
+                } else {
                     muteSystemAudio()
                 }
-            } else if settings.muteDuringRecording {
-                muteSystemAudio()
             }
+            showActiveOverlay(.recording)
+            updateRecordingElapsed()
         } catch {
             DebugLog.shared.record("recording start failed type=\(type(of: error))")
+            recordingStartSound?.stop()
+            recordingStartSound = nil
             recorder = nil
             try? FileManager.default.removeItem(at: url)
             setStatus("녹음 오류: \(error.localizedDescription)")
@@ -920,6 +933,7 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
         do {
             try updated.save()
             settings = updated
+            prepareRecordingStartSound()
             DebugLog.shared.setRetention(hours: updated.logRetentionHours)
             keyDown = false
             pressStartedRecordingAt = nil

@@ -1171,9 +1171,27 @@ unsafe fn start(hwnd: HWND) {
         transient_overlay(hwnd, overlay::State::ApiSetupRequired);
         return;
     }
+    // Start feedback before microphone/device setup and overlay work. Neither
+    // should delay the cue, and playback must not block microphone capture.
+    app(hwnd).generation += 1;
+    let volume = app(hwnd).settings.recording_start_sound_volume;
+    if volume > 0 {
+        let root = hwnd as isize;
+        let generation = app(hwnd).generation;
+        std::thread::spawn(move || {
+            let sound = recording_start_sound(volume);
+            unsafe {
+                PlaySoundW(
+                    sound.as_ptr().cast(),
+                    ptr::null_mut(),
+                    SND_MEMORY | SND_NODEFAULT | SND_SYNC,
+                );
+                PostMessageW(root as HWND, CHIME_FINISHED_MESSAGE, generation as usize, 0);
+            }
+        });
+    }
     match Recording::start() {
         Ok(recording) => {
-            app(hwnd).generation += 1;
             app(hwnd).recording = Some(recording);
             app(hwnd).recording_started_at = Some(Instant::now());
             app(hwnd).recording_deadline = Some(
@@ -1183,24 +1201,9 @@ unsafe fn start(hwnd: HWND) {
                     ),
             );
             app(hwnd).recording_seconds_shown = None;
-            let volume = app(hwnd).settings.recording_start_sound_volume;
             active_overlay(hwnd, overlay::State::Recording);
             update_recording_elapsed(hwnd);
-            if volume > 0 {
-                let root = hwnd as isize;
-                let generation = app(hwnd).generation;
-                std::thread::spawn(move || {
-                    let sound = recording_start_sound(volume);
-                    unsafe {
-                        PlaySoundW(
-                            sound.as_ptr().cast(),
-                            ptr::null_mut(),
-                            SND_MEMORY | SND_NODEFAULT | SND_SYNC,
-                        );
-                        PostMessageW(root as HWND, CHIME_FINISHED_MESSAGE, generation as usize, 0);
-                    }
-                });
-            } else if app(hwnd).settings.mute_during_recording {
+            if volume == 0 && app(hwnd).settings.mute_during_recording {
                 app(hwnd).mute_before = mute::mute();
                 crate::debug_log::log(|| {
                     format!("recording mute result={:?}", app(hwnd).mute_before)
@@ -1460,6 +1463,7 @@ unsafe fn cancel(hwnd: HWND) {
 /// 앱이 있어서 누르기와 떼기를 나눠 둔다.
 enum PasteStep {
     Text(String),
+    Wait(u32),
     KeyDown(Vec<u16>),
     KeyUp(Vec<u16>),
 }
@@ -1469,6 +1473,7 @@ impl PasteStep {
     fn delay(&self) -> u32 {
         match self {
             Self::Text(_) => 400,
+            Self::Wait(milliseconds) => *milliseconds,
             Self::KeyDown(_) => 40,
             Self::KeyUp(_) => 120,
         }
@@ -1495,8 +1500,9 @@ unsafe fn queue_paste(hwnd: HWND, text: &str, auto_send: bool) {
             }
         }
     }
-    // 자동 Enter도 마지막 키 조각일 뿐이라 키 토큰과 같은 경로로 내보낸다.
+    // 자동 전송은 편집기가 붙여넣은 내용을 반영할 시간을 조금 더 준다.
     if auto_send {
+        steps.push_back(PasteStep::Wait(300));
         steps.push_back(PasteStep::KeyDown(vec![VK_RETURN]));
         steps.push_back(PasteStep::KeyUp(vec![VK_RETURN]));
     }
@@ -1517,6 +1523,7 @@ unsafe fn run_paste_step(hwnd: HWND) -> Result<(), String> {
         };
         match &step {
             PasteStep::Text(value) => paste_text(value)?,
+            PasteStep::Wait(_) => {}
             PasteStep::KeyDown(codes) => {
                 app(hwnd).paste_held = codes.clone();
                 let events: Vec<(u16, bool)> = codes.iter().map(|code| (*code, false)).collect();
