@@ -225,6 +225,7 @@ fn language_options(selected: &str) -> Vec<(String, String)> {
 }
 
 struct App {
+    chime: crate::chime::Chime,
     tray: NOTIFYICONDATAW,
     icons: TrayIcons,
     hook: HHOOK,
@@ -409,6 +410,7 @@ pub fn run() -> Result<(), String> {
             hook: ptr::null_mut(),
             overlay,
             overlay_expires: None,
+            chime: crate::chime::Chime::new(settings.recording_start_sound_volume),
             settings,
             model_cache: HashMap::new(),
             dialog: ptr::null_mut(),
@@ -1176,19 +1178,9 @@ unsafe fn start(hwnd: HWND) {
     app(hwnd).generation += 1;
     let volume = app(hwnd).settings.recording_start_sound_volume;
     if volume > 0 {
-        let root = hwnd as isize;
-        let generation = app(hwnd).generation;
-        std::thread::spawn(move || {
-            let sound = recording_start_sound(volume);
-            unsafe {
-                PlaySoundW(
-                    sound.as_ptr().cast(),
-                    ptr::null_mut(),
-                    SND_MEMORY | SND_NODEFAULT | SND_SYNC,
-                );
-                PostMessageW(root as HWND, CHIME_FINISHED_MESSAGE, generation as usize, 0);
-            }
-        });
+        app(hwnd)
+            .chime
+            .play(volume, hwnd, CHIME_FINISHED_MESSAGE, app(hwnd).generation);
     }
     match Recording::start() {
         Ok(recording) => {
@@ -1225,7 +1217,7 @@ unsafe fn start(hwnd: HWND) {
     }
 }
 
-fn recording_start_sound(volume: u16) -> Vec<u8> {
+pub(crate) fn recording_start_sound(volume: u16) -> Vec<u8> {
     let mut sound = include_bytes!("../../../assets/recording-start.wav").to_vec();
     if volume != 100 {
         let gain = f64::from(volume.min(200)) / 100.0;
