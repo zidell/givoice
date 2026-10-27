@@ -16,7 +16,7 @@ for name in ['KCoreAddons', 'KConfigCore', 'KConfigGui', 'KWindowSystem']:
     include.append('-I' + str(headers / 'KF6' / name))
 source = root / 'escape.cpp'
 name = 'escape'
-binary = 'givoice-escape'
+binary = 'givoice-input'
 if '--test-driver' in sys.argv:
     source = root.parent / 'tests/kwin_escape_driver.cpp'
     name = 'kwin_escape_driver'

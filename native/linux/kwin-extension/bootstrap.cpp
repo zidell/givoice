@@ -12,7 +12,7 @@ public:
         QCoreApplication::addLibraryPath(QString::fromUtf8(GIVOICE_KWIN_PLUGIN_DIR));
         QTimer::singleShot(0, QCoreApplication::instance(), [] {
             QDBusInterface effects("org.kde.KWin", "/Effects", "org.kde.kwin.Effects");
-            effects.asyncCall("loadEffect", "givoice-escape");
+            effects.asyncCall("loadEffect", "givoice-input");
         });
     }
 };

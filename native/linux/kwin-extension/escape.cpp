@@ -9,6 +9,7 @@
 #include <QDBusPendingReply>
 #include <QDBusServiceWatcher>
 #include <QSet>
+#include <linux/input-event-codes.h>
 
 namespace KWin {
 static const QString app = QStringLiteral("com.videostew.givoice");
@@ -21,12 +22,14 @@ public:
     GivoiceEscape() : InputEventFilter(InputFilterOrder::ScreenEdge) {
         auto bus = QDBusConnection::sessionBus();
         bus.connect(app, path, iface, "StateChanged", this, SLOT(stateChanged(bool)));
+        bus.connect(app, path, iface, "TriggerChanged", this, SLOT(triggerChanged(QString)));
         auto watcher = new QDBusServiceWatcher(app, bus,
             QDBusServiceWatcher::WatchForOwnerChange, this);
         connect(watcher, &QDBusServiceWatcher::serviceOwnerChanged, this,
             [this](const QString &, const QString &, const QString &owner) {
                 ++m_generation;
                 m_active = false;
+                m_rightAlt = false;
                 if (!owner.isEmpty()) refresh();
             });
         refresh();
@@ -34,6 +37,18 @@ public:
     }
     bool isActive() const override { return false; }
     bool keyboardKey(KeyboardKeyEvent *event) override {
+        if (!effects->isScreenLocked() && event->nativeScanCode == KEY_RIGHTALT &&
+            (m_rightAlt || m_altDown)) {
+            const bool down = event->state != KeyboardKeyState::Released;
+            if (down != m_altDown) {
+                m_altDown = down;
+                if (down) input()->keyboard()->addFilteredKey(event->nativeScanCode);
+                auto message = QDBusMessage::createMethodCall(app, path, iface, "Record");
+                message << down;
+                QDBusConnection::sessionBus().asyncCall(message, 1000);
+            }
+            return true;
+        }
         // Latch the actual scan code, because Escape can be remapped to Caps.
         // Retain repeats and release even after cancellation makes the app idle.
         if (m_consumed.contains(event->nativeScanCode)) {
@@ -53,12 +68,22 @@ public:
         return true;
     }
 private Q_SLOTS:
+    void triggerChanged(const QString &trigger) { m_rightAlt = trigger == QStringLiteral("Alt_R"); }
     void stateChanged(bool active) {
         ++m_generation;
         m_active = active;
     }
 private:
     void refresh() {
+        auto trigger = QDBusConnection::sessionBus().asyncCall(
+            QDBusMessage::createMethodCall(app, path, iface, "GetTrigger"), 1000);
+        auto triggerWatcher = new QDBusPendingCallWatcher(trigger, this);
+        connect(triggerWatcher, &QDBusPendingCallWatcher::finished, this,
+            [this](QDBusPendingCallWatcher *watcher) {
+                QDBusPendingReply<QString> reply = *watcher;
+                if (!reply.isError()) triggerChanged(reply.value());
+                watcher->deleteLater();
+            });
         const auto generation = ++m_generation;
         auto call = QDBusConnection::sessionBus().asyncCall(
             QDBusMessage::createMethodCall(app, path, iface, "GetState"), 1000);
@@ -71,6 +96,8 @@ private:
                 watcher->deleteLater();
             });
     }
+    bool m_rightAlt = false;
+    bool m_altDown = false;
     bool m_active = false;
     unsigned m_generation = 0;
     QSet<uint32_t> m_consumed;

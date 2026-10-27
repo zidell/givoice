@@ -295,6 +295,17 @@ static void escape_method(GDBusConnection *bus, const char *sender, const char *
     Portal *p = user;
     if (g_str_equal(method, "GetState")) {
         g_dbus_method_invocation_return_value(invocation, g_variant_new("(b)", p->escape_active));
+    } else if (g_str_equal(method, "GetTrigger")) {
+        g_dbus_method_invocation_return_value(invocation,
+            g_variant_new("(s)", p->native_shortcut ? p->preferred_trigger : ""));
+    } else if (g_str_equal(method, "Record")) {
+        gboolean pressed;
+        g_variant_get(parameters, "(b)", &pressed);
+        if (p->native_shortcut && p->event) {
+            trace(p, "KWin recording key pressed=%d", pressed);
+            p->event("record", pressed, p->user);
+        }
+        g_dbus_method_invocation_return_value(invocation, NULL);
     } else {
         if (p->escape_active && p->event)
             p->event("cancel", TRUE, p->user);
@@ -315,6 +326,9 @@ gboolean portal_init(Portal *p, ShortcutEvent event, void *user, GError **error)
     g_autoptr(GDBusNodeInfo) escape_info = g_dbus_node_info_new_for_xml(
         "<node><interface name='" ESCAPE_IFACE "'>"
         "<method name='GetState'><arg type='b' direction='out'/></method>"
+        "<method name='GetTrigger'><arg type='s' direction='out'/></method>"
+        "<method name='Record'><arg type='b' direction='in'/></method>"
+        "<signal name='TriggerChanged'><arg type='s'/></signal>"
         "<method name='Cancel'/><signal name='StateChanged'><arg type='b'/></signal>"
         "</interface></node>", NULL);
     static const GDBusInterfaceVTable escape_vtable = {.method_call = escape_method};
@@ -323,7 +337,7 @@ gboolean portal_init(Portal *p, ShortcutEvent event, void *user, GError **error)
     const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
     if (desktop && strstr(desktop, "KDE"))
         g_dbus_connection_call(p->bus, "org.kde.KWin", "/Effects", "org.kde.kwin.Effects",
-            "loadEffect", g_variant_new("(s)", "givoice-escape"), NULL, 0, 3000,
+            "loadEffect", g_variant_new("(s)", "givoice-input"), NULL, 0, 3000,
             NULL, NULL, NULL);
     // New portals require an application identity for unsandboxed native applications.
     g_autoptr(GVariant) registered = g_dbus_connection_call_sync(
@@ -348,6 +362,7 @@ static void close_session(Portal *p, char **session) {
     }
 }
 void portal_clear(Portal *p) {
+    portal_pause_shortcuts(p);
     if (p->bus && p->escape_registration)
         g_dbus_connection_unregister_object(p->bus, p->escape_registration);
     p->escape_registration = 0;
@@ -522,6 +537,38 @@ void portal_bind(Portal *p, PortalResult cb, void *user) {
     trace(p, "portal bind requested trigger=%s pending=%d",
           p->preferred_trigger ? p->preferred_trigger : "CTRL+ALT+space",
           p->shortcuts_pending);
+    portal_pause_shortcuts(p);
+    const char *current_desktop = g_getenv("XDG_CURRENT_DESKTOP");
+    if (current_desktop && strstr(current_desktop, "KDE") &&
+        !g_strcmp0(p->preferred_trigger, "Alt_R")) {
+        g_autoptr(GError) error = NULL;
+        g_autoptr(GVariant) loaded = g_dbus_connection_call_sync(p->bus,
+            "org.kde.KWin", "/Effects", "org.kde.kwin.Effects", "isEffectLoaded",
+            g_variant_new("(s)", "givoice-input"), G_VARIANT_TYPE("(b)"),
+            0, 3000, NULL, &error);
+        gboolean ready = FALSE;
+        if (loaded) g_variant_get(loaded, "(b)", &ready);
+        if (!ready) {
+            if (!error) error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                "오른쪽 Alt를 사용하려면 Givoice KWin 확장을 설치하고 활성화하세요");
+            cb(NULL, error, user);
+            return;
+        }
+        p->native_shortcut = TRUE;
+        g_dbus_connection_emit_signal(p->bus, NULL, ESCAPE_PATH, ESCAPE_IFACE,
+            "TriggerChanged", g_variant_new("(s)", p->preferred_trigger), NULL);
+        GVariantBuilder items, props;
+        g_variant_builder_init(&items, G_VARIANT_TYPE("a(sa{sv})"));
+        g_variant_builder_init(&props, G_VARIANT_TYPE_VARDICT);
+        g_variant_builder_add(&props, "{sv}", "trigger_description", g_variant_new_string("오른쪽 Alt"));
+        g_variant_builder_add(&items, "(s@a{sv})", "record", g_variant_builder_end(&props));
+        GVariantBuilder result;
+        g_variant_builder_init(&result, G_VARIANT_TYPE_VARDICT);
+        g_variant_builder_add(&result, "{sv}", "shortcuts", g_variant_builder_end(&items));
+        g_autoptr(GVariant) values = g_variant_ref_sink(g_variant_builder_end(&result));
+        cb(values, NULL, user);
+        return;
+    }
     ibus_reserve(p);
     // GNOME reuses previously saved bindings and ignores preferred_trigger for
     // existing IDs. Apply the user's selection to this app's existing binding,
@@ -587,6 +634,10 @@ void portal_enable_keyboard(Portal *p, PortalResult cb, void *user) {
     setup(p, TRUE, cb, user);
 }
 void portal_pause_shortcuts(Portal *p) {
+    p->native_shortcut = FALSE;
+    if (p->bus)
+        g_dbus_connection_emit_signal(p->bus, NULL, ESCAPE_PATH, ESCAPE_IFACE,
+            "TriggerChanged", g_variant_new("(s)", ""), NULL);
     close_session(p, &p->shortcuts);
 }
 gboolean portal_key(Portal *p, int keysym, gboolean pressed, GError **error) {

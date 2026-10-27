@@ -115,6 +115,11 @@ output mute starts after the chime and restores the previous output state.
 Configured launches start in the tray; use the tray's Settings item or
 `givoice --settings` to open the window explicitly.
 
+On KDE Plasma 6, Right Alt uses the bundled native KWin helper to receive both
+press and release; the GlobalShortcuts portal cannot register this bare modifier.
+Install the helper as described below before selecting Right Alt. Capture dialogs
+and changing triggers disable this binding; the lock screen never triggers recording.
+
 Some Korean keyboards report the key labelled Hangul as `Alt_R` (evdev key 100,
 XKB key 108). On the local GNOME desktop, a bare right-Alt portal binding emitted
 presses without releases. Enabling the XKB option `korean:ralt_hangul`, preserving
@@ -182,12 +187,13 @@ size for readability (about 436×87 physical pixels at 140% when GTK uses an
 X11 scale of one). The main settings app remains Wayland native.
 Existing macOS and Windows implementations are unchanged.
 
-## KDE Plasma 6 Escape helper
+## KDE Plasma 6 keyboard helper
 
 Build the optional helper against development headers for the **exact installed
 KWin version** and Qt 6. KWin's input-filter interface is private, so rebuild this
 helper when KWin changes; do not distribute a locally built helper for other versions.
-The standard GTK build does not require these dependencies.
+The standard GTK build does not require these dependencies. The helper also
+provides physical Right Alt recording, including hold-to-record releases.
 
 ```sh
 # kwin-dev and Qt 6 development packages must match the installed desktop.

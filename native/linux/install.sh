@@ -38,9 +38,9 @@ Gio.Settings.sync()
 PYTHON
   echo 'GNOME: log out and back in once to load the new Escape cancellation extension.'
 fi
-kwin_extension="$(dirname "$binary")/givoice-escape.so"
+kwin_extension="$(dirname "$binary")/givoice-input.so"
 if [[ -f "$kwin_extension" ]]; then
-  install -Dm755 "$kwin_extension" "$prefix/lib/qt6/plugins/kwin/effects/plugins/givoice-escape.so"
+  install -Dm755 "$kwin_extension" "$prefix/lib/qt6/plugins/kwin/effects/plugins/givoice-input.so"
   bootstrap="$prefix/share/kwin/scripts/givoice-escape-bootstrap"
   install -Dm644 "$root/native/linux/kwin-extension/bootstrap-metadata.json" "$bootstrap/metadata.json"
   install -Dm644 "$root/native/linux/kwin-extension/bootstrap.qml" "$bootstrap/contents/ui/main.qml"

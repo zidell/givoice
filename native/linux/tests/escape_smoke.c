@@ -5,10 +5,12 @@
 #endif
 static Portal p;
 static int record_presses, record_releases;
+static int alt_presses, alt_releases;
 static int stage, cancels, presses, releases, result=1;
 static GtkWidget *window;
 static void event(const char *id, gboolean down, void *user) {
     (void)user;
+    if (g_str_equal(id,"record")) { if(down) alt_presses++; else alt_releases++; }
     if (g_str_equal(id,"cancel") && down) { cancels++; portal_capture_escape(&p,FALSE); }
 }
 static void record_signal(GDBusConnection *bus, const char *sender, const char *path,
@@ -61,6 +63,15 @@ static gboolean tick(void *user) {
     case 10: CHECK(key(GDK_KEY_Escape,TRUE));break;
     case 11: CHECK(cancels==3);CHECK(key(GDK_KEY_Escape,FALSE));break;
     case 12: CHECK(key(GDK_KEY_Alt_L,FALSE));CHECK(key(GDK_KEY_Control_L,FALSE));break;
+#ifdef GIVOICE_KDE_ESCAPE_TEST
+    case 13: p.preferred_trigger=g_strdup("Alt_R");p.native_shortcut=TRUE;
+        g_dbus_connection_emit_signal(p.bus,NULL,"/com/videostew/givoice/Escape","com.videostew.givoice.Escape","TriggerChanged",g_variant_new("(s)","Alt_R"),NULL);break;
+    case 14: CHECK(key(GDK_KEY_Alt_R,TRUE));break;
+    case 15: CHECK(alt_presses==1);CHECK(key(GDK_KEY_Alt_R,FALSE));break;
+    case 16: CHECK(alt_releases==1);portal_pause_shortcuts(&p);break;
+    case 17: CHECK(key(GDK_KEY_Alt_R,TRUE));CHECK(key(GDK_KEY_Alt_R,FALSE));break;
+    case 18: CHECK(alt_presses==1 && alt_releases==1);break;
+#endif
     default: CHECK(presses==1 && releases==1);result=0;g_print("PASS: real desktop: push-to-talk release and toggle cancellation, modifier Escape, press/release swallowed, idle Escape delivered\n");gtk_main_quit();return G_SOURCE_REMOVE;
     }
     stage++;return G_SOURCE_CONTINUE;

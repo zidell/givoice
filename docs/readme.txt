@@ -192,3 +192,6 @@ for that behavior. On Linux, `cmd` maps to Ctrl.
 
 For older installed releases, inspect the existing settings before assuming
 every key is available. This guide ships with the app version it describes.
+
+Linux KDE Plasma 6: shortcut = "Alt_R" requires the bundled Givoice KWin helper
+installed and loaded. It handles the physical right Alt press and release.

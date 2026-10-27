@@ -429,7 +429,7 @@ gboolean settings_save(const Settings *s, const char *dir, GError **error) {
         "# Top-level TOML keys, double-quoted strings, true/false, integers and string arrays.\n"
         "# API key is stored separately in user_config.json; never put it in this file.\n");
     append_string(out, "shortcut", s->shortcut,
-        "Recording shortcut (Linux portal accelerator), default CTRL+ALT+space; portal approval may be required. "
+        "Recording shortcut (Linux portal accelerator), default CTRL+ALT+space; portal approval may be required. KDE Alt_R requires the Givoice KWin helper. "
         "Tap it to record until the next press; hold it over a second to stop on release.");
     g_string_append_printf(out,
         "\n# Recording limit, minutes: 10, 20, 30, 60. Default 30.\nrecording_time_limit_minutes = %d\n"
