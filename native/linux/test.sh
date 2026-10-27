@@ -4,6 +4,9 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 output="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}"
 mkdir -p "$output"
 settings_sources=("$root/native/linux/src/settings.c" "$root/native/linux/vendor/tomlc17/tomlc17.c")
+if [[ "${1:-}" == --kde-shortcuts ]]; then
+  exec "$root/native/linux/tests/kwin_escape_test.sh" --shortcuts
+fi
 if [[ "${1:-}" == --kde-escape ]]; then
   exec "$root/native/linux/tests/kwin_escape_test.sh"
 fi

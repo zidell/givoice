@@ -118,10 +118,13 @@ KWin helper). Closing Settings returns to the tray.
 Configured launches start in the tray; use the tray's Settings item or
 `givoice --settings` to open the window explicitly.
 
-On KDE Plasma 6, Right Alt uses the bundled native KWin helper to receive both
-press and release; the GlobalShortcuts portal cannot register this bare modifier.
-Install the helper as described below before selecting Right Alt. Capture dialogs
-and changing triggers disable this binding; the lock screen never triggers recording.
+On KDE Plasma 6, Right Alt and Right Ctrl use the bundled native KWin helper to
+receive both press and release; the GlobalShortcuts portal cannot register bare
+modifiers reliably. Hangul also uses the helper when available, before input-method
+handling. Combination presets use KDE GlobalShortcuts so Super+Space does not
+accidentally open the launcher. Changes update only Givoice's saved KDE binding;
+the app verifies the actual assignment and reports conflicts. Capture dialogs and
+changing triggers disable the previous binding; the lock screen never triggers recording.
 
 Some Korean keyboards report the key labelled Hangul as `Alt_R` (evdev key 100,
 XKB key 108). On the local GNOME desktop, a bare right-Alt portal binding emitted
@@ -196,7 +199,8 @@ Build the optional helper against development headers for the **exact installed
 KWin version** and Qt 6. KWin's input-filter interface is private, so rebuild this
 helper when KWin changes; do not distribute a locally built helper for other versions.
 The standard GTK build does not require these dependencies. The helper also
-provides physical Right Alt recording, including hold-to-record releases.
+provides Right Alt, Right Ctrl, and logical Hangul recording, including
+hold-to-record releases.
 
 ```sh
 # kwin-dev and Qt 6 development packages must match the installed desktop.
@@ -252,3 +256,10 @@ Portal API references: [GlobalShortcuts](https://flatpak.github.io/xdg-desktop-p
 `./native/linux/test.sh --paste` checks the production paste scheduler in a private
 focused entry: 20 Korean clipboard pastes and Enter presses, without recording or
 network requests. It stops immediately if that window loses focus.
+
+`./native/linux/test.sh --kde-shortcuts` validates all seven Settings presets on a
+live KDE Wayland session using a private focused entry, with no audio or uploads.
+It covers portal/native binding, long holds, taps, real repeated-key events,
+modifiers released first, consumed key events, preset changes, and native capture
+pause/rebind/disable while held. Quit idle Givoice first. The private KWin driver
+refuses presses outside that test window. Verified on KWin 6.6.6.

@@ -15,7 +15,7 @@ typedef struct {
     gboolean keyboard_pending, shortcuts_pending, clipboard_enabled;
     gboolean ibus_managed;
     gboolean escape_active;
-    gboolean native_shortcut;
+    gboolean native_shortcut, record_down;
     guint escape_registration;
     char *clipboard_text;
     guint clipboard_subscription;

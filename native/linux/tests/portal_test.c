@@ -208,7 +208,7 @@ static gpointer service(gpointer address) {
     return NULL;
 }
 static gboolean callback_done;
-static gboolean expected_denial;
+static gboolean expected_denial, expected_native_unavailable;
 static guint keyboard_closures;
 static void complete(GVariant *values, const GError *error, void *user);
 static void keyboard_closed(void *user) {
@@ -222,7 +222,9 @@ static void keyboard_closed(void *user) {
 static void complete(GVariant *values, const GError *error, void *user) {
     (void)values;
     (void)user;
-    if (g_atomic_int_get(&missing)) {
+    if (expected_native_unavailable) {
+        g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
+    } else if (g_atomic_int_get(&missing)) {
         g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
         g_assert_nonnull(strstr(error->message, "xdg-desktop-portal-kde"));
     } else if (expected_denial)
@@ -319,6 +321,14 @@ int main(int argc, char **argv) {
         g_autoptr(GVariant) gnome_after = g_settings_get_value(saved_settings, "shortcuts");
         g_assert_true(g_variant_equal(gnome_before, gnome_after));
     }
+    // An absent/outdated native helper must never report bare-modifier success.
+    g_free(p.preferred_trigger);p.preferred_trigger = g_strdup("Control_R");
+    callback_done = FALSE;expected_native_unavailable = TRUE;
+    portal_bind(&p, complete, NULL);wait_for(&callback_done);
+    g_assert_false(p.native_shortcut);g_assert_null(p.shortcuts);
+    expected_native_unavailable = FALSE;
+    g_free(p.preferred_trigger);p.preferred_trigger = g_strdup("CTRL+ALT+space");
+    callback_done = FALSE;portal_bind(&p, complete, NULL);wait_for(&callback_done);
     callback_done = FALSE;
     portal_enable_keyboard(&p, complete, NULL);
     wait_for(&callback_done);

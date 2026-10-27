@@ -39,9 +39,10 @@ public Q_SLOTS:
         auto window = effects->activeWindow();
         if ((!window || window->caption() != "Private Escape test" || effects->isScreenLocked()) &&
             (down || !m_pressed.contains(code))) return false;
+        bool repeat = down && m_pressed.contains(code);
         if (down) m_pressed.insert(code); else m_pressed.remove(code);
         auto now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch());
-        input()->keyboard()->processKey(code, down ? KeyboardKeyState::Pressed : KeyboardKeyState::Released, now);
+        input()->keyboard()->processKey(code, down ? (repeat ? KeyboardKeyState::Repeated : KeyboardKeyState::Pressed) : KeyboardKeyState::Released, now);
         return true;
     }
 Q_SIGNALS:

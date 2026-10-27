@@ -2,6 +2,7 @@
 #include "core.h"
 #include "portal.h"
 #include "input.h"
+#include "shortcut_presets.h"
 #include "output.h"
 #include "overlay.h"
 #include "sounds.h"
@@ -1375,13 +1376,9 @@ static void activate(GtkApplication *application, void *user) {
     default_models(p);
     g_signal_connect(app.key, "changed", G_CALLBACK(provider_changed), NULL);
     app.shortcut_choice = gtk_combo_box_text_new();
-    const char *triggers[] = {"CTRL+ALT+space", "CTRL+SHIFT+space", "LOGO+space", "CTRL+ALT+r",
-                             "Hangul", "Alt_R", "Control_R"},
-               *trigger_labels[] = {"Ctrl+Alt+Space", "Ctrl+Shift+Space", "Super+Space",
-                                    "Ctrl+Alt+R", "한/영 키 (Hangul)", "오른쪽 Alt", "오른쪽 Ctrl"};
-    for (guint i = 0; i < G_N_ELEMENTS(triggers); i++)
-        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(app.shortcut_choice), triggers[i],
-                                  trigger_labels[i]);
+    for (guint i = 0; i < SHORTCUT_PRESET_COUNT; i++)
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(app.shortcut_choice),
+            shortcut_presets[i].trigger, shortcut_presets[i].label);
     if (!gtk_combo_box_set_active_id(GTK_COMBO_BOX(app.shortcut_choice), app.settings.shortcut)) {
         gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(app.shortcut_choice), app.settings.shortcut,
                                   app.settings.shortcut);

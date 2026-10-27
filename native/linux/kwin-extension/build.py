@@ -16,11 +16,11 @@ for name in ['KCoreAddons', 'KConfigCore', 'KConfigGui', 'KWindowSystem']:
     include.append('-I' + str(headers / 'KF6' / name))
 source = root / 'escape.cpp'
 name = 'escape'
-binary = 'givoice-input'
+binary = 'givoice-shortcuts'
 if '--test-driver' in sys.argv:
     source = root.parent / 'tests/kwin_escape_driver.cpp'
     name = 'kwin_escape_driver'
-    binary = 'givoice-escape-driver'
+    binary = 'givoice-shortcut-driver'
 include.append('-I' + str(source.parent))
 qt = shlex.split(subprocess.check_output(
     ['pkg-config', '--cflags', '--libs', 'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6DBus'], text=True))

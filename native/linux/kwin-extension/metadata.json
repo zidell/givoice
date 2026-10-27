@@ -1,1 +1,1 @@
-{"KPlugin":{"Id":"givoice-input","Name":"Givoice keyboard integration","Description":"Right Alt recording and Escape cancellation","Version":"2.0","License":"GPL-3.0-or-later","EnabledByDefault":false}}
+{"KPlugin":{"Id":"givoice-shortcuts","Name":"Givoice keyboard integration","Description":"Native recording keys and Escape cancellation","Version":"2.0","License":"GPL-3.0-or-later","EnabledByDefault":false}}

@@ -1,4 +1,5 @@
 #include "portal.h"
+#include "shortcut_presets.h"
 #include <string.h>
 #include <gio/gunixoutputstream.h>
 #include <gio/gunixfdlist.h>
@@ -9,6 +10,17 @@
 #define PATH "/org/freedesktop/portal/desktop"
 #define SHORTCUTS "org.freedesktop.portal.GlobalShortcuts"
 #define REMOTE "org.freedesktop.portal.RemoteDesktop"
+
+static gint kde_accelerator(const ShortcutPreset *preset) {
+    guint key = preset->keysym;
+    if (key >= 'a' && key <= 'z') key -= 'a' - 'A';
+    if (preset->modifiers & 1) key |= 0x04000000;
+    if (preset->modifiers & 2) key |= 0x08000000;
+    if (preset->modifiers & 4) key |= 0x02000000;
+    if (preset->modifiers & 8) key |= 0x10000000;
+    return (gint)key;
+}
+static const char *kde_action[] = {"com.videostew.givoice", "record", "Givoice", "Givoice 녹음", NULL};
 
 static void trace(Portal *p, const char *format, ...) G_GNUC_PRINTF(2, 3);
 static void trace(Portal *p, const char *format, ...) {
@@ -263,8 +275,13 @@ static void shortcut_signal(GDBusConnection *bus, const char *sender, const char
     trace(p, "portal %s id=%s session=%s current=%s matched=%d", signal, id,
           session, p->shortcuts ? p->shortcuts : "none",
           g_strcmp0(session, p->shortcuts) == 0);
-    if (g_strcmp0(session, p->shortcuts) == 0)
-        p->event(id, g_str_equal(signal, "Activated"), p->user);
+    if (g_strcmp0(session, p->shortcuts) == 0) {
+        gboolean pressed = g_str_equal(signal, "Activated");
+        if (!g_str_equal(id, "record") || p->record_down != pressed) {
+            if (g_str_equal(id, "record")) p->record_down = pressed;
+            if (p->event) p->event(id, pressed, p->user);
+        }
+    }
     g_variant_unref(opts);
 }
 static void session_closed(GDBusConnection *bus, const char *sender, const char *path,
@@ -301,7 +318,8 @@ static void escape_method(GDBusConnection *bus, const char *sender, const char *
     } else if (g_str_equal(method, "Record")) {
         gboolean pressed;
         g_variant_get(parameters, "(b)", &pressed);
-        if (p->native_shortcut && p->event) {
+        if (p->native_shortcut && p->record_down != pressed && p->event) {
+            p->record_down = pressed;
             trace(p, "KWin recording key pressed=%d", pressed);
             p->event("record", pressed, p->user);
         }
@@ -335,10 +353,16 @@ gboolean portal_init(Portal *p, ShortcutEvent event, void *user, GError **error)
     p->escape_registration = g_dbus_connection_register_object(
         p->bus, ESCAPE_PATH, escape_info->interfaces[0], &escape_vtable, p, NULL, NULL);
     const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
-    if (desktop && strstr(desktop, "KDE"))
+    if (desktop && strstr(desktop, "KDE")) {
+        // Retire the earlier Escape-only / Right-Alt-only effects on upgrades.
+        const char *legacy[] = {"givoice-escape", "givoice-input"};
+        for (guint i = 0; i < G_N_ELEMENTS(legacy); i++)
+            g_dbus_connection_call(p->bus, "org.kde.KWin", "/Effects", "org.kde.kwin.Effects",
+                "unloadEffect", g_variant_new("(s)", legacy[i]), NULL, 0, 3000, NULL, NULL, NULL);
         g_dbus_connection_call(p->bus, "org.kde.KWin", "/Effects", "org.kde.kwin.Effects",
-            "loadEffect", g_variant_new("(s)", "givoice-input"), NULL, 0, 3000,
+            "loadEffect", g_variant_new("(s)", "givoice-shortcuts"), NULL, 0, 3000,
             NULL, NULL, NULL);
+    }
     // New portals require an application identity for unsandboxed native applications.
     g_autoptr(GVariant) registered = g_dbus_connection_call_sync(
         p->bus, DEST, PATH, "org.freedesktop.host.portal.Registry", "Register",
@@ -431,9 +455,40 @@ static void finish(GVariant *values, const GError *error, void *user) {
     if (!error && !s->keyboard) {
         g_autoptr(GVariant) shortcuts =
             g_variant_lookup_value(values, "shortcuts", G_VARIANT_TYPE("a(sa{sv})"));
-        if (!shortcuts || !g_variant_n_children(shortcuts))
+        gboolean assigned = FALSE;
+        for (gsize i = 0; shortcuts && i < g_variant_n_children(shortcuts); i++) {
+            g_autoptr(GVariant) item = g_variant_get_child_value(shortcuts, i);
+            const char *id, *description = NULL;
+            GVariant *props;
+            g_variant_get(item, "(&s@a{sv})", &id, &props);
+            if (g_str_equal(id, "record") &&
+                g_variant_lookup(props, "trigger_description", "&s", &description) &&
+                description && *description) assigned = TRUE;
+            g_variant_unref(props);
+        }
+        if (!assigned)
             local = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-                                        "등록된 전역 단축키가 없습니다");
+                                        "등록된 전역 녹음 단축키가 없습니다");
+        const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
+        const ShortcutPreset *preset = shortcut_preset(s->p->preferred_trigger);
+        if (!local && desktop && strstr(desktop, "KDE") && preset && preset->modifiers) {
+            g_autoptr(GVariant) actual = g_dbus_connection_call_sync(s->p->bus,
+                "org.kde.kglobalaccel", "/kglobalaccel", "org.kde.KGlobalAccel", "shortcut",
+                g_variant_new("(^as)", kde_action), G_VARIANT_TYPE("(ai)"),
+                0, 3000, NULL, NULL);
+            if (actual) {
+                g_autoptr(GVariant) keys = g_variant_get_child_value(actual, 0);
+                gboolean found = FALSE;
+                GVariantIter iter;
+                gint key;
+                g_variant_iter_init(&iter, keys);
+                while (g_variant_iter_next(&iter, "i", &key))
+                    found |= key == kde_accelerator(preset);
+                if (!found)
+                    local = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+                        "선택한 단축키가 KDE에 배정되지 않았습니다. 시스템 단축키 충돌을 확인하세요.");
+            }
+        }
     }
     if (error || local) {
         close_session(s->p, s->keyboard ? &s->p->keyboard : &s->p->shortcuts);
@@ -533,41 +588,75 @@ static void setup(Portal *p, gboolean keyboard, PortalResult cb, void *user) {
     request(p, keyboard ? REMOTE : SHORTCUTS, "CreateSession", t,
             g_variant_new("(@a{sv})", options(t, session)), created, s);
 }
+static gboolean kde_bind_native(Portal *p, const ShortcutPreset *preset,
+                              PortalResult cb, void *user) {
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GVariant) supported = g_dbus_connection_call_sync(p->bus,
+        "org.kde.KWin", "/com/videostew/givoice/Keyboard",
+        "com.videostew.givoice.Keyboard", "SupportedTriggers", NULL,
+        G_VARIANT_TYPE("(as)"), 0, 3000, NULL, &error);
+    gboolean ready = FALSE;
+    if (supported) {
+        g_auto(GStrv) triggers = NULL;
+        g_variant_get(supported, "(^as)", &triggers);
+        ready = g_strv_contains((const char *const *)triggers, preset->trigger);
+    }
+    if (!ready) {
+        g_clear_error(&error);
+        error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+            "KDE 기본 단축키를 사용하려면 최신 Givoice KWin 확장을 설치하고 활성화하세요");
+        // Logical combinations retain portal support when the optional
+        // private-ABI helper is absent. Bare modifiers cannot use that route.
+        if (preset->keysym) return FALSE;
+        cb(NULL, error, user);
+        return TRUE;
+    }
+    p->native_shortcut = TRUE;
+    g_dbus_connection_emit_signal(p->bus, NULL, ESCAPE_PATH, ESCAPE_IFACE,
+        "TriggerChanged", g_variant_new("(s)", p->preferred_trigger), NULL);
+    GVariantBuilder items, props;
+    g_variant_builder_init(&items, G_VARIANT_TYPE("a(sa{sv})"));
+    g_variant_builder_init(&props, G_VARIANT_TYPE_VARDICT);
+    g_variant_builder_add(&props, "{sv}", "trigger_description", g_variant_new_string(preset->label));
+    g_variant_builder_add(&items, "(s@a{sv})", "record", g_variant_builder_end(&props));
+    GVariantBuilder result;
+    g_variant_builder_init(&result, G_VARIANT_TYPE_VARDICT);
+    g_variant_builder_add(&result, "{sv}", "shortcuts", g_variant_builder_end(&items));
+    g_autoptr(GVariant) values = g_variant_ref_sink(g_variant_builder_end(&result));
+    cb(values, NULL, user);
+    return TRUE;
+}
 void portal_bind(Portal *p, PortalResult cb, void *user) {
     trace(p, "portal bind requested trigger=%s pending=%d",
           p->preferred_trigger ? p->preferred_trigger : "CTRL+ALT+space",
           p->shortcuts_pending);
     portal_pause_shortcuts(p);
     const char *current_desktop = g_getenv("XDG_CURRENT_DESKTOP");
-    if (current_desktop && strstr(current_desktop, "KDE") &&
-        !g_strcmp0(p->preferred_trigger, "Alt_R")) {
-        g_autoptr(GError) error = NULL;
-        g_autoptr(GVariant) loaded = g_dbus_connection_call_sync(p->bus,
-            "org.kde.KWin", "/Effects", "org.kde.kwin.Effects", "isEffectLoaded",
-            g_variant_new("(s)", "givoice-input"), G_VARIANT_TYPE("(b)"),
-            0, 3000, NULL, &error);
-        gboolean ready = FALSE;
-        if (loaded) g_variant_get(loaded, "(b)", &ready);
-        if (!ready) {
-            if (!error) error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-                "오른쪽 Alt를 사용하려면 Givoice KWin 확장을 설치하고 활성화하세요");
+    const ShortcutPreset *preset = shortcut_preset(p->preferred_trigger);
+    if (current_desktop && strstr(current_desktop, "KDE") && preset &&
+        (!preset->keysym || preset->keysym == 0xff31) &&
+        kde_bind_native(p, preset, cb, user)) return;
+    if (current_desktop && strstr(current_desktop, "KDE") && preset && preset->modifiers) {
+        // KDE reuses saved bindings and can ignore preferred_trigger on a rebind.
+        // Change only our existing action; KGlobalAccel retains conflict handling.
+        g_autoptr(GVariant) availability = g_dbus_connection_call_sync(p->bus,
+            "org.kde.kglobalaccel", "/kglobalaccel", "org.kde.KGlobalAccel", "isGlobalShortcutAvailable",
+            g_variant_new("(is)", kde_accelerator(preset), "com.videostew.givoice"),
+            G_VARIANT_TYPE("(b)"), 0, 3000, NULL, NULL);
+        gboolean available = TRUE;
+        if (availability) g_variant_get(availability, "(b)", &available);
+        if (!available) {
+            g_autoptr(GError) error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_EXISTS,
+                "다른 앱이 사용 중인 단축키입니다. KDE 시스템 설정에서 충돌을 해제하세요.");
             cb(NULL, error, user);
             return;
         }
-        p->native_shortcut = TRUE;
-        g_dbus_connection_emit_signal(p->bus, NULL, ESCAPE_PATH, ESCAPE_IFACE,
-            "TriggerChanged", g_variant_new("(s)", p->preferred_trigger), NULL);
-        GVariantBuilder items, props;
-        g_variant_builder_init(&items, G_VARIANT_TYPE("a(sa{sv})"));
-        g_variant_builder_init(&props, G_VARIANT_TYPE_VARDICT);
-        g_variant_builder_add(&props, "{sv}", "trigger_description", g_variant_new_string("오른쪽 Alt"));
-        g_variant_builder_add(&items, "(s@a{sv})", "record", g_variant_builder_end(&props));
-        GVariantBuilder result;
-        g_variant_builder_init(&result, G_VARIANT_TYPE_VARDICT);
-        g_variant_builder_add(&result, "{sv}", "shortcuts", g_variant_builder_end(&items));
-        g_autoptr(GVariant) values = g_variant_ref_sink(g_variant_builder_end(&result));
-        cb(values, NULL, user);
-        return;
+        GVariantBuilder keys;
+        g_variant_builder_init(&keys, G_VARIANT_TYPE("ai"));
+        g_variant_builder_add(&keys, "i", kde_accelerator(preset));
+        g_autoptr(GVariant) applied = g_dbus_connection_call_sync(p->bus,
+            "org.kde.kglobalaccel", "/kglobalaccel", "org.kde.KGlobalAccel", "setForeignShortcut",
+            g_variant_new("(^as@ai)", kde_action, g_variant_builder_end(&keys)), NULL, 0, 3000, NULL, NULL);
     }
     ibus_reserve(p);
     // GNOME reuses previously saved bindings and ignores preferred_trigger for
@@ -634,6 +723,10 @@ void portal_enable_keyboard(Portal *p, PortalResult cb, void *user) {
     setup(p, TRUE, cb, user);
 }
 void portal_pause_shortcuts(Portal *p) {
+    if (p->record_down) {
+        p->record_down = FALSE;
+        if (p->event) p->event("record", FALSE, p->user);
+    }
     p->native_shortcut = FALSE;
     if (p->bus)
         g_dbus_connection_emit_signal(p->bus, NULL, ESCAPE_PATH, ESCAPE_IFACE,
