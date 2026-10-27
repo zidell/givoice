@@ -3,6 +3,8 @@
 #include "input.h"
 #include "input_event.h"
 #include "keyboard_input.h"
+#include "workspace.h"
+#include "window.h"
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QDBusPendingCallWatcher>
@@ -33,6 +35,14 @@ public:
                 if (!owner.isEmpty()) refresh();
             });
         refresh();
+        // GTK's skip-taskbar hint only reaches X11; apply it natively on KDE Wayland.
+        auto hideTask = [](Window *window) {
+            const auto name = window->resourceClass().toLower();
+            if (name == QStringLiteral("com.videostew.givoice") || name == QStringLiteral("givoice"))
+                window->setSkipTaskbar(true);
+        };
+        connect(workspace(), &Workspace::windowAdded, this, hideTask);
+        for (auto window : workspace()->windows()) hideTask(window);
         input()->installInputEventFilter(this);
     }
     bool isActive() const override { return false; }

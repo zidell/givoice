@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
     g_assert_true(g_application_register(G_APPLICATION(application), NULL, NULL));
     activate(application, NULL);
     g_assert_true(gtk_widget_get_visible(app.window));
+    g_assert_true(gtk_window_get_skip_taskbar_hint(GTK_WINDOW(app.window)));
     g_assert_nonnull(app.portal.bus);
     g_assert_nonnull(app.audio_loop);
     g_assert_true(GTK_IS_COMBO_BOX_TEXT(app.model));

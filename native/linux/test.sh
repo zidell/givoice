@@ -10,6 +10,16 @@ fi
 if [[ "${1:-}" == --escape ]]; then
   exec "$root/native/linux/tests/escape_test.sh"
 fi
+if [[ "${1:-}" == --paste ]]; then
+  read -r -a paste_cflags <<< "$(pkg-config --cflags gtk+-3.0 ayatana-appindicator3-0.1 libpulse-mainloop-glib libpulse-simple libcurl json-glib-1.0 gio-unix-2.0)"
+  read -r -a paste_libs <<< "$(pkg-config --libs gtk+-3.0 ayatana-appindicator3-0.1 libpulse-mainloop-glib libpulse-simple libcurl json-glib-1.0 gio-unix-2.0)"
+  python3 "$root/native/linux/embed_sounds.py" "$output/sounds.h"
+  "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${paste_cflags[@]}" -I"$output" \
+    "$root/native/linux/tests/paste_smoke.c" "$root/native/linux/src/core.c" "${settings_sources[@]}" \
+    "$root/native/linux/src/portal.c" "$root/native/linux/src/output.c" "$root/native/linux/src/overlay.c" \
+    -o "$output/paste-smoke" ${LDFLAGS:-} "${paste_libs[@]}" -lm
+  exec "$output/paste-smoke"
+fi
 if [[ "${1:-}" == --input ]]; then
   read -r -a input_cflags <<< "$(pkg-config --cflags gtk+-3.0 gio-unix-2.0)"
   read -r -a input_libs <<< "$(pkg-config --libs gtk+-3.0 gio-unix-2.0)"

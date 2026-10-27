@@ -112,6 +112,9 @@ route and respects system speaker mute. If the volume is nonzero but the chime i
 silent, check the desktop's output mute and selected speaker first. Recording
 output mute starts after the chime and restores the previous output state.
 
+Settings windows stay out of the taskbar (on KDE Wayland this uses the native
+KWin helper). Closing Settings returns to the tray.
+
 Configured launches start in the tray; use the tray's Settings item or
 `givoice --settings` to open the window explicitly.
 
@@ -245,3 +248,7 @@ the WAV, Korean clipboard, mute restoration, selectors, and ordered results. Run
 Portal API references: [GlobalShortcuts](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html),
 [RemoteDesktop](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.RemoteDesktop.html),
 [Clipboard](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Clipboard.html).
+
+`./native/linux/test.sh --paste` checks the production paste scheduler in a private
+focused entry: 20 Korean clipboard pastes and Enter presses, without recording or
+network requests. It stops immediately if that window loses focus.

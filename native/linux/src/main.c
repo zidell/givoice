@@ -56,7 +56,8 @@ typedef struct {
     Overlay overlay;
     GQueue jobs;
     GPtrArray *paste_steps;
-    guint paste_index, paste_timer;
+    guint paste_index, paste_timer, paste_key_phase;
+    guint paste_held[8], paste_held_count;
     double input_level;
     gboolean pasting_text, paste_auto_send;
     gboolean closing;
@@ -403,6 +404,7 @@ static void keyboard_closed(void *user) {
     if (app.closing)
         return;
     app.pasting_text = FALSE;
+    app.paste_key_phase = app.paste_held_count = 0;
     set_status("자동 붙여넣기 연결이 끊겨 복구 중입니다…");
     // Restore only a previously granted permission. The portal still decides
     // whether the saved grant is valid and handles any required consent.
@@ -456,7 +458,13 @@ static void job_free(void *data) {
     g_clear_object(&j->cancel);
     g_free(j);
 }
+static void release_paste_keys(void) {
+    while (app.paste_held_count)
+        send_key(app.paste_held[--app.paste_held_count], FALSE);
+    app.paste_key_phase = 0;
+}
 static void finish_paste(gboolean success) {
+    release_paste_keys();
     debug_log(success ? "automatic input completed" : "automatic input failed");
     g_clear_pointer(&app.paste_steps, g_ptr_array_unref);
     app.paste_timer = 0;
@@ -469,16 +477,9 @@ static void finish_paste(gboolean success) {
         process_results();
     }
 }
-static void pace_chord(void) {
-    // KWin/IBus dispatch is asynchronous: retain modifiers until the target
-    // has processed the chord, rather than releasing them in the same burst.
-    const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
-    if (desktop && strstr(desktop, "KDE"))
-        g_usleep(30000);
-}
 static gboolean paste_tick(void *user) {
     (void)user;
-    if (app.state == RECORDING || app.state == CONNECTING)
+    if ((app.state == RECORDING || app.state == CONNECTING) && !app.paste_key_phase)
         return G_SOURCE_CONTINUE;
     if (app.portal.keyboard_pending)
         return G_SOURCE_CONTINUE;
@@ -504,27 +505,27 @@ static gboolean paste_tick(void *user) {
         app.pasting_text = TRUE;
         return G_SOURCE_CONTINUE;
     }
-    if (segment->text) {
-        guint keys[] = {GDK_KEY_Control_L, GDK_KEY_v};
-        for (guint i = 0; i < 2 && ok; i++)
-            ok = send_key(keys[i], TRUE);
-        pace_chord();
-        for (int i = 1; i >= 0; i--)
-            if (!send_key(keys[i], FALSE))
-                ok = FALSE;
-        app.pasting_text = FALSE;
-    } else {
-        for (guint i = 0; i < segment->n_keys && ok; i++)
-            ok = send_key(segment->keys[i], TRUE);
-        pace_chord();
-        for (int i = (int)segment->n_keys - 1; i >= 0; i--)
-            if (!send_key(segment->keys[i], FALSE))
-                ok = FALSE;
+    // IBus/Wayland processes modifier updates asynchronously. Give the main loop
+    // a turn between *every* press and release, including Ctrl-down before V-down.
+    // Sleeping after both presses cannot prevent a bare V from reaching the app.
+    const guint paste_keys[] = {GDK_KEY_Control_L, GDK_KEY_v};
+    const guint *keys = segment->text ? paste_keys : segment->keys;
+    guint count = segment->text ? G_N_ELEMENTS(paste_keys) : segment->n_keys;
+    if (app.paste_key_phase < count) {
+        guint key = keys[app.paste_key_phase];
+        ok = send_key(key, TRUE);
+        if (ok) app.paste_held[app.paste_held_count++] = key;
+    } else if (app.paste_held_count) {
+        ok = send_key(app.paste_held[--app.paste_held_count], FALSE);
     }
-    ++app.paste_index;
     if (!ok) {
         finish_paste(FALSE);
         return G_SOURCE_REMOVE;
+    }
+    if (++app.paste_key_phase >= count * 2) {
+        app.paste_key_phase = 0;
+        app.pasting_text = FALSE;
+        ++app.paste_index;
     }
     return G_SOURCE_CONTINUE;
 }
@@ -625,6 +626,7 @@ static void process_results(void) {
     }
 }
 static void cancel_jobs(void) {
+    release_paste_keys();
     for (GList *node = app.jobs.head; node; node = node->next)
         g_cancellable_cancel(((Job *)node->data)->cancel);
     if (app.paste_timer) {
@@ -1290,6 +1292,7 @@ static void activate(GtkApplication *application, void *user) {
     g_object_unref(css);
     app.window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(app.window), "Givoice 설정");
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(app.window), TRUE);
     gtk_window_set_default_size(GTK_WINDOW(app.window), 560, 850);
     g_signal_connect(app.window, "delete-event", G_CALLBACK(hide_window), NULL);
     g_signal_connect(app.window, "key-press-event", G_CALLBACK(key_press), NULL);
