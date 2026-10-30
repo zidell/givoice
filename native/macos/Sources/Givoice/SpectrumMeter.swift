@@ -1,16 +1,24 @@
 import AVFoundation
 
+// Hann FFT with disjoint bands, matching Linux and Windows.
 // Analysis only: recording and its file format remain owned by AVAudioRecorder.
 final class SpectrumMeter {
     private let engine = AVAudioEngine()
     private let lock = NSLock()
-    private var b = [Double](repeating: 0, count: 5)
-    private var a1 = [Double](repeating: 0, count: 5)
-    private var a2 = [Double](repeating: 0, count: 5)
-    private var z1 = [Double](repeating: 0, count: 5)
-    private var z2 = [Double](repeating: 0, count: 5)
-    private var power = [Double](repeating: 0, count: 5)
+    private var size = 256
+    private var position = 0
+    private var filled = 0
+    private var pending = 0
+    private var rate: Double = 0
+    private var windowPower: Double = 0
     private var decay: Double = 0
+    private var samples: [Double] = []
+    private var window: [Double] = []
+    private var real: [Double] = []
+    private var imag: [Double] = []
+    private var cosine: [Double] = []
+    private var sine: [Double] = []
+    private var power = [Double](repeating: 0, count: 5)
     private var installed = false
 
     func start() throws {
@@ -21,17 +29,23 @@ final class SpectrumMeter {
             throw NSError(domain: "Givoice", code: 2,
                           userInfo: [NSLocalizedDescriptionKey: "마이크 주파수 분석을 시작하지 못했습니다."])
         }
-        let edges: [Double] = [80, 250, 500, 1000, 2000, 8000]
-        decay = exp(-1 / (rate * 0.03))
-        for i in 0..<5 {
-            let high = min(edges[i + 1], rate * 0.49)
-            let low = min(edges[i], high * 0.5)
-            let center = sqrt(low * high), q = center / (high - low)
-            let w = 2 * Double.pi * center / rate
-            let alpha = sin(w) / (2 * q)
-            b[i] = alpha / (1 + alpha)
-            a1[i] = -2 * cos(w) / (1 + alpha)
-            a2[i] = (1 - alpha) / (1 + alpha)
+        self.rate = rate
+        while Double(size) < rate * 0.032 && size < 2048 { size *= 2 }
+        samples = Array(repeating: 0, count: size)
+        window = Array(repeating: 0, count: size)
+        real = Array(repeating: 0, count: size)
+        imag = Array(repeating: 0, count: size)
+        cosine = Array(repeating: 0, count: size / 2)
+        sine = Array(repeating: 0, count: size / 2)
+        decay = exp(-(Double(size) / 2) / (rate * 0.03))
+        for i in 0..<size {
+            window[i] = 0.5 - 0.5 * cos(2 * Double.pi * Double(i) / Double(size))
+            windowPower += window[i] * window[i]
+        }
+        for i in 0..<(size / 2) {
+            let angle = -2 * Double.pi * Double(i) / Double(size)
+            cosine[i] = cos(angle)
+            sine[i] = sin(angle)
         }
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             self?.analyze(buffer)
@@ -50,12 +64,56 @@ final class SpectrumMeter {
                 sample += Double(channels[channel][frame])
             }
             sample /= Double(buffer.format.channelCount)
-            for i in 0..<5 {
-                let y = b[i] * sample + z1[i]
-                z1[i] = -a1[i] * y + z2[i]
-                z2[i] = -b[i] * sample - a2[i] * y
-                power[i] = decay * power[i] + (1 - decay) * y * y
+            samples[position] = sample
+            position = (position + 1) % size
+            filled = min(filled + 1, size)
+            pending += 1
+            if filled == size && pending >= size / 2 {
+                pending = 0
+                transform()
             }
+        }
+    }
+
+    private func transform() {
+        let n = size
+        for i in 0..<n {
+            real[i] = samples[(position + i) % n] * window[i]
+            imag[i] = 0
+        }
+        var j = 0
+        for i in 1..<n {
+            var bit = n >> 1
+            while (j & bit) != 0 { j ^= bit; bit >>= 1 }
+            j ^= bit
+            if i < j { real.swapAt(i, j) }
+        }
+        var width = 2
+        while width <= n {
+            for start in stride(from: 0, to: n, by: width) {
+                for j in 0..<(width / 2) {
+                    let a = start + j, b = a + width / 2, k = j * n / width
+                    let re = cosine[k] * real[b] - sine[k] * imag[b]
+                    let im = cosine[k] * imag[b] + sine[k] * real[b]
+                    real[b] = real[a] - re
+                    imag[b] = imag[a] - im
+                    real[a] += re
+                    imag[a] += im
+                }
+            }
+            width *= 2
+        }
+        let edges: [Double] = [80, 250, 500, 1000, 2000, 8000]
+        var next = [Double](repeating: 0, count: 5)
+        for k in 1..<(n / 2) {
+            let hz = Double(k) * rate / Double(n)
+            for band in 0..<5 where hz >= edges[band] && hz < edges[band + 1] {
+                next[band] += 2 * (real[k] * real[k] + imag[k] * imag[k]) / (Double(n) * windowPower)
+                break
+            }
+        }
+        for i in 0..<5 {
+            power[i] = decay * power[i] + (1 - decay) * next[i]
         }
     }
 
