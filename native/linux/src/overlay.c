@@ -10,6 +10,7 @@ static GtkWidget *window;
 static guint animation_timer;
 static char *title;
 static double volume, phase;
+static double levels[5];
 static gboolean recording, time_warning;
 static char *last_position;
 static double widget_scale = 1.0;
@@ -74,6 +75,8 @@ static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
         gtk_widget_hide(window);
         return G_SOURCE_CONTINUE;
     }
+    if (!gtk_widget_get_visible(window) || recording != g_str_has_prefix(parts[3], "녹음 중"))
+        memset(levels, 0, sizeof(levels));
     g_free(title);
     title = g_strdup(parts[3]);
     time_warning = atoi(parts[2]) != 0;
@@ -176,20 +179,22 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr, void *user) {
     {
         cairo_set_source_rgb(cr, 1, recording ? 0.28 : 1, recording ? 0.28 : 1);
         for (int i = 0; i < 5; i++) {
-            double wave = 0.5 + 0.5 * sin(phase + i * 1.3);
-            double strength = volume * (0.5 + 0.5 * wave) + (1 - volume) * 0.12 * wave;
-            double height = 4 + strength * 24;
+            double height = 4 + levels[i] * 24;
             pill(cr, 210 + i * 7, (52 - height) / 2, 3, height);
             cairo_fill(cr);
         }
     }
     return TRUE;
 }
+static void advance_levels(void) {
+    // Oldest input level on the left, newest on the right.
+    memmove(levels, levels + 1, 4 * sizeof(levels[0]));
+    levels[4] = recording ? volume : 0;
+}
 static gboolean tick(void *user) {
     (void)user;
     phase += 0.4;
-    if (!recording)
-        volume *= 0.88;
+    advance_levels();
     if (gtk_widget_get_visible(window))
         gtk_widget_queue_draw(window);
     return G_SOURCE_CONTINUE;

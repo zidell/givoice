@@ -23,3 +23,13 @@ does not have them. When moving to another machine, copy `local/` along and run
 `bash local/install_macos_login_app.sh` once. The app's only dependency on this
 setup is the `GIVOICE_KEEPALIVE=1` relaunch check in
 `native/macos/Sources/Givoice/main.swift`.
+
+## Local Linux verification
+
+After changing Linux app behavior or UI, build and test with
+`bash native/linux/build.sh --test`, install the new build with
+`bash native/linux/install.sh`, and restart the locally installed app so the
+maintainer can immediately verify the change. Check whether recording is active
+before restarting; do not discard an active recording. Report what was actually
+verified and any remaining limits. Source edits alone do not complete a local
+app change.

@@ -18,7 +18,29 @@ static void assert_text_centered(cairo_surface_t *surface) {
 int main(int argc, char **argv) {
     title = g_strdup("녹음 중 (00:12)");
     recording = TRUE;
+    // Silence stays flat; a brief input peak travels from right to left.
+    volume = 0;
+    for (int i = 0; i < 5; i++)
+        advance_levels();
+    for (int i = 0; i < 5; i++)
+        g_assert_cmpfloat(levels[i], ==, 0);
+    volume = 1;
+    advance_levels();
+    g_assert_cmpfloat(levels[4], ==, 1);
+    volume = 0;
+    advance_levels();
+    g_assert_cmpfloat(levels[3], ==, 1);
+    g_assert_cmpfloat(levels[4], ==, 0);
+    recording = FALSE;
+    volume = 1;
+    for (int i = 0; i < 5; i++)
+        advance_levels();
+    for (int i = 0; i < 5; i++)
+        g_assert_cmpfloat(levels[i], ==, 0);
+    recording = TRUE;
     volume = 0.5;
+    for (int i = 0; i < 5; i++)
+        advance_levels();
     phase = 0;
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 260, 52);
     cairo_t *cr = cairo_create(surface);
@@ -62,6 +84,6 @@ int main(int argc, char **argv) {
     cairo_surface_destroy(surface);
     g_free(title);
     g_print(
-        "PASS: original 260x52 widget, transparent rounded corners, original five-bar waveform\n");
+        "PASS: original 260x52 widget, transparent rounded corners, input-driven five-bar waveform\n");
     return 0;
 }

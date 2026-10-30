@@ -99,7 +99,7 @@ struct Data {
     title: String,
     indicator: Indicator,
     time_warning: bool,
-    level: f32,
+    levels: [f32; 5],
     phase: f32,
     position: Position,
 }
@@ -152,7 +152,7 @@ pub unsafe fn create(instance: *mut std::ffi::c_void, owner: HWND) -> HWND {
             title: String::new(),
             indicator: Indicator::None,
             time_warning: false,
-            level: 0.0,
+            levels: [0.0; 5],
             phase: 0.0,
             position: Position::default(),
         });
@@ -206,7 +206,7 @@ unsafe fn show_with_message(hwnd: HWND, message: &str, indicator: Indicator) {
     data.title = message.into();
     data.indicator = indicator;
     data.time_warning = false;
-    data.level = 0.0;
+    data.levels = [0.0; 5];
     data.phase = 0.0;
     // "표시 안 함"이면 상태만 기억하고 창은 띄우지 않는다.
     if data.position.is_hidden() {
@@ -236,11 +236,9 @@ pub unsafe fn tick(hwnd: HWND, level: Option<f32>) {
     }
     let data = &mut *(GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut Data);
     data.phase += 0.4;
-    data.level = if let Some(level) = level {
-        level.clamp(0.0, 1.0)
-    } else {
-        data.level * 0.88
-    };
+    // Oldest input level on the left, newest on the right.
+    data.levels.rotate_left(1);
+    data.levels[4] = level.unwrap_or(0.0).clamp(0.0, 1.0);
     InvalidateRect(hwnd, ptr::null(), 0);
 }
 
@@ -362,10 +360,7 @@ unsafe extern "system" fn procedure(
                     }
                 }
                 for index in 0..5 {
-                    let wave = (data.phase + index as f32 * 1.3).sin() * 0.5 + 0.5;
-                    let strength =
-                        data.level * (0.5 + 0.5 * wave) + (1.0 - data.level) * 0.12 * wave;
-                    let height = (4.0 + strength * 24.0) as i32;
+                    let height = (4.0 + data.levels[index as usize] * 24.0) as i32;
                     let x = 210 + index * 7;
                     RoundRect(
                         dc,

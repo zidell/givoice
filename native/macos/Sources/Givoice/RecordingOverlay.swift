@@ -71,8 +71,7 @@ final class RecordingOverlay {
     private let window: NSPanel
     private let label: NSTextField
     private var bars: [CALayer] = []
-    private var phase: CGFloat = 0
-    private var volume: CGFloat = 0
+    private var levels = Array(repeating: CGFloat(0), count: 5)
     private var state: State?
 
     init() {
@@ -111,6 +110,7 @@ final class RecordingOverlay {
     }
 
     func show(_ state: State, position: OverlayPosition = .bottomCenter) {
+        levels = Array(repeating: 0, count: 5)
         self.state = state
         label.stringValue = state.title
         let pointer = NSEvent.mouseLocation
@@ -139,18 +139,13 @@ final class RecordingOverlay {
     }
 
     func tick(level: CGFloat?) {
-        phase += 0.4
-        if let level {
-            volume = max(0, min(1, level))
-        } else {
-            volume *= 0.88
-        }
+        // Oldest input level on the left, newest on the right.
+        levels.removeFirst()
+        levels.append(max(0, min(1, level ?? 0)))
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for (index, bar) in bars.enumerated() {
-            let wave = 0.5 + 0.5 * sin(phase + CGFloat(index) * 1.3)
-            let strength = volume * (0.5 + 0.5 * wave) + (1 - volume) * 0.12 * wave
-            let barHeight = 4 + strength * 24
+            let barHeight = 4 + levels[index] * 24
             bar.frame = NSRect(x: 210 + CGFloat(index) * 7,
                                y: (height - barHeight) / 2,
                                width: 3, height: barHeight)
@@ -159,7 +154,7 @@ final class RecordingOverlay {
     }
 
     func hide() {
-        volume = 0
+        levels = Array(repeating: 0, count: 5)
         window.orderOut(nil)
     }
 }
