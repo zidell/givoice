@@ -69,6 +69,7 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
     private var statusLine: NSMenuItem!
     private var lastResultItem: NSMenuItem!
     private var recorder: AVAudioRecorder?
+    private var spectrumMeter: SpectrumMeter?
     private var recordingStartSound: AVAudioPlayer?
     private var preparedRecordingStartSound: AVAudioPlayer?
     private var recordingLimitSound: AVAudioPlayer?
@@ -479,9 +480,15 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
         ]
         do {
             recorder = try AVAudioRecorder(url: url, settings: format)
-            recorder?.isMeteringEnabled = true
             guard recorder?.record() == true else { throw NSError(domain: "Givoice", code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "마이크를 시작하지 못했습니다."]) }
+            let meter = SpectrumMeter()
+            do {
+                try meter.start()
+                spectrumMeter = meter
+            } catch {
+                DebugLog.shared.record("spectrum meter unavailable: \(error.localizedDescription)")
+            }
             recordingURL = url
             refreshPhase()
             recordingStartedAt = ProcessInfo.processInfo.systemUptime
@@ -542,6 +549,8 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + remaining + 0.02) { sound.stop() }
         }
         recordingStartSound = nil
+        spectrumMeter?.stop()
+        spectrumMeter = nil
         recorder?.stop()
         recorder = nil
         restoreSystemAudio()
@@ -643,6 +652,8 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
         recordingSecondsShown = nil
         recordingStartSound?.stop()
         recordingStartSound = nil
+        spectrumMeter?.stop()
+        spectrumMeter = nil
         recorder?.stop()
         recorder = nil
         // 녹음 중 취소는 버리지만, 녹음을 끝낸 원본은 전사를 취소해도 남긴다.
@@ -668,16 +679,14 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
         overlayTimer?.invalidate()
         let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let level: CGFloat?
-            if self.phase == .recording, let recorder = self.recorder {
+            let levels: [CGFloat]?
+            if self.phase == .recording {
                 self.updateRecordingElapsed()
-                recorder.updateMeters()
-                let power = Double(recorder.averagePower(forChannel: 0))
-                level = CGFloat(min(1, pow(10.0, power / 20.0) * 8.0))
+                levels = self.spectrumMeter?.levels()
             } else {
-                level = nil
+                levels = nil
             }
-            self.overlay?.tick(level: level)
+            self.overlay?.tick(levels: levels)
         }
         overlayTimer = timer
         RunLoop.main.add(timer, forMode: .common)

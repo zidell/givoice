@@ -9,7 +9,7 @@
 static GtkWidget *window;
 static guint animation_timer;
 static char *title;
-static double volume, phase;
+static double phase;
 static double levels[5];
 static gboolean recording, time_warning;
 static char *last_position;
@@ -20,7 +20,7 @@ static int widget_pixels(double logical) {
 void overlay_init(Overlay *overlay) {
     overlay->executable = g_file_read_link("/proc/self/exe", NULL);
 }
-void overlay_update(Overlay *overlay, const char *position, const char *text, double level,
+void overlay_update(Overlay *overlay, const char *position, const char *text, const double bands[5],
                     gboolean warning) {
     if (!overlay->process && g_str_equal(position, "hidden"))
         return;
@@ -36,7 +36,8 @@ void overlay_update(Overlay *overlay, const char *position, const char *text, do
         if (!overlay->process)
             return;
     }
-    g_autofree char *line = g_strdup_printf("%s\t%.4f\t%d\t%s\n", position, level, warning, text);
+    g_autofree char *line = g_strdup_printf("%s\t%.4f,%.4f,%.4f,%.4f,%.4f\t%d\t%s\n", position,
+                                             bands[0], bands[1], bands[2], bands[3], bands[4], warning, text);
     GOutputStream *stream = g_subprocess_get_stdin_pipe(overlay->process);
     g_autoptr(GError) error = NULL;
     if (!g_output_stream_write_all(stream, line, strlen(line), NULL, NULL, &error))
@@ -75,13 +76,16 @@ static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
         gtk_widget_hide(window);
         return G_SOURCE_CONTINUE;
     }
-    if (!gtk_widget_get_visible(window) || recording != g_str_has_prefix(parts[3], "녹음 중"))
-        memset(levels, 0, sizeof(levels));
     g_free(title);
     title = g_strdup(parts[3]);
     time_warning = atoi(parts[2]) != 0;
-    volume = CLAMP(g_ascii_strtod(parts[1], NULL), 0, 1);
+    g_auto(GStrv) values = g_strsplit(parts[1], ",", 5);
+    memset(levels, 0, sizeof(levels));
+    for (int i = 0; i < 5 && values[i]; i++)
+        levels[i] = CLAMP(g_ascii_strtod(values[i], NULL), 0, 1);
     recording = g_str_has_prefix(title, "녹음 중");
+    if (!recording)
+        memset(levels, 0, sizeof(levels));
     gtk_widget_queue_draw(window);
     gboolean reposition = !gtk_widget_get_visible(window) || g_strcmp0(last_position, parts[0]);
     g_free(last_position);
@@ -186,15 +190,9 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr, void *user) {
     }
     return TRUE;
 }
-static void advance_levels(void) {
-    // Oldest input level on the left, newest on the right.
-    memmove(levels, levels + 1, 4 * sizeof(levels[0]));
-    levels[4] = recording ? volume : 0;
-}
 static gboolean tick(void *user) {
     (void)user;
     phase += 0.4;
-    advance_levels();
     if (gtk_widget_get_visible(window))
         gtk_widget_queue_draw(window);
     return G_SOURCE_CONTINUE;

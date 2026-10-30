@@ -786,7 +786,7 @@ unsafe extern "system" fn root_proc(
                 if expires.is_some_and(|when| Instant::now() >= when) {
                     hide_overlay(hwnd);
                 } else {
-                    let level = app(hwnd).recording.as_ref().map(Recording::level);
+                    let level = app(hwnd).recording.as_ref().map(Recording::levels);
                     overlay::tick(app(hwnd).overlay, level);
                     update_recording_elapsed(hwnd);
                 }

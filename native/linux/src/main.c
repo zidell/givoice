@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
+#include "spectrum.h"
 #include "core.h"
 #include "portal.h"
 #include "input.h"
@@ -62,6 +63,8 @@ typedef struct {
     guint paste_index, paste_timer, paste_key_phase;
     guint paste_held[8], paste_held_count;
     double input_level;
+    Spectrum spectrum;
+    double bands[5];
     gboolean pasting_text, paste_auto_send;
     gboolean closing;
     gboolean show_on_start;
@@ -89,7 +92,7 @@ static void update_overlay(void) {
                          : app.state == TRANSCRIBING ? (app.paste_steps ? "입력 중..." : "변환 중...")
                                                      : "");
     overlay_update(&app.overlay, app.state == IDLE ? "hidden" : app.settings.overlay_position,
-                   title, app.input_level,
+                   title, app.bands,
                    app.state == RECORDING &&
                        (g_get_monotonic_time() - app.started) / G_USEC_PER_SEC >=
                            app.settings.limit_minutes * 60 - 60);
@@ -727,8 +730,10 @@ static void audio_read(pa_stream *stream, size_t available, void *user) {
             gint16 sample = (gint16)((guint16)pcm[i] | ((guint16)pcm[i + 1] << 8));
             double n = sample / 32768.0;
             sum += n * n;
+            spectrum_sample(&app.spectrum, n);
         }
-        app.input_level = size ? MIN(1.0, sqrt(sum / (size / 2)) * 8.0) : 0;
+        app.input_level = size ? MIN(1.0, sqrt(sum / (size / 2))) : 0;
+        spectrum_levels(&app.spectrum, app.bands);
         gtk_level_bar_set_value(GTK_LEVEL_BAR(app.level), app.input_level);
         update_overlay();
     }
@@ -753,6 +758,8 @@ static void context_state(pa_context *context, void *user) {
     (void)user;
     pa_context_state_t state = pa_context_get_state(context);
     if (state == PA_CONTEXT_READY) {
+        spectrum_init(&app.spectrum, 16000);
+        memset(app.bands, 0, sizeof(app.bands));
         pa_sample_spec spec = {PA_SAMPLE_S16LE, 16000, 1};
         app.stream = pa_stream_new(context, "Givoice microphone", &spec, NULL);
         if (!app.stream) {
@@ -845,6 +852,7 @@ static void stop_recording(gboolean cancel) {
     audio_clear();
     output_restore(&app.output);
     app.input_level = 0;
+    memset(app.bands, 0, sizeof(app.bands));
     debug_log(cancel ? "recording cancelled" : "recording stopped");
     if (app.timer) {
         g_source_remove(app.timer);

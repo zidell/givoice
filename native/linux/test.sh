@@ -65,6 +65,8 @@ read -r -a portal_libs <<< "$(pkg-config --libs gio-unix-2.0)"
   "$root/native/linux/tests/ibus_shortcut_test.c" -o "$output/ibus-shortcut-test" ${LDFLAGS:-} "${portal_libs[@]}"
 "$output/ibus-shortcut-test"
 
+"${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic "$root/native/linux/tests/spectrum_test.c" -o "$output/spectrum-test" -lm
+"$output/spectrum-test"
 read -r -a overlay_cflags <<< "$(pkg-config --cflags gtk+-3.0)"
 read -r -a overlay_libs <<< "$(pkg-config --libs gtk+-3.0)"
 "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${overlay_cflags[@]}" \

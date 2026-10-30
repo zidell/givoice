@@ -230,15 +230,13 @@ unsafe fn show_with_message(hwnd: HWND, message: &str, indicator: Indicator) {
     ShowWindow(hwnd, SW_SHOWNOACTIVATE);
 }
 
-pub unsafe fn tick(hwnd: HWND, level: Option<f32>) {
+pub unsafe fn tick(hwnd: HWND, levels: Option<[f32; 5]>) {
     if hwnd.is_null() {
         return;
     }
     let data = &mut *(GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut Data);
     data.phase += 0.4;
-    // Oldest input level on the left, newest on the right.
-    data.levels.rotate_left(1);
-    data.levels[4] = level.unwrap_or(0.0).clamp(0.0, 1.0);
+    data.levels = levels.unwrap_or([0.0; 5]);
     InvalidateRect(hwnd, ptr::null(), 0);
 }
 

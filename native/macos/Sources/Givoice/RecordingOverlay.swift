@@ -138,14 +138,12 @@ final class RecordingOverlay {
         label.attributedStringValue = styled
     }
 
-    func tick(level: CGFloat?) {
-        // Oldest input level on the left, newest on the right.
-        levels.removeFirst()
-        levels.append(max(0, min(1, level ?? 0)))
+    func tick(levels: [CGFloat]?) {
+        self.levels = levels ?? Array(repeating: 0, count: 5)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for (index, bar) in bars.enumerated() {
-            let barHeight = 4 + levels[index] * 24
+            let barHeight = 4 + self.levels[index] * 24
             bar.frame = NSRect(x: 210 + CGFloat(index) * 7,
                                y: (height - barHeight) / 2,
                                width: 3, height: barHeight)

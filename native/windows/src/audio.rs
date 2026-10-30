@@ -4,9 +4,8 @@ use std::{
     fs,
     path::PathBuf,
     sync::{
-        atomic::{AtomicU32, Ordering},
         mpsc::{self, SyncSender},
-        Arc,
+        Arc, Mutex,
     },
     thread::{self, JoinHandle},
 };
@@ -15,7 +14,7 @@ pub struct Recording {
     stream: Option<Stream>,
     sender: Option<SyncSender<Vec<i16>>>,
     writer: Option<JoinHandle<Result<PathBuf, String>>>,
-    level: Arc<AtomicU32>,
+    level: Arc<Mutex<crate::spectrum::Spectrum>>,
 }
 
 impl Recording {
@@ -29,7 +28,7 @@ impl Recording {
         let format = supported.sample_format();
         let config: StreamConfig = supported.into();
         let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(16);
-        let level = Arc::new(AtomicU32::new(0));
+        let level = Arc::new(Mutex::new(crate::spectrum::Spectrum::new(sample_rate as f64)));
         let error = |err| eprintln!("Givoice audio: {err}");
         let stream = match format {
             SampleFormat::F32 => {
@@ -39,14 +38,14 @@ impl Recording {
                     &config,
                     move |data: &[f32], _| {
                         let mut output = Vec::with_capacity(data.len() / channels);
-                        let mut peak = 0u32;
+                        let mut analyzer = meter.lock().unwrap();
                         for frame in data.chunks(channels) {
                             let mono = frame.iter().sum::<f32>() / frame.len() as f32;
                             let sample = (mono.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
-                            peak = peak.max(sample.unsigned_abs() as u32);
+                            analyzer.sample(sample as f64 / 32768.0);
                             output.push(sample);
                         }
-                        meter.store(peak, Ordering::Relaxed);
+                        drop(analyzer);
                         let _ = sink.try_send(output);
                     },
                     error,
@@ -60,15 +59,15 @@ impl Recording {
                     &config,
                     move |data: &[i16], _| {
                         let mut output = Vec::with_capacity(data.len() / channels);
-                        let mut peak = 0u32;
+                        let mut analyzer = meter.lock().unwrap();
                         for frame in data.chunks(channels) {
                             let sample = (frame.iter().map(|v| *v as i32).sum::<i32>()
                                 / frame.len() as i32)
                                 as i16;
-                            peak = peak.max(sample.unsigned_abs() as u32);
+                            analyzer.sample(sample as f64 / 32768.0);
                             output.push(sample);
                         }
-                        meter.store(peak, Ordering::Relaxed);
+                        drop(analyzer);
                         let _ = sink.try_send(output);
                     },
                     error,
@@ -82,15 +81,15 @@ impl Recording {
                     &config,
                     move |data: &[u16], _| {
                         let mut output = Vec::with_capacity(data.len() / channels);
-                        let mut peak = 0u32;
+                        let mut analyzer = meter.lock().unwrap();
                         for frame in data.chunks(channels) {
                             let sample = (frame.iter().map(|v| *v as i32 - 32768).sum::<i32>()
                                 / frame.len() as i32)
                                 as i16;
-                            peak = peak.max(sample.unsigned_abs() as u32);
+                            analyzer.sample(sample as f64 / 32768.0);
                             output.push(sample);
                         }
-                        meter.store(peak, Ordering::Relaxed);
+                        drop(analyzer);
                         let _ = sink.try_send(output);
                     },
                     error,
@@ -118,8 +117,8 @@ impl Recording {
         })
     }
 
-    pub fn level(&self) -> f32 {
-        (self.level.swap(0, Ordering::Relaxed) as f32 / i16::MAX as f32 * 8.0).min(1.0)
+    pub fn levels(&self) -> [f32; 5] {
+        self.level.lock().unwrap().levels()
     }
 
     pub fn stop(mut self) -> Result<PathBuf, String> {
