@@ -449,6 +449,11 @@ void debug_log(const char *event) {
         return;
     g_autofree char *path = g_build_filename(log_directory, "debug.log", NULL);
     g_mutex_lock(&log_mutex);
+    GStatBuf log_stat;
+    if (g_stat(path, &log_stat) == 0 && log_stat.st_size >= 4 * 1024 * 1024) {
+        g_autofree char *previous = g_strconcat(path, ".1", NULL);
+        g_rename(path, previous);
+    }
     FILE *file = fopen(path, "a");
     if (file) {
         g_chmod(path, 0600);

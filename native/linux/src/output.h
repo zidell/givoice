@@ -4,10 +4,10 @@
 #include <pulse/glib-mainloop.h>
 typedef struct {
     pa_context *context;
-    gboolean wanted, held, prior_muted;
+    gboolean wanted, held, prior_muted, closing;
     guint32 sink;
     pa_cvolume volume;
-    guint fade_timer, fade_step, restore_attempts;
+    guint fade_timer, fade_step, restore_attempts, restore_timer;
 } Output;
 void output_init(Output *out, pa_glib_mainloop *loop);
 void output_mute(Output *out);

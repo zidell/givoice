@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <glib/gstdio.h>
+#include <glib-unix.h>
 #define DEST "org.freedesktop.portal.Desktop"
 #define PATH "/org/freedesktop/portal/desktop"
 #define SHORTCUTS "org.freedesktop.portal.GlobalShortcuts"
@@ -386,6 +387,11 @@ static void close_session(Portal *p, char **session) {
     }
 }
 void portal_clear(Portal *p) {
+    if (p->clipboard_writes) {
+        for (guint i = 0; i < p->clipboard_writes->len; ++i)
+            g_cancellable_cancel(g_ptr_array_index(p->clipboard_writes, i));
+        g_clear_pointer(&p->clipboard_writes, g_ptr_array_unref);
+    }
     portal_pause_shortcuts(p);
     if (p->bus && p->escape_registration)
         g_dbus_connection_unregister_object(p->bus, p->escape_registration);
@@ -760,21 +766,66 @@ typedef struct {
     char *session, *text;
     guint serial;
     GOutputStream *stream;
+    GCancellable *cancel;
+    GPtrArray *pending;
+    guint deadline;
 } ClipboardWrite;
+#ifndef CLIPBOARD_TIMEOUT_MS
+#define CLIPBOARD_TIMEOUT_MS 5000
+#endif
+static gboolean clipboard_expired(void *user) {
+    ClipboardWrite *w = user;
+    w->deadline = 0;
+    g_cancellable_cancel(w->cancel);
+    return G_SOURCE_REMOVE;
+}
 static void clipboard_written(GObject *obj, GAsyncResult *result, void *user) {
     ClipboardWrite *w = user;
     g_autoptr(GError) error = NULL;
     gsize written = 0;
     gboolean ok = g_output_stream_write_all_finish(G_OUTPUT_STREAM(obj), result, &written, &error);
+    if (w->deadline)
+        g_source_remove(w->deadline);
     g_output_stream_close(w->stream, NULL, NULL);
     g_dbus_connection_call(w->bus, DEST, PATH, "org.freedesktop.portal.Clipboard",
                            "SelectionWriteDone", g_variant_new("(oub)", w->session, w->serial, ok),
                            NULL, 0, 5000, NULL, NULL, NULL);
     g_object_unref(w->stream);
     g_object_unref(w->bus);
+    g_ptr_array_remove(w->pending, w->cancel);
+    g_ptr_array_unref(w->pending);
+    g_object_unref(w->cancel);
     g_free(w->session);
     g_free(w->text);
     g_free(w);
+}
+static gboolean clipboard_write_start(Portal *p, GDBusConnection *bus, const char *session,
+                                      guint serial, int fd) {
+    // Portal pipes may be blocking. A large write would otherwise block the
+    // main loop itself, preventing cancellation and the timeout from running.
+    if (!g_unix_set_fd_nonblocking(fd, TRUE, NULL)) {
+        close(fd);
+        return FALSE;
+    }
+    if (!p->clipboard_writes)
+        p->clipboard_writes = g_ptr_array_new_with_free_func(g_object_unref);
+    if (p->clipboard_writes->len >= 8) {
+        close(fd);
+        return FALSE;
+    }
+    ClipboardWrite *w = g_new0(ClipboardWrite, 1);
+    w->bus = g_object_ref(bus);
+    w->session = g_strdup(session);
+    w->text = g_strdup(p->clipboard_text);
+    w->serial = serial;
+    w->stream = g_unix_output_stream_new(fd, TRUE);
+    w->cancel = g_cancellable_new();
+    w->pending = g_ptr_array_ref(p->clipboard_writes);
+    g_ptr_array_add(w->pending, g_object_ref(w->cancel));
+    w->deadline = g_timeout_add(CLIPBOARD_TIMEOUT_MS, clipboard_expired, w);
+    g_output_stream_write_all_async(w->stream, w->text, strlen(w->text), G_PRIORITY_DEFAULT,
+                                    w->cancel, clipboard_written, w);
+    return TRUE;
 }
 static void clipboard_transfer(GDBusConnection *bus, const char *sender, const char *path,
                                const char *iface, const char *signal, GVariant *params,
@@ -803,14 +854,10 @@ static void clipboard_transfer(GDBusConnection *bus, const char *sender, const c
     int fd = g_unix_fd_list_get(fds, handle, &error);
     if (fd < 0)
         return;
-    ClipboardWrite *w = g_new0(ClipboardWrite, 1);
-    w->bus = g_object_ref(bus);
-    w->session = g_strdup(session);
-    w->text = g_strdup(p->clipboard_text);
-    w->serial = serial;
-    w->stream = g_unix_output_stream_new(fd, TRUE);
-    g_output_stream_write_all_async(w->stream, w->text, strlen(w->text), G_PRIORITY_DEFAULT, NULL,
-                                    clipboard_written, w);
+    if (!clipboard_write_start(p, bus, session, serial, fd))
+        g_dbus_connection_call(bus, DEST, PATH, "org.freedesktop.portal.Clipboard",
+                               "SelectionWriteDone", g_variant_new("(oub)", session, serial, FALSE),
+                               NULL, 0, 5000, NULL, NULL, NULL);
 }
 gboolean portal_set_text(Portal *p, const char *text, GError **error) {
     // Older portals can still use GtkClipboard with an authorized keyboard session.

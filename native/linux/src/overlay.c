@@ -7,6 +7,7 @@
 #include <math.h>
 #include <pango/pangocairo.h>
 static GtkWidget *window;
+static guint animation_timer;
 static char *title;
 static double volume, phase;
 static gboolean recording, time_warning;
@@ -55,8 +56,13 @@ static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
     }
     char *line = NULL;
     gsize length;
-    if (g_io_channel_read_line(channel, &line, &length, NULL, NULL) != G_IO_STATUS_NORMAL) {
+    GIOStatus status = g_io_channel_read_line(channel, &line, &length, NULL, NULL);
+    if (status != G_IO_STATUS_NORMAL) {
         g_free(line);
+        if (status == G_IO_STATUS_EOF || status == G_IO_STATUS_ERROR) {
+            gtk_main_quit();
+            return G_SOURCE_REMOVE;
+        }
         return G_SOURCE_CONTINUE;
     }
     g_auto(GStrv) parts = g_strsplit(line, "\t", 4);
@@ -188,6 +194,20 @@ static gboolean tick(void *user) {
         gtk_widget_queue_draw(window);
     return G_SOURCE_CONTINUE;
 }
+static void start_animation(GtkWidget *widget, void *user) {
+    (void)widget;
+    (void)user;
+    if (!animation_timer)
+        animation_timer = g_timeout_add(50, tick, NULL);
+}
+static void stop_animation(GtkWidget *widget, void *user) {
+    (void)widget;
+    (void)user;
+    if (animation_timer) {
+        g_source_remove(animation_timer);
+        animation_timer = 0;
+    }
+}
 static void session_xauthority(void) {
     // GUI launchers normally inherit this. Source/dev shells may retain an old
     // XAUTHORITY after GNOME restarts; use the current local Mutter session.
@@ -235,11 +255,13 @@ int overlay_run(void) {
     if (visual)
         gtk_widget_set_visual(window, visual);
     g_signal_connect(window, "draw", G_CALLBACK(draw), NULL);
-    g_timeout_add(50, tick, NULL);
+    g_signal_connect(window, "show", G_CALLBACK(start_animation), NULL);
+    g_signal_connect(window, "hide", G_CALLBACK(stop_animation), NULL);
     GIOChannel *channel = g_io_channel_unix_new(STDIN_FILENO);
     g_io_channel_set_close_on_unref(channel, FALSE);
     g_io_add_watch(channel, G_IO_IN | G_IO_HUP | G_IO_ERR, input, NULL);
     gtk_main();
+    stop_animation(window, NULL);
     g_io_channel_unref(channel);
     g_free(title);
     g_free(last_position);

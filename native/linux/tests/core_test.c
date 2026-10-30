@@ -484,6 +484,23 @@ static void versions(void) {
     g_assert_cmpint(version_compare("1.0", "1.0.0"), ==, 0);
     g_assert_cmpint(version_compare("1.0.1", "1.0"), >, 0);
 }
+static void bounded_debug_log(void) {
+    g_autofree char *dir = g_dir_make_tmp("givoice-log-test-XXXXXX", NULL);
+    g_autofree char *path = g_build_filename(dir, "debug.log", NULL);
+    g_autofree char *backup = g_strconcat(path, ".1", NULL);
+    g_autofree char *data = g_malloc0(4 * 1024 * 1024);
+    debug_log_init(dir);
+    for (int i = 0; i < 3; ++i) {
+        g_assert_true(g_file_set_contents(path, data, 4 * 1024 * 1024, NULL));
+        debug_log("bounded-log-test");
+        GStatBuf s;
+        g_assert_cmpint(g_stat(path, &s), ==, 0);
+        g_assert_cmpint(s.st_size, <, 1024);
+        g_assert_cmpint(g_stat(backup, &s), ==, 0);
+        g_assert_cmpint(s.st_size, ==, 4 * 1024 * 1024);
+    }
+    debug_log_init(NULL);g_remove(path);g_remove(backup);g_rmdir(dir);
+}
 int main(int argc, char **argv) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     g_test_init(&argc, &argv, NULL);
@@ -503,6 +520,7 @@ int main(int argc, char **argv) {
     g_test_add_func("/linux/wav-format", wav);
     g_test_add_func("/linux/retention", retention);
     g_test_add_func("/linux/cancel-upload", cancellation);
+    g_test_add_func("/linux/bounded-debug-log", bounded_debug_log);
     int result = g_test_run();
     curl_global_cleanup();
     return result;

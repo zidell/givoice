@@ -6,6 +6,7 @@ mod debug_log;
 mod keys;
 mod mute;
 mod overlay;
+mod resource_cache;
 mod settings;
 mod system_speech;
 mod transcriber;

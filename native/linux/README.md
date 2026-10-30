@@ -24,6 +24,8 @@ To build from source:
 ```sh
 sudo apt install build-essential pkg-config libgtk-3-dev \
   libayatana-appindicator3-dev libpulse-dev libcurl4-openssl-dev libjson-glib-dev
+sudo apt install python3 ninja-build patch patchelf libdbus-1-dev libxml2-dev \
+  libx11-dev libxtst-dev libxi-dev libxres-dev
 ./native/linux/build.sh --test
 ./native/linux/install.sh
 ~/.local/bin/givoice
@@ -263,3 +265,9 @@ It covers portal/native binding, long holds, taps, real repeated-key events,
 modifiers released first, consumed key events, preset changes, and native capture
 pause/rebind/disable while held. Quit idle Givoice first. The private KWin driver
 refuses presses outside that test window. Verified on KWin 6.6.6.
+
+## Long-running resource checks
+
+The Linux build bundles an app-private AT-SPI client and GTK bridge from the pinned sources in native/linux/vendor/atspi-runtime. Clients use the authenticated accessibility bus; the bridge releases disconnected direct peers. System libraries, portal services, permissions, and login startup are unchanged. Both the local installer and Debian package include the private runtime and its source/build inputs. An incomplete runtime installation is refused rather than silently loading the affected system library.
+
+Hidden overlay animation stops. Audio-restore retries are tracked and removed on success/shutdown. Clipboard writes use nonblocking pipes, a five-second cancellation deadline and at most eight active transfers; shutdown cancels pending writes. debug.log rotates at 4MiB with one backup. The default test suite includes 10,000 restore cycles and 100 unread clipboard transfers with FD-baseline checks.

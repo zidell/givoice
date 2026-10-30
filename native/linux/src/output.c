@@ -7,8 +7,14 @@ static gboolean retry_restore(void *user);
 static void restored(pa_context *c, int success, void *user) {
     (void)c;
     Output *out = user;
+    if (out->closing)
+        return;
+    if (out->restore_timer) {
+        g_source_remove(out->restore_timer);
+        out->restore_timer = 0;
+    }
     if (!success && ++out->restore_attempts < 3) {
-        g_timeout_add(200, retry_restore, out);
+        out->restore_timer = g_timeout_add(200, retry_restore, out);
         return;
     }
     debug_log(success ? "output mute restored" : "output mute restore failed");
@@ -17,6 +23,10 @@ static void restored(pa_context *c, int success, void *user) {
         output_mute(out);
 }
 void output_restore(Output *out) {
+    if (out->restore_timer) {
+        g_source_remove(out->restore_timer);
+        out->restore_timer = 0;
+    }
     out->wanted = FALSE;
     if (out->fade_timer) {
         g_source_remove(out->fade_timer);
@@ -36,6 +46,7 @@ void output_restore(Output *out) {
     }
 }
 static gboolean retry_restore(void *user) {
+    ((Output *)user)->restore_timer = 0;
     output_restore(user);
     return G_SOURCE_REMOVE;
 }
@@ -116,6 +127,11 @@ void output_close(Output *out) {
         while (g_main_context_iteration(NULL, FALSE)) {
         }
         g_usleep(1000);
+    }
+    out->closing = TRUE;
+    if (out->restore_timer) {
+        g_source_remove(out->restore_timer);
+        out->restore_timer = 0;
     }
     if (out->context) {
         pa_context_set_state_callback(out->context, NULL, NULL);

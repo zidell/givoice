@@ -5,6 +5,12 @@ binary="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}/givoice"
 if [[ ! -x "$binary" ]]; then "$root/native/linux/build.sh"; fi
 prefix="${GIVOICE_INSTALL_PREFIX:-$HOME/.local}"
 install -Dm755 "$binary" "$prefix/bin/givoice"
+mkdir -p "$prefix/lib/givoice/atspi"
+find "$(dirname "$binary")/atspi" -maxdepth 1 -type f ! -name '.*' ! -name '*.log' -exec cp -p {} "$prefix/lib/givoice/atspi/" \;
+for lib in libatspi libatk-bridge-2.0; do
+  target=$(basename "$(find "$prefix/lib/givoice/atspi" -maxdepth 1 -name "$lib.so.0.*" -type f | head -n 1)")
+  ln -sfn "$target" "$prefix/lib/givoice/atspi/$lib.so.0"
+done
 install -Dm644 "$root/docs/readme.txt" "$prefix/share/doc/givoice/readme.txt"
 install -Dm644 "$root/native/linux/README.md" "$prefix/share/doc/givoice/linux-readme.md"
 install -Dm644 "$root/native/linux/vendor/tomlc17/LICENSE" "$prefix/share/doc/givoice/tomlc17-LICENSE"

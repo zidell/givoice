@@ -725,9 +725,9 @@ unsafe extern "system" fn root_proc(
             let result = Box::from_raw(lparam as *mut ModelsMessage);
             if let Ok(models) = &result.result {
                 if !models.is_empty() {
-                    app(hwnd)
-                        .model_cache
-                        .insert(result.key.clone(), models.clone());
+                    crate::resource_cache::insert_bounded(
+                        &mut app(hwnd).model_cache, result.key.clone(), models.clone(), 8,
+                    );
                 }
             }
             let dialog = app(hwnd).dialog;

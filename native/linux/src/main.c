@@ -25,6 +25,8 @@
 #include <signal.h>
 
 typedef enum { IDLE, CONNECTING, RECORDING, TRANSCRIBING } State;
+extern int gtools_atspi_runtime_revision(void);
+extern int gtools_atk_bridge_runtime_revision(void);
 typedef struct {
     GtkApplication *application;
     GtkWidget *window, *status, *level, *record_button, *result, *key, *language, *model, *refresh,
@@ -1568,6 +1570,10 @@ static void activate(GtkApplication *application, void *user) {
         portal_enable_keyboard(&app.portal, keyboard_done, NULL);
 }
 int main(int argc, char **argv) {
+    if (gtools_atspi_runtime_revision() != 1 || gtools_atk_bridge_runtime_revision() != 1) {
+        fputs("Givoice accessibility runtime mismatch\n", stderr);
+        return 1;
+    }
     // Handle discovery without starting GTK, recording, or permission portals.
     if (argc == 2 && g_str_equal(argv[1], "--config-path")) {
         g_autofree char *dir = g_build_filename(g_get_user_config_dir(), "givoice", NULL);

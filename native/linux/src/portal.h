@@ -19,6 +19,7 @@ typedef struct {
     guint escape_registration;
     char *clipboard_text;
     guint clipboard_subscription;
+    GPtrArray *clipboard_writes;
 } Portal;
 gboolean portal_init(Portal *p, ShortcutEvent event, void *user, GError **error);
 void portal_clear(Portal *p);

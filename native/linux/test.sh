@@ -4,6 +4,11 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 output="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}"
 mkdir -p "$output"
 settings_sources=("$root/native/linux/src/settings.c" "$root/native/linux/vendor/tomlc17/tomlc17.c")
+runtime_libs=()
+if [[ "${1:-}" == --paste || "${1:-}" == --desktop ]]; then
+  python3 "$root/native/linux/vendor/atspi-runtime/build.py" "$output/atspi" --bridge
+  runtime_libs=("$output/atspi/libatk-bridge-2.0.so.0.0.0" "$output/atspi/libatspi.so.0.0.1" '-Wl,-rpath,$ORIGIN/atspi')
+fi
 if [[ "${1:-}" == --kde-shortcuts ]]; then
   exec "$root/native/linux/tests/kwin_escape_test.sh" --shortcuts
 fi
@@ -20,7 +25,7 @@ if [[ "${1:-}" == --paste ]]; then
   "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${paste_cflags[@]}" -I"$output" \
     "$root/native/linux/tests/paste_smoke.c" "$root/native/linux/src/core.c" "${settings_sources[@]}" \
     "$root/native/linux/src/portal.c" "$root/native/linux/src/output.c" "$root/native/linux/src/overlay.c" \
-    -o "$output/paste-smoke" ${LDFLAGS:-} "${paste_libs[@]}" -lm
+    -o "$output/paste-smoke" ${LDFLAGS:-} "${paste_libs[@]}" "${runtime_libs[@]}" -lm
   exec "$output/paste-smoke"
 fi
 if [[ "${1:-}" == --input ]]; then
@@ -47,7 +52,7 @@ if [[ "${1:-}" == --desktop ]]; then
   python3 "$root/native/linux/embed_sounds.py" "$output/sounds.h"
   "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${desktop_cflags[@]}" -I"$output" \
     "$root/native/linux/tests/desktop_smoke.c" "$root/native/linux/src/core.c" "${settings_sources[@]}" "$root/native/linux/src/portal.c" "$root/native/linux/src/output.c" "$root/native/linux/src/overlay.c" \
-    -o "$output/desktop-smoke" ${LDFLAGS:-} "${desktop_libs[@]}" -lm
+    -o "$output/desktop-smoke" ${LDFLAGS:-} "${desktop_libs[@]}" "${runtime_libs[@]}" -lm
   "$output/desktop-smoke"
 fi
 read -r -a portal_cflags <<< "$(pkg-config --cflags gio-unix-2.0)"
@@ -65,3 +70,12 @@ read -r -a overlay_libs <<< "$(pkg-config --libs gtk+-3.0)"
 "${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${overlay_cflags[@]}" \
   "$root/native/linux/tests/overlay_test.c" -o "$output/overlay-test" ${LDFLAGS:-} "${overlay_libs[@]}" -lm
 "$output/overlay-test" "$output/widget-preview.png"
+read -r -a output_cflags <<< "$(pkg-config --cflags gio-2.0 libpulse-mainloop-glib libpulse-simple)"
+read -r -a output_libs <<< "$(pkg-config --libs gio-2.0 libpulse-mainloop-glib libpulse-simple)"
+python3 "$root/native/linux/embed_sounds.py" "$output/sounds.h"
+"${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${output_cflags[@]}" -I"$output" \
+  "$root/native/linux/tests/output_lifecycle_test.c" -o "$output/output-lifecycle-test" ${LDFLAGS:-} "${output_libs[@]}" -lm
+"$output/output-lifecycle-test"
+"${CC:-cc}" -std=c11 -O2 -Wall -Wextra -Wpedantic ${CFLAGS:-} "${portal_cflags[@]}" \
+  "$root/native/linux/tests/clipboard_lifecycle_test.c" -o "$output/clipboard-lifecycle-test" ${LDFLAGS:-} "${portal_libs[@]}"
+"$output/clipboard-lifecycle-test"

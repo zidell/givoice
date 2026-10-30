@@ -9,6 +9,12 @@ output="${GIVOICE_BUILD_DIR:-$root/dist-native/linux}"
 stage="$(mktemp -d)"
 trap 'rm -rf "$stage"' EXIT
 install -Dm755 "$output/givoice" "$stage/usr/bin/givoice"
+mkdir -p "$stage/usr/lib/givoice/atspi"
+find "$output/atspi" -maxdepth 1 -type f ! -name '.*' ! -name '*.log' -exec cp -p {} "$stage/usr/lib/givoice/atspi/" \;
+for lib in libatspi libatk-bridge-2.0; do
+  target=$(basename "$(find "$stage/usr/lib/givoice/atspi" -maxdepth 1 -name "$lib.so.0.*" -type f | head -n 1)")
+  ln -sfn "$target" "$stage/usr/lib/givoice/atspi/$lib.so.0"
+done
 install -Dm644 "$root/native/linux/com.videostew.givoice.desktop" "$stage/usr/share/applications/com.videostew.givoice.desktop"
 for file in extension.js metadata.json; do
   install -Dm644 "$root/native/linux/gnome-extension/$file" "$stage/usr/share/gnome-shell/extensions/givoice-escape@videostew.com/$file"
