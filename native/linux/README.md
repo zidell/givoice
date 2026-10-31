@@ -26,10 +26,15 @@ sudo apt install build-essential pkg-config libgtk-3-dev \
   libayatana-appindicator3-dev libpulse-dev libcurl4-openssl-dev libjson-glib-dev
 sudo apt install python3 ninja-build patch patchelf libdbus-1-dev libxml2-dev \
   libx11-dev libxtst-dev libxi-dev libxres-dev
-./native/linux/build.sh --test
-./native/linux/install.sh
-~/.local/bin/givoice
+python3 native/linux/run.py --build
 ```
+
+This builds and tests before installing, refuses to restart an active or
+unverifiable recording/transcription/input operation, and launches the installed
+app in its own transient user systemd service. It survives terminal/agent exit
+without enabling login startup. Use `python3 native/linux/run.py` to start only,
+or add `--restart` to restart an idle app. For builds and diagnostics without
+restarting the app, use `./native/linux/build.sh --test` directly.
 
 `install.sh` installs the binary and application launcher under `~/.local` without
 root. Run **Givoice** from Ubuntu's applications menu. Closing the window keeps

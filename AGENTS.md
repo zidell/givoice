@@ -27,9 +27,16 @@ setup is the `GIVOICE_KEEPALIVE=1` relaunch check in
 ## Local Linux verification
 
 After changing Linux app behavior or UI, build and test with
-`bash native/linux/build.sh --test`, install the new build with
-`bash native/linux/install.sh`, and restart the locally installed app so the
+`python3 native/linux/run.py --build`, which builds/tests, installs, and restarts
+the locally installed app through a transient user systemd service so the
 maintainer can immediately verify the change. Check whether recording is active
 before restarting; do not discard an active recording. Report what was actually
 verified and any remaining limits. Source edits alone do not complete a local
 app change.
+
+For start/restart without rebuilding, use `python3 native/linux/run.py` or
+`python3 native/linux/run.py --restart`. Never launch the long-running app
+directly with an agent exec tool, shell backgrounding/nohup, or a detached
+subprocess: the agent may still own and clean up its process group/cgroup.
+Verify the app belongs to its own user systemd service. Build-only/test/package
+commands must not restart it. These transient services do not enable login startup.

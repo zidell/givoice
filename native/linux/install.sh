@@ -6,7 +6,13 @@ if [[ ! -x "$binary" ]]; then "$root/native/linux/build.sh"; fi
 prefix="${GIVOICE_INSTALL_PREFIX:-$HOME/.local}"
 install -Dm755 "$binary" "$prefix/bin/givoice"
 mkdir -p "$prefix/lib/givoice/atspi"
-find "$(dirname "$binary")/atspi" -maxdepth 1 -type f ! -name '.*' ! -name '*.log' -exec cp -p {} "$prefix/lib/givoice/atspi/" \;
+# Never truncate a library mapped by the running app. Replace its inode, as we
+# already do for KWin helpers below.
+while IFS= read -r -d '' file; do
+  target="$prefix/lib/givoice/atspi/$(basename "$file")"
+  cp -p "$file" "$target.new"
+  mv -f "$target.new" "$target"
+done < <(find "$(dirname "$binary")/atspi" -maxdepth 1 -type f ! -name '.*' ! -name '*.log' -print0)
 for lib in libatspi libatk-bridge-2.0; do
   target=$(basename "$(find "$prefix/lib/givoice/atspi" -maxdepth 1 -name "$lib.so.0.*" -type f | head -n 1)")
   ln -sfn "$target" "$prefix/lib/givoice/atspi/$lib.so.0"
