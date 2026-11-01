@@ -126,6 +126,7 @@ static void set_state(State state) {
     gtk_widget_set_sensitive(app.model, state == IDLE && provider_from_key(gtk_entry_get_text(
                                                              GTK_ENTRY(app.key))) != PROVIDER_NONE);
     gtk_widget_set_sensitive(app.refresh, state == IDLE);
+    update_overlay();
 }
 static void show_window(GtkMenuItem *item, void *user) {
     (void)item;
