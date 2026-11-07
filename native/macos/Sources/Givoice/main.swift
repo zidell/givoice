@@ -105,6 +105,12 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             DebugLog.shared.record("audio unmuted after a previous run ended while muted")
         }
         installTerminationSignals()
+        // 앱을 옮기거나 다시 설치해도 등록된 로그인 실행 항목이 지금 실행본을 가리키게 한다.
+        if LoginItem.isEnabled && !LoginItem.managedBySupervisor {
+            do { try LoginItem.set(true) } catch {
+                DebugLog.shared.record("login startup refresh failed type=\(type(of: error))")
+            }
+        }
         NSApp.setActivationPolicy(.accessory)
         if Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") != nil {
             updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil,
@@ -949,6 +955,14 @@ final class GivoiceApp: NSObject, NSApplicationDelegate {
             setStatus("설정 저장됨")
         } catch {
             setStatus("설정 저장 실패: \(error.localizedDescription)")
+            return
+        }
+        guard !LoginItem.managedBySupervisor, dialog.launchAtLogin != LoginItem.isEnabled else { return }
+        do {
+            try LoginItem.set(dialog.launchAtLogin)
+            DebugLog.shared.record("login startup \(dialog.launchAtLogin ? "enabled" : "disabled")")
+        } catch {
+            setStatus("로그인 시 자동 실행을 바꾸지 못했습니다: \(error.localizedDescription)")
         }
     }
 }

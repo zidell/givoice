@@ -1,6 +1,6 @@
 use crate::{
     audio::Recording,
-    keys, mute, overlay,
+    keys, login_item, mute, overlay,
     settings::{self, Engine, Provider, Settings},
     transcriber,
 };
@@ -306,6 +306,7 @@ struct Dialog {
     recording_start_sound_volume: HWND,
     recording_start_sound_value: HWND,
     auto_send: HWND,
+    login_start: HWND,
 }
 
 struct ResultMessage {
@@ -327,6 +328,12 @@ struct SystemStatusMessage {
 pub fn run() -> Result<(), String> {
     crate::debug_log::init();
     crate::debug_log::log(|| "app start".into());
+    // 앱을 옮기거나 다시 설치해도 등록된 자동 실행 값이 지금 실행본을 가리키게 한다.
+    if login_item::enabled() {
+        if let Err(error) = login_item::set(true) {
+            crate::debug_log::log(|| format!("login startup refresh failed: {error}"));
+        }
+    }
     unsafe {
         mute::initialize();
         crate::debug_log::log(|| "audio COM initialized".into());
@@ -1694,7 +1701,7 @@ unsafe fn show_settings(root: HWND) {
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         560,
-        847,
+        882,
         root,
         ptr::null_mut(),
         instance,
@@ -2023,6 +2030,18 @@ unsafe fn show_settings(root: HWND) {
         0,
     );
     SendMessageW(auto_send, BM_SETCHECK, usize::from(settings.auto_send), 0);
+    let login_start = control(
+        dialog,
+        "BUTTON",
+        "로그인 시 자동 실행",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX as u32,
+        165,
+        673,
+        365,
+        25,
+        0,
+    );
+    SendMessageW(login_start, BM_SETCHECK, usize::from(login_item::enabled()), 0);
     label("녹음 시작 효과음", 638);
     let recording_start_sound_volume = control(
         dialog,
@@ -2060,7 +2079,7 @@ unsafe fn show_settings(root: HWND) {
         "API 키는 이 컴퓨터의 사용자 설정에 저장됩니다.",
         WS_CHILD | WS_VISIBLE,
         165,
-        677,
+        712,
         365,
         26,
         0,
@@ -2071,7 +2090,7 @@ unsafe fn show_settings(root: HWND) {
         "저장",
         WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON as u32,
         348,
-        717,
+        752,
         85,
         32,
         ID_SAVE,
@@ -2082,7 +2101,7 @@ unsafe fn show_settings(root: HWND) {
         "취소",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON as u32,
         445,
-        717,
+        752,
         85,
         32,
         ID_CANCEL,
@@ -2120,6 +2139,7 @@ unsafe fn show_settings(root: HWND) {
         recording_start_sound_volume,
         recording_start_sound_value,
         auto_send,
+        login_start,
     });
     SetWindowLongPtrW(dialog, GWLP_USERDATA, Box::into_raw(state) as isize);
     app(root).dialog = dialog;
@@ -2600,6 +2620,12 @@ unsafe fn save_dialog(hwnd: HWND) {
             app(root).pressed = false;
             app(root).press_started_recording_at = None;
             set_status(root, "설정 저장됨");
+            let login_start = SendMessageW(dialog.login_start, BM_GETCHECK, 0, 0) == 1;
+            if login_start != login_item::enabled() {
+                if let Err(error) = login_item::set(login_start) {
+                    info(hwnd, &format!("로그인 시 자동 실행을 바꾸지 못했습니다: {error}"));
+                }
+            }
             DestroyWindow(hwnd);
         }
         Err(error) => info(hwnd, &format!("설정을 저장하지 못했습니다: {error}")),

@@ -5,6 +5,7 @@ mod spectrum;
 mod chime;
 mod debug_log;
 mod keys;
+mod login_item;
 mod mute;
 mod overlay;
 mod resource_cache;

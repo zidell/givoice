@@ -22,6 +22,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 
@@ -30,9 +31,8 @@ extern int gtools_atspi_runtime_revision(void);
 extern int gtools_atk_bridge_runtime_revision(void);
 typedef struct {
     GtkApplication *application;
-    GtkWidget *window, *status, *level, *record_button, *result, *key, *language, *model, *refresh,
-        *terms, *rules, *send, *limit, *retention, *mute, *no_verbatim, *volume, *position,
-        *shortcut_choice;
+    GtkWidget *window, *status, *result, *key, *language, *model, *refresh, *terms, *rules, *send,
+        *limit, *retention, *mute, *no_verbatim, *volume, *position, *shortcut_choice, *login_start;
     AppIndicator *indicator;
     GtkWidget *menu_status, *menu_last, *menu_update;
     // 다운로드 페이지에 올라온 더 새 Ubuntu 버전. 없으면 NULL이다.
@@ -119,9 +119,6 @@ static void set_state(State state) {
                                                                              : 0]
                                     : "audio-input-microphone",
                                 "Givoice");
-    gtk_button_set_label(GTK_BUTTON(app.record_button),
-                         state == CONNECTING || state == RECORDING ? "녹음 종료" : "녹음 시작");
-    gtk_widget_set_sensitive(app.record_button, TRUE);
     gtk_widget_set_sensitive(app.key, state == IDLE);
     gtk_widget_set_sensitive(app.model, state == IDLE && provider_from_key(gtk_entry_get_text(
                                                              GTK_ENTRY(app.key))) != PROVIDER_NONE);
@@ -431,13 +428,6 @@ static char *view_text(GtkWidget *view) {
     gtk_text_buffer_get_bounds(b, &start, &end);
     return gtk_text_buffer_get_text(b, &start, &end, FALSE);
 }
-static void copy_result(GtkWidget *w, void *user) {
-    (void)w;
-    (void)user;
-    g_autofree char *text = view_text(app.result);
-    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
-    set_status("결과를 복사했습니다. Ctrl+V로 붙여넣으세요.");
-}
 static gboolean send_key(int symbol, gboolean pressed) {
     g_autoptr(GError) error = NULL;
     if (!portal_key(&app.portal, symbol, pressed, &error)) {
@@ -735,7 +725,6 @@ static void audio_read(pa_stream *stream, size_t available, void *user) {
         }
         app.input_level = size ? MIN(1.0, sqrt(sum / (size / 2))) : 0;
         spectrum_levels(&app.spectrum, app.bands);
-        gtk_level_bar_set_value(GTK_LEVEL_BAR(app.level), app.input_level);
         update_overlay();
     }
     pa_stream_drop(stream);
@@ -865,7 +854,6 @@ static void stop_recording(gboolean cancel) {
             ok = FALSE;
         app.file = NULL;
     }
-    gtk_level_bar_set_value(GTK_LEVEL_BAR(app.level), 0);
     set_state(IDLE);
     if (!ok) {
         set_status("녹음 파일 저장 실패");
@@ -1022,6 +1010,59 @@ static void provider_changed(GtkEditable *w, void *user) {
     if (p)
         app.model_timer = g_timeout_add(600, refresh_models, NULL);
 }
+// 로그인 시 자동 실행은 설정 파일에 따로 두지 않고 XDG autostart 항목 자체를 상태로 쓴다.
+static char *autostart_path(void) {
+    return g_build_filename(g_get_user_config_dir(), "autostart", "com.videostew.givoice.desktop",
+                            NULL);
+}
+static gboolean login_start_enabled(void) {
+    g_autofree char *path = autostart_path();
+    g_autoptr(GKeyFile) file = g_key_file_new();
+    return g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, NULL) &&
+           !g_key_file_get_boolean(file, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_HIDDEN,
+                                   NULL);
+}
+static gboolean set_login_start(gboolean enabled, GError **error) {
+    g_autofree char *path = autostart_path();
+    if (!enabled) {
+        if (g_unlink(path) == 0 || errno == ENOENT)
+            return TRUE;
+        int code = errno;
+        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "%s", g_strerror(code));
+        return FALSE;
+    }
+    // 지금 실행 중인 설치본(~/.local/bin 또는 /usr/bin)을 그대로 띄운다.
+    g_autofree char *exe = g_file_read_link("/proc/self/exe", error);
+    if (!exe)
+        return FALSE;
+    if (g_str_has_suffix(exe, " (deleted)"))
+        exe[strlen(exe) - strlen(" (deleted)")] = '\0';
+    GString *command = g_string_new("\"");
+    for (const char *c = exe; *c; c++) {
+        if (*c == '%')
+            g_string_append_c(command, '%');
+        else if (strchr("\"`$\\", *c))
+            g_string_append_c(command, '\\');
+        g_string_append_c(command, *c);
+    }
+    g_string_append_c(command, '"');
+    g_autofree char *exec = g_string_free(command, FALSE);
+    g_autoptr(GKeyFile) file = g_key_file_new();
+    const char *group = G_KEY_FILE_DESKTOP_GROUP;
+    g_key_file_set_string(file, group, G_KEY_FILE_DESKTOP_KEY_TYPE, "Application");
+    g_key_file_set_string(file, group, G_KEY_FILE_DESKTOP_KEY_NAME, "Givoice");
+    g_key_file_set_string(file, group, G_KEY_FILE_DESKTOP_KEY_EXEC, exec);
+    g_key_file_set_string(file, group, G_KEY_FILE_DESKTOP_KEY_ICON, "audio-input-microphone");
+    g_key_file_set_boolean(file, group, G_KEY_FILE_DESKTOP_KEY_TERMINAL, FALSE);
+    g_key_file_set_boolean(file, group, "X-GNOME-Autostart-enabled", TRUE);
+    g_autofree char *dir = g_path_get_dirname(path);
+    if (g_mkdir_with_parents(dir, 0700) < 0) {
+        int code = errno;
+        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "%s", g_strerror(code));
+        return FALSE;
+    }
+    return g_key_file_save_to_file(file, path, error);
+}
 static void save_settings(GtkWidget *w, void *user) {
     (void)w;
     (void)user;
@@ -1101,7 +1142,15 @@ static void save_settings(GtkWidget *w, void *user) {
     settings_clear(&app.settings);
     app.settings = next;
     prune_recordings(app.logs_dir, next.retention_hours);
-    set_status("설정을 적용했습니다");
+    gboolean login_start = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app.login_start));
+    g_autoptr(GError) login_error = NULL;
+    if (login_start != login_start_enabled() && !set_login_start(login_start, &login_error)) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app.login_start), login_start_enabled());
+        g_autofree char *message =
+            g_strdup_printf("로그인 시 자동 실행을 바꾸지 못했습니다: %s", login_error->message);
+        set_status(message);
+    } else
+        set_status("설정을 적용했습니다");
     if (rebind)
         bind_shortcuts(NULL, NULL);
 }
@@ -1138,6 +1187,7 @@ static void discard_settings(GtkWidget *w, void *user) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app.no_verbatim), app.settings.no_verbatim);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app.mute), app.settings.mute_during_recording);
     gtk_range_set_value(GTK_RANGE(app.volume), app.settings.sound_volume);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app.login_start), login_start_enabled());
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(app.position), app.settings.overlay_position);
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(app.shortcut_choice), app.settings.shortcut);
     g_autofree char *limit = g_strdup_printf("%d", app.settings.limit_minutes),
@@ -1318,14 +1368,6 @@ static void activate(GtkApplication *application, void *user) {
     app.status = gtk_label_new("준비됨 — API 키를 설정하고 저장하세요");
     gtk_label_set_line_wrap(GTK_LABEL(app.status), TRUE);
     gtk_box_pack_start(GTK_BOX(outer), app.status, FALSE, FALSE, 0);
-    app.level = gtk_level_bar_new_for_interval(0, 1);
-    gtk_box_pack_start(GTK_BOX(outer), app.level, FALSE, FALSE, 0);
-    gtk_widget_set_no_show_all(app.level, TRUE);
-    GtkWidget *controls = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    gtk_box_pack_start(GTK_BOX(outer), controls, FALSE, FALSE, 0);
-    app.record_button = button(controls, "녹음 시작", G_CALLBACK(toggle));
-    button(controls, "취소 (Esc)", G_CALLBACK(cancel_action));
-    button(controls, "결과 복사", G_CALLBACK(copy_result));
     GtkWidget *tabs = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(outer), tabs, TRUE, TRUE, 0);
     GtkWidget *settings = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -1497,13 +1539,16 @@ static void activate(GtkApplication *application, void *user) {
     g_object_unref(app.mute);
     gtk_grid_attach(GTK_GRID(compact), app.send, 1, 7, 1, 1);
     g_object_unref(app.send);
-    form_row(compact, 8, "녹음 시작 효과음", app.volume);
+    app.login_start = gtk_check_button_new_with_label("로그인 시 자동 실행");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app.login_start), login_start_enabled());
+    gtk_grid_attach(GTK_GRID(compact), app.login_start, 1, 8, 1, 1);
+    form_row(compact, 9, "녹음 시작 효과음", app.volume);
     GtkWidget *save_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     gtk_widget_set_halign(save_row, GTK_ALIGN_END);
     button(save_row, "적용", G_CALLBACK(save_settings));
     GtkWidget *close = button(save_row, "닫기", G_CALLBACK(close_settings));
     gtk_widget_set_tooltip_text(close, "적용하지 않은 변경을 버리고 설정 창을 닫습니다.");
-    gtk_grid_attach(GTK_GRID(compact), save_row, 1, 9, 1, 1);
+    gtk_grid_attach(GTK_GRID(compact), save_row, 1, 10, 1, 1);
     GtkWidget *integration = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_container_set_border_width(GTK_CONTAINER(integration), 12);
     gtk_notebook_append_page(GTK_NOTEBOOK(tabs), integration, gtk_label_new("단축키 / 권한"));
@@ -1636,6 +1681,11 @@ int main(int argc, char **argv) {
         return 1;
     }
     prune_recordings(app.logs_dir, app.settings.retention_hours);
+    // 설치 위치가 바뀌어도 등록된 자동 실행 항목이 지금 실행본을 가리키게 한다.
+    if (login_start_enabled() && !set_login_start(TRUE, &error)) {
+        g_printerr("Cannot refresh login startup: %s\n", error->message);
+        g_clear_error(&error);
+    }
     GtkApplication *application =
         gtk_application_new("com.videostew.givoice", G_APPLICATION_DEFAULT_FLAGS);
     const GActionEntry actions[] = {

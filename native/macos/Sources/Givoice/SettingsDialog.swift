@@ -33,6 +33,9 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
     private let recordingStartSoundValue = NSTextField(labelWithString: "100%")
     private var recordingStartSoundPreview: AVAudioPlayer?
     private let autoSend = NSButton(checkboxWithTitle: "붙여넣은 뒤 Enter 입력", target: nil, action: nil)
+    private let loginStart = NSButton(checkboxWithTitle: "로그인 시 자동 실행", target: nil, action: nil)
+    /// 저장을 누른 순간의 로그인 시 자동 실행 선택. 설정 파일이 아니라 LoginItem에 반영한다.
+    private(set) var launchAtLogin = LoginItem.isEnabled
 
     init(settings: Settings) {
         original = settings
@@ -86,6 +89,7 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         updated.muteDuringRecording = mute.state == .on
         updated.recordingStartSoundVolume = Int(recordingStartSoundVolume.doubleValue.rounded())
         updated.autoSend = autoSend.state == .on
+        launchAtLogin = loginStart.state == .on
         return updated
     }
 
@@ -243,6 +247,13 @@ final class SettingsDialog: NSObject, NSTextFieldDelegate {
         autoSend.frame = NSRect(x: 125, y: 78, width: 350, height: 25)
         autoSend.state = original.autoSend ? .on : .off
         form.addSubview(autoSend)
+        loginStart.frame = NSRect(x: 125, y: 2, width: 350, height: 25)
+        loginStart.state = LoginItem.isEnabled || LoginItem.managedBySupervisor ? .on : .off
+        if LoginItem.managedBySupervisor {
+            loginStart.isEnabled = false
+            loginStart.toolTip = "개발용 LaunchAgent가 로그인 실행을 관리합니다"
+        }
+        form.addSubview(loginStart)
 
         updateProvider()
         return form

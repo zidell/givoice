@@ -105,6 +105,15 @@ template can supply different values; keep those unless the user requests a chan
 | Recording trigger | `shortcut` | Platform-specific, see below. A tap records until the next press; holding over one second stops on release |
 | Linux shortcut authorization state | `shortcuts_enabled` | Linux only; app-managed boolean, default `false`; do not edit to bypass portal authorization |
 
+Start at login is not a preferences key. The Settings checkbox (로그인 시 자동 실행)
+reads and writes the OS registration itself, and an enabled registration is
+refreshed to the running executable at each launch. Default: off. Enable it only
+when the user asks:
+
+- Linux: `~/.config/autostart/com.videostew.givoice.desktop`
+- macOS: `~/Library/LaunchAgents/com.videostew.givoice.login.plist`
+- Windows: value `Givoice` under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+
 On macOS/Windows, choose the engine at the top of Settings. API engines show one
 key field and one Create Key button for the selected service. Each service's key
 and model are retained when switching engines. `user_config.json` keeps the active
