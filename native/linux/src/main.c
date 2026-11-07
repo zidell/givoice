@@ -1704,7 +1704,9 @@ int main(int argc, char **argv) {
         g_cancellable_cancel(app.cancel);
     if (app.models_cancel)
         g_cancellable_cancel(app.models_cancel);
-    cancel_jobs();
+    // 이미 떠 있는 앱에 요청만 넘긴 두 번째 실행은 창·트레이를 만들지 않았다.
+    if (app.window)
+        cancel_jobs();
     output_close(&app.output);
     overlay_close(&app.overlay);
     // Worker callbacks are no longer dispatched after shutdown. The process owns their lifetime.
