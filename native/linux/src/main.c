@@ -1150,9 +1150,12 @@ static void save_settings(GtkWidget *w, void *user) {
             g_strdup_printf("로그인 시 자동 실행을 바꾸지 못했습니다: %s", login_error->message);
         set_status(message);
     } else
-        set_status("설정을 적용했습니다");
+        set_status("설정 저장됨");
     if (rebind)
         bind_shortcuts(NULL, NULL);
+    // macOS·Windows처럼 저장하면 창을 닫는다. 자동 실행 등록이 실패했으면 오류를 보이도록 남긴다.
+    if (!login_error)
+        gtk_widget_hide(app.window);
 }
 static void replacement_help(GtkWidget *w, void *user) {
     (void)w;
@@ -1545,9 +1548,15 @@ static void activate(GtkApplication *application, void *user) {
     form_row(compact, 9, "녹음 시작 효과음", app.volume);
     GtkWidget *save_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     gtk_widget_set_halign(save_row, GTK_ALIGN_END);
-    button(save_row, "적용", G_CALLBACK(save_settings));
-    GtkWidget *close = button(save_row, "닫기", G_CALLBACK(close_settings));
-    gtk_widget_set_tooltip_text(close, "적용하지 않은 변경을 버리고 설정 창을 닫습니다.");
+    // 버튼 순서는 Qt 대화상자처럼 데스크톱 관례를 따른다: KDE는 저장·취소, GNOME 등은 취소·저장.
+    const char *desktop = g_getenv("XDG_CURRENT_DESKTOP");
+    gboolean kde = desktop && strstr(desktop, "KDE");
+    if (kde)
+        button(save_row, "저장", G_CALLBACK(save_settings));
+    GtkWidget *cancel = button(save_row, "취소", G_CALLBACK(close_settings));
+    gtk_widget_set_tooltip_text(cancel, "저장하지 않은 변경을 버리고 설정 창을 닫습니다.");
+    if (!kde)
+        button(save_row, "저장", G_CALLBACK(save_settings));
     gtk_grid_attach(GTK_GRID(compact), save_row, 1, 10, 1, 1);
     GtkWidget *integration = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_container_set_border_width(GTK_CONTAINER(integration), 12);
