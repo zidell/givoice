@@ -50,6 +50,46 @@ void overlay_close(Overlay *overlay) {
     }
     g_clear_pointer(&overlay->executable, g_free);
 }
+static gboolean root_cardinals(const char *name, long *values, int count) {
+    guchar *data = NULL;
+    GdkAtom type;
+    gint format = 0, length = 0;
+    if (!gdk_property_get(gdk_get_default_root_window(), gdk_atom_intern_static_string(name),
+                          gdk_atom_intern_static_string("CARDINAL"), 0, count * 4, FALSE, &type,
+                          &format, &length, &data))
+        return FALSE;
+    // Xlib returns 32-bit X properties as C longs.
+    gboolean valid = format == 32 && length >= (gint)(count * sizeof(long));
+    if (valid)
+        memcpy(values, data, count * sizeof(long));
+    g_free(data);
+    return valid;
+}
+// KWin publishes _NET_DESKTOP_GEOMETRY/_NET_WORKAREA in logical pixels, while
+// a scaled XWayland (kwinrc [Xwayland] Scale) uses device pixels. GDK then
+// clips the logical workarea to the device-pixel monitor, so on a 1.25x 4K
+// display the widget is centred in a 3072x1728 corner of a 3840x2160 screen.
+// Scale the published workarea into the root window's pixel space first.
+static void monitor_area(GdkMonitor *monitor, GdkRectangle *area) {
+    GdkRectangle geometry;
+    gdk_monitor_get_geometry(monitor, &geometry);
+    gdk_monitor_get_workarea(monitor, area);
+    long desktop[2], work[4];
+    GdkWindow *root = gdk_get_default_root_window();
+    int root_width = gdk_window_get_width(root), root_height = gdk_window_get_height(root);
+    if (!root_cardinals("_NET_DESKTOP_GEOMETRY", desktop, 2) || desktop[0] <= 0 ||
+        desktop[1] <= 0 || (desktop[0] == root_width && desktop[1] == root_height))
+        return;
+    if (!root_cardinals("_NET_WORKAREA", work, 4)) {
+        *area = geometry;
+        return;
+    }
+    double sx = (double)root_width / desktop[0], sy = (double)root_height / desktop[1];
+    GdkRectangle scaled = {(int)lround(work[0] * sx), (int)lround(work[1] * sy),
+                           (int)lround(work[2] * sx), (int)lround(work[3] * sy)};
+    if (!gdk_rectangle_intersect(&scaled, &geometry, area))
+        *area = geometry;
+}
 static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
     (void)user;
     if (condition & (G_IO_HUP | G_IO_ERR)) {
@@ -98,7 +138,7 @@ static gboolean input(GIOChannel *channel, GIOCondition condition, void *user) {
     gdk_device_get_position(gdk_seat_get_pointer(seat), NULL, &x, &y);
     GdkMonitor *monitor = gdk_display_get_monitor_at_point(display, x, y);
     GdkRectangle area;
-    gdk_monitor_get_workarea(monitor, &area);
+    monitor_area(monitor, &area);
     x = area.x + (area.width - widget_pixels(260)) / 2;
     y = area.y + area.height - widget_pixels(92);
     if (strstr(parts[0], "left"))
